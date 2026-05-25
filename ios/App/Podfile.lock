@@ -1,0 +1,93 @@
+PODS:
+  - Capacitor (7.6.5):
+    - CapacitorCordova
+  - CapacitorApp (7.1.2):
+    - Capacitor
+  - CapacitorCommunityInAppReview (7.1.0):
+    - Capacitor
+  - CapacitorCordova (7.6.5)
+  - CapacitorDevice (7.0.5):
+    - Capacitor
+  - CapacitorHaptics (7.0.5):
+    - Capacitor
+  - CapacitorLocalNotifications (7.0.6):
+    - Capacitor
+  - CapacitorPreferences (7.0.4):
+    - Capacitor
+  - CapacitorPushNotifications (7.0.6):
+    - Capacitor
+  - CapacitorSplashScreen (7.0.5):
+    - Capacitor
+  - CapacitorStatusBar (7.0.6):
+    - Capacitor
+  - PurchasesHybridCommon (17.25.0):
+    - RevenueCat (= 5.51.1)
+  - RevenueCat (5.51.1)
+  - RevenuecatPurchasesCapacitor (11.3.2):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.25.0)
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCommunityInAppReview (from `../../node_modules/@capacitor-community/in-app-review`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
+  - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
+  - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - RevenueCat
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorCommunityInAppReview:
+    :path: "../../node_modules/@capacitor-community/in-app-review"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorDevice:
+    :path: "../../node_modules/@capacitor/device"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
+  CapacitorPreferences:
+    :path: "../../node_modules/@capacitor/preferences"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
+  CapacitorSplashScreen:
+    :path: "../../node_modules/@capacitor/splash-screen"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
+
+SPEC CHECKSUMS:
+  Capacitor: e9708b186e71dc45f9b2ee72e826b7389fb79ff2
+  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
+  CapacitorCommunityInAppReview: 3756d05524c5cf2eccbc8ed460f77f8f8db6c141
+  CapacitorCordova: 2b36392a7292c3c451dcae154185ee8804d7b6b3
+  CapacitorDevice: ba96f933a2cb5dcdc68187503d48f7b5aa11ba9e
+  CapacitorHaptics: 1b145fa83c622e5383a3bac04ea81e2514f0b0f5
+  CapacitorLocalNotifications: 2e3f5b717ec9cd2bd64d93c99a9470941e1c80be
+  CapacitorPreferences: 69d9991307507aeab8ef8019c10b9babfda0e9ca
+  CapacitorPushNotifications: b8e30637549ce91468b8c4dddbef2657be831f4c
+  CapacitorSplashScreen: 409eeaaeac603d264f209c0fcb718aa22fe1f7bb
+  CapacitorStatusBar: 416e9e53fd6397e668d4a181cd2131617d949bd6
+  PurchasesHybridCommon: 6a79a873ab52f777bfa36e9516f3fcd84d3b3428
+  RevenueCat: eab035bbab271faccfef5c36eaff2a1ffef14dc0
+  RevenuecatPurchasesCapacitor: fa376932f9967c7ab4b5eac477e824d90393b91a
+
+PODFILE CHECKSUM: 4e1413896d82fa814213b8a14577ef57ce32173f
+
+COCOAPODS: 1.16.2

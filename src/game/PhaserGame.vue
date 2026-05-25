@@ -11,6 +11,9 @@ const emit = defineEmits(['current-active-scene'])
 
 onMounted(() => {
   game.value = StartGame('game-container')
+  // Dev/debug hook — handy for poking at scenes from the browser console.
+  // Harmless in production for a single-player offline kids game.
+  if (typeof window !== 'undefined') window.__phaserGame = game.value
 
   EventBus.on('current-scene-ready', (currentScene) => {
     emit('current-active-scene', currentScene)

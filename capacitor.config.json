@@ -1,0 +1,25 @@
+{
+  "appId": "com.blackboxcode.toddlerpuzzle",
+  "appName": "Toddler Puzzles",
+  "webDir": "dist",
+  "backgroundColor": "#5bb6ef",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": false,
+      "backgroundColor": "#5bb6ef",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#5bb6ef"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

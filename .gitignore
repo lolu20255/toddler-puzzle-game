@@ -28,3 +28,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Native app — secrets (the ios/ and android/ folders are committed;
+# their own generated .gitignore files exclude Pods/build artifacts)
+.env

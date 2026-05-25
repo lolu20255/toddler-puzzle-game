@@ -6,18 +6,53 @@ import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
 import Phaser from 'phaser'
 
-// Find out more information about the Game Config at:
-// https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
-
-let clientWidth = document.documentElement.clientWidth
-let clientHeight = document.documentElement.clientHeight
+// ──────────────────────────────────────────────────────────────────────────
+// HiDPI / Retina sharpness
+//
+// Phaser's Scale.RESIZE creates a backing-store canvas at CSS pixel size.
+// On an iPhone with devicePixelRatio 3, iOS then upscales that low-res
+// canvas to 3× physical pixels — which is why every sprite looked pixelated
+// on device. The recommended Phaser 3 fix is to render the game at
+// `innerWidth × DPR` pixels and CSS-scale it back down with `zoom: 1/DPR`,
+// so the backing store matches the physical screen 1:1 and the GPU draws
+// every sprite at its native source resolution.
+//
+// Sources:
+// - https://supernapie.com/blog/support-retina-with-phaser-3/
+// - https://github.com/phaserjs/phaser/issues/3198
+// - https://github.com/Quinten/phaser3-retina
+//
+// We cap DPR at 2 (not 3). At 3 the backing store on an iPhone Pro Max is
+// 1290 × 2220 × 4 bytes ≈ 11 MB, plus mipmaps and decoded background
+// textures — enough to push WKWebView's WebContent process over its memory
+// limit on a real device, even though the iOS Simulator stays fine. Going
+// from 3× to 2× drops canvas memory by ~55% and the visual difference is
+// imperceptible.
+// ──────────────────────────────────────────────────────────────────────────
+const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
 const config = {
   type: Phaser.AUTO,
-  width: clientWidth,
-  height: clientHeight,
   parent: 'game-container',
   backgroundColor: '#b06923',
+  scale: {
+    // NONE (not RESIZE) because we set width/height ourselves in physical
+    // pixels and let CSS `zoom` scale the canvas back to the viewport.
+    mode: Phaser.Scale.NONE,
+    width: Math.floor(window.innerWidth * DPR),
+    height: Math.floor(window.innerHeight * DPR),
+    zoom: 1 / DPR,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  render: {
+    antialias: true,
+    antialiasGL: true,
+    pixelArt: false,
+    roundPixels: false,
+    // Smooth downscaling for the sprite-sheet icons that sit inside the
+    // smaller card windows in MainMenu.
+    mipmapFilter: 'LINEAR_MIPMAP_LINEAR'
+  },
   scene: [Boot, MainMenu, GameA, GameB, GameC, GameOver],
   physics: {
     default: 'arcade',
@@ -29,20 +64,7 @@ const config = {
 }
 
 const StartGame = (parent) => {
-  // if (window.innerWidth > window.innerHeight) {
   return new Phaser.Game({ ...config, parent })
-  // } else {
-  // if (
-  //   confirm(
-  //     'Please rotate your device to landscape orientation to start the game. Click "OK" to reload or "Cancel" to stay on this page.'
-  //   )
-  // ) {
-  //   window.location.reload()
-  // }
-  // window.location.reload()
-  //   return null
-  // }
 }
 
 export default StartGame
-
