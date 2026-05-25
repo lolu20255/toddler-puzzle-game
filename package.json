@@ -16,13 +16,33 @@
     "dev": "node log.js dev & vite --config vite/config.dev.mjs",
     "build": "node log.js build & vite build --config vite/config.prod.mjs",
     "dev-nolog": "vite --config vite/config.dev.mjs",
-    "build-nolog": "vite build --config vite/config.prod.mjs"
+    "build-nolog": "vite build --config vite/config.prod.mjs",
+    "build:ios": "bash scripts/build/ios/start.sh",
+    "build:android": "bash scripts/build/android/start.sh",
+    "cap:sync": "npx cap sync",
+    "cap:assets": "npx capacitor-assets generate"
   },
   "dependencies": {
+    "@capacitor-community/in-app-review": "^7.1.0",
+    "@capacitor/android": "^7.6.5",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.5",
+    "@capacitor/device": "^7.0.5",
+    "@capacitor/haptics": "^7.0.5",
+    "@capacitor/ios": "^7.6.5",
+    "@capacitor/local-notifications": "^7.0.6",
+    "@capacitor/preferences": "^7.0.4",
+    "@capacitor/push-notifications": "^7.0.6",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.6",
+    "@revenuecat/purchases-capacitor": "^11.3.2",
+    "axios": "^1.16.1",
     "phaser": "^3.85.2",
     "vue": "^3.4.27"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.5",
     "@rushstack/eslint-patch": "^1.10.2",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/eslint-config-prettier": "^9.0.0",
@@ -33,4 +53,3 @@
     "vite": "^5.2.11"
   }
 }
-

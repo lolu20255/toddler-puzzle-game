@@ -1,5 +1,12 @@
 import { EventBus } from '../EventBus'
 import { Scene } from 'phaser'
+import { showCelebration } from '../celebrate'
+
+// HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
+// crispness; hardcoded pixel constants in this scene get multiplied by DPR
+// so they keep their original CSS-pixel visual size on Retina screens.
+// Cap kept in sync with main.js (2× — see the memory note in main.js).
+const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
 const NUM_OF_CLOUDS = 10
 const NUM_OF_BIRDS = 2
@@ -55,18 +62,18 @@ export class GameC extends Scene {
 
     const textConfig = {
       fontFamily: 'Bruno Ace SC',
-      fontSize: 80,
+      fontSize: 80 * DPR,
       color: '#ffffff'
     }
 
     // this.labelBackground = this.add.graphics()
 
     this.animalLabelObj = this.add.text(x, y, animal, textConfig)
-    this.animalLabelObj.setPadding(20)
+    this.animalLabelObj.setPadding(20 * DPR)
     this.animalLabelObj.x = x - this.animalLabelObj.displayWidth / 2
     this.animalLabelObj.text = ''
-    this.animalLabelObj.setStroke('#000', 10)
-    this.animalLabelObj.setShadow(15, 18, '#000000', 15, true, true)
+    this.animalLabelObj.setStroke('#000', 10 * DPR)
+    this.animalLabelObj.setShadow(15 * DPR, 18 * DPR, '#000000', 15 * DPR, true, true)
 
     let index = 0
 
@@ -96,9 +103,9 @@ export class GameC extends Scene {
     this.start()
 
     this.scoreBoard = this.add
-      .text(this.sWidth / 2, 35, `SCORE: 0`, {
+      .text(this.sWidth / 2, 35 * DPR, `SCORE: 0`, {
         fontFamily: 'Fredoka',
-        fontSize: '60px',
+        fontSize: `${60 * DPR}px`,
         fill: '#51381e', // Same yellow color as the congratulations text
         fontStyle: 'bolder' // Make the font bolder
       })
@@ -106,7 +113,7 @@ export class GameC extends Scene {
       .setDepth(3)
 
     const backButton = this.add
-      .image(70, 70, 'button_back')
+      .image(70 * DPR, 70 * DPR, 'button_back')
       .setInteractive()
       .setScale(Math.min(this.sWidth, this.sHeight) * 0.0008)
       .setDepth(5)
@@ -118,6 +125,7 @@ export class GameC extends Scene {
 
   start() {
     console.log('start')
+    this.celebrated = new Set()
     const availableAnimals = [
       `asset_${this.packName}_a`,
       `asset_${this.packName}_b`,
@@ -234,7 +242,10 @@ export class GameC extends Scene {
       console.log('dragend')
 
       if (this.animalsOnBase.has(animalDragged)) {
-        // this.addAnimalLabel(animalDragged)
+        if (!this.celebrated.has(animalDragged)) {
+          this.celebrated.add(animalDragged)
+          showCelebration(this, animalDragged)
+        }
 
         this.sound.play('collect')
         this.score++

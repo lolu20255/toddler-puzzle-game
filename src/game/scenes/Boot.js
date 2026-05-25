@@ -6,61 +6,48 @@ export class Boot extends Scene {
   }
 
   preload() {
-    console.log('boot_preload')
-
-    // Load the WebFont script only — wait to load fonts + assets in create()
-    this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js')
-
-    // Load a small background to show behind the loader
-    this.load.image('background', 'assets/backgrounds/D.png')
     this.sWidth = this.cameras.main.width
     this.sHeight = this.cameras.main.height
+
+    // Friendly background + primitive loading bar drawn BEFORE any asset
+    // loads, so the player never stares at a blank screen and we don't
+    // depend on a loaded image to draw the loader.
+    this.cameras.main.setBackgroundColor('#5bb6ef')
+    const barW = this.sWidth * 0.6
+    const barH = Math.max(8, this.sHeight * 0.035)
+    const barX = this.sWidth / 2
+    const barY = this.sHeight / 2
+    this.add.rectangle(barX, barY, barW, barH).setStrokeStyle(2, 0xffffff)
+    const bar = this.add
+      .rectangle(barX - barW / 2, barY, 4, barH - 4, 0xffffff)
+      .setOrigin(0, 0.5)
+    this.load.on('progress', (p) => {
+      bar.width = 4 + (barW - 8) * p
+    })
+
+    // Load every game asset here in preload, unconditionally.
+    //
+    // The original Boot.js gated `loadGameAssets()` behind WebFont's `active`
+    // callback. On a real iOS device / simulator the Google Fonts CDN often
+    // fires `inactive` instead (cold network, ATS, timeout), and the assets
+    // were never queued at all — leaving every scene with Phaser's __MISSING
+    // texture (the green-outlined diagonal-line square).
+    this.loadGameAssets()
   }
 
   create() {
-    WebFont.load({
-      google: {
-        families: ['Bruno Ace SC', 'Fredoka']
-      },
-      active: () => {
-        // Show outline of the loading bar
-        const barWidth = this.sWidth * 0.6
-        const barHeight = this.sHeight * 0.04
-        const barX = this.sWidth / 2
-        const barY = this.sHeight / 2
-
-        this.add
-          .image(this.sWidth / 2, this.sHeight / 2, 'background')
-          .setOrigin(0.5)
-          .setDisplaySize(this.sWidth, this.sHeight)
-        // Outline of the loading bar
-        this.add.rectangle(barX, barY, barWidth, barHeight).setStrokeStyle(1, 0xffffff)
-
-        // Inner bar that will expand with progress
-        const bar = this.add
-          .rectangle(barX - barWidth / 2, barY, 4, barHeight - 4, 0xffffff)
-          .setOrigin(0, 0.5)
-
-        // Listen for progress updates
-        this.load.on('progress', (progress) => {
-          bar.width = 4 + (barWidth - 8) * progress
-        })
-
-        // Load all game assets now that font is ready
-        this.loadGameAssets()
-
-        // Start loading!
-        this.load.once('complete', () => {
-          this.scene.start('MainMenu')
-        })
-
-        this.load.start()
-      },
-      inactive: () => {
-        console.warn('WebFont failed to load. Proceeding anyway.')
-        this.scene.start('MainMenu')
-      }
-    })
+    // Fonts are loaded via <link rel="stylesheet"> in index.html (standard
+    // browser font loading, no WebFont.js). Wait briefly for them to arrive
+    // so Phaser bakes them into text textures correctly — but never sit on
+    // the Boot scene longer than 2s if the CDN is unreachable.
+    const proceed = () => this.scene.start('MainMenu')
+    const fontsReady =
+      typeof document !== 'undefined' && document.fonts && document.fonts.ready
+        ? document.fonts.ready
+        : Promise.resolve()
+    Promise.race([fontsReady, new Promise((r) => setTimeout(r, 2000))]).then(
+      proceed
+    )
   }
 
   loadGameAssets() {
@@ -136,4 +123,3 @@ export class Boot extends Scene {
     this.load.image('wall', 'assets/crateboy/_ART/Wall tiles/wall3.png')
   }
 }
-

@@ -1,39 +1,42 @@
+/* Full-bleed mobile layout.
+   - `100dvh` is the dynamic viewport height — accounts for iOS browser
+     chrome and Capacitor safe areas without the classic 100vh overshoot.
+   - The body background matches `capacitor.config.json → backgroundColor`
+     so any sliver of margin during launch matches the status bar smoothly
+     instead of showing a black/system-colour frame.
+   - `overscroll-behavior: none` + `touch-action: none` stop iOS rubber-band
+     scrolling, which is what makes a Phaser canvas look "framed". */
+
+html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100dvh;
+  background-color: #5bb6ef;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
   color: rgba(255, 255, 255, 0.87);
-  background-color: #000000;
   font-family: Arial, Helvetica, sans-serif;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.spritePosition {
-  margin: 10px 0 0 10px;
-  font-size: 0.8em;
-}
-
-.button {
-  width: 140px;
-  margin: 10px;
-  padding: 10px;
-  background-color: #000000;
-  color: rgba(255, 255, 255, 0.87);
-  border: 1px solid rgba(255, 255, 255, 0.87);
-  cursor: pointer;
-  transition: all 0.3s;
-
-  /* Disabled styles */
-  &:disabled {
-    cursor: not-allowed;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.3);
-  }
+#game-container,
+#game-container > canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
