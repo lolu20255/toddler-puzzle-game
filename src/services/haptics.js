@@ -7,11 +7,17 @@
  */
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics'
 import { isNativePlatform } from './platform'
+import { settings } from './settings'
+
+/** True when haptics should fire — native + user has it enabled in Settings. */
+function allowed() {
+  return isNativePlatform() && settings.hapticsEnabled()
+}
 
 export const haptics = {
   /** Light tick — use for picking up / tapping a piece. */
   async tap() {
-    if (!isNativePlatform()) return
+    if (!allowed()) return
     try {
       await Haptics.impact({ style: ImpactStyle.Light })
     } catch {
@@ -21,7 +27,7 @@ export const haptics = {
 
   /** Firmer bump — use for dropping a piece onto a slot. */
   async medium() {
-    if (!isNativePlatform()) return
+    if (!allowed()) return
     try {
       await Haptics.impact({ style: ImpactStyle.Medium })
     } catch {
@@ -31,7 +37,7 @@ export const haptics = {
 
   /** Celebratory pattern — use when a puzzle is solved. */
   async success() {
-    if (!isNativePlatform()) return
+    if (!allowed()) return
     try {
       await Haptics.notification({ type: NotificationType.Success })
     } catch {
@@ -41,7 +47,7 @@ export const haptics = {
 
   /** Subtle change — use when a selection moves between options. */
   async selection() {
-    if (!isNativePlatform()) return
+    if (!allowed()) return
     try {
       await Haptics.selectionChanged()
     } catch {

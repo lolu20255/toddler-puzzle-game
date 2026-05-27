@@ -25,8 +25,7 @@
 import { HTTP } from './http'
 import { libroAuth } from './auth'
 
-const DEFAULT_PROVIDER =
-  import.meta.env.VITE_LIBRO_PRONUNCIATION_PROVIDER || 'elevenlabs'
+const DEFAULT_PROVIDER = import.meta.env.VITE_LIBRO_PRONUNCIATION_PROVIDER || 'elevenlabs'
 
 const audioByKey = new Map() // key → HTMLAudioElement
 const inflight = new Map() // key → Promise<HTMLAudioElement|null>
@@ -39,6 +38,10 @@ async function fetchAudio(word, lang, provider) {
   try {
     const authed = await libroAuth.ensureAuthenticated()
     if (!authed) return null
+
+    // If this request fails with 401 "Invalid token", the response interceptor
+    // installed by `libroAuth.setupInterceptor()` transparently refreshes the
+    // token and retries — no need to handle 401 here.
     const response = await HTTP.post(
       '/v1/pronunciations',
       { word, language: lang, provider },
@@ -46,15 +49,12 @@ async function fetchAudio(word, lang, provider) {
     )
     const blob = response.data
     if (!blob || blob.size === 0) return null
+
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
     audio.preload = 'auto'
     return audio
   } catch (e) {
-    // 401 with "Invalid token" → drop the cached token and let the next call re-auth.
-    if (e?.response?.status === 401) {
-      libroAuth.clear()
-    }
     console.warn(
       `[Pronunciation] fetch failed for "${word}" (${lang}/${provider}):`,
       e?.message || e
@@ -66,7 +66,9 @@ async function fetchAudio(word, lang, provider) {
 /** Fetch and cache the audio for `word` without playing it. */
 export async function preload(word, lang = 'en', provider = DEFAULT_PROVIDER) {
   if (!word) return null
+
   const key = cacheKey(word, lang, provider)
+
   if (audioByKey.has(key)) return audioByKey.get(key)
   if (!inflight.has(key)) {
     inflight.set(
@@ -74,8 +76,11 @@ export async function preload(word, lang = 'en', provider = DEFAULT_PROVIDER) {
       fetchAudio(word, lang, provider).finally(() => inflight.delete(key))
     )
   }
+
   const audio = await inflight.get(key)
+
   if (audio) audioByKey.set(key, audio)
+
   return audio
 }
 
@@ -104,3 +109,4 @@ export async function speak(word, lang = 'en', provider = DEFAULT_PROVIDER) {
 export function getDefaultProvider() {
   return DEFAULT_PROVIDER
 }
+

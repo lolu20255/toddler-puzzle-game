@@ -1,10 +1,15 @@
 import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
+import { getGrid } from '../layout'
 
 /**
- * The three puzzles share one shadow-matching mechanic but use different art
- * packs. Toddlers can't read "Game A/B/C", so each is shown as a big colourful
- * card with a picture of what's inside (a toy, a hero, a face).
+ * The four puzzles share one shadow-matching mechanic but use different art
+ * packs. Toddlers can't read "Game A/B/C/D", so each is shown as a big colourful
+ * card with a picture of what's inside (a toy, a hero, a face, a fruit).
+ *
+ * Colours form a balanced quartet — warm orange, cool purple, warm pink, cool
+ * green — so the 2×2 grid in portrait reads as a satisfying complementary
+ * pattern rather than four random colours.
  */
 const GAMES = [
   {
@@ -33,6 +38,15 @@ const GAMES = [
     darkHex: '#b32a63',
     iconKey: 'asset_emojis_lego_a',
     iconFrame: 0 // big laughing face
+  },
+  {
+    label: 'Fruits',
+    scene: 'GameD',
+    color: 0x5fc34a, // fresh leaf green
+    colorDark: 0x3d8c2f,
+    darkHex: '#266b22',
+    iconKey: 'asset_fruits_b', // banana — iconic, instantly recognisable, secretly hilarious
+    iconFrame: 0 // ignored — fruits are loaded as individual images
   }
 ]
 
@@ -50,6 +64,7 @@ export class MainMenu extends Scene {
     this.sWidth = this.cameras.main.width
     this.sHeight = this.cameras.main.height
     this.minSide = Math.min(this.sWidth, this.sHeight)
+    this.grid = getGrid(this)
     this.locked = false
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -59,6 +74,7 @@ export class MainMenu extends Scene {
     this.addTwinkles()
     this.buildTitle()
     this.buildCards()
+    this.buildSettingsButton()
 
     this.cameras.main.fadeIn(this.reducedMotion ? 0 : 400, 91, 182, 239)
 
@@ -85,8 +101,11 @@ export class MainMenu extends Scene {
   }
 
   addSun() {
-    const r = this.minSide * 0.07
-    const sun = this.add.container(this.sWidth * 0.13, this.sHeight * 0.11).setDepth(1)
+    // With the wordmark removed, the sun is the sole branding/personality
+    // element above the cards — so it grows from decoration to mascot.
+    // Sized so the ray-tips never bleed off the left/top edges of the canvas.
+    const r = this.minSide * 0.095
+    const sun = this.add.container(this.sWidth * 0.2, this.sHeight * 0.135).setDepth(1)
 
     // Rays drawn around the origin so the graphics object can spin in place.
     const rays = this.add.graphics()
@@ -204,13 +223,18 @@ export class MainMenu extends Scene {
   }
 
   // --------------------------------------------------------------------- title
-
+  //
+  // Lavender candy pill, deliberately on the opposite side of the colour wheel
+  // from the warm-yellow sun so the two read as different "characters" instead
+  // of fighting each other. Placement sits BELOW the sun's ray-tips so the
+  // pill never overlaps the mascot. Same 3-D card-stack treatment as the game
+  // tiles — keeps the visual language consistent across the menu.
   buildTitle() {
     const cx = this.sWidth / 2
-    const cy = this.sHeight * 0.155
+    const cy = this.sHeight * 0.255
     const badge = this.add.container(cx, cy).setDepth(10)
 
-    const fontSize = this.minSide * 0.13
+    const fontSize = this.minSide * 0.075
     const text = this.add
       .text(0, 0, 'PUZZLE', {
         fontFamily: '"Fredoka", "Arial Rounded MT Bold", "Helvetica Rounded", sans-serif',
@@ -218,38 +242,49 @@ export class MainMenu extends Scene {
         color: '#ffffff'
       })
       .setOrigin(0.5)
-    text.setStroke('#e8881c', fontSize * 0.16)
-    text.setShadow(0, fontSize * 0.07, 'rgba(0,0,0,0.25)', 4)
+    text.setStroke('#4d2c8a', fontSize * 0.18)
+    text.setShadow(0, fontSize * 0.06, 'rgba(0,0,0,0.22)', 3)
 
     const w = text.displayWidth + fontSize * 1.5
     const h = text.displayHeight + fontSize * 0.55
     const radius = h / 2
 
     const g = this.add.graphics()
-    g.fillStyle(0x000000, 0.16)
+    g.fillStyle(0x000000, 0.18)
     g.fillRoundedRect(-w / 2, -h / 2 + h * 0.14, w, h, radius)
-    g.fillStyle(0xf0a91c, 1)
+    g.fillStyle(0x7a55c8, 1) // deep purple — the 3-D lip
     g.fillRoundedRect(-w / 2, -h / 2 + h * 0.1, w, h, radius)
-    g.fillStyle(0xffce3a, 1)
+    g.fillStyle(0xb594ff, 1) // lavender — the top face
     g.fillRoundedRect(-w / 2, -h / 2, w, h, radius)
-    g.fillStyle(0xffffff, 0.28)
+    g.fillStyle(0xffffff, 0.3) // glossy top highlight strip
     g.fillRoundedRect(-w / 2 + w * 0.06, -h / 2 + h * 0.12, w * 0.88, h * 0.3, radius * 0.6)
     badge.add(g)
 
-    // A small star dotting each rounded end of the pill.
-    const starR = h * 0.2
+    // A small pink heart bookending each side — colour-distinct from the
+    // yellow sun's existing twinkles, ties to Faces (pink) on the cards.
+    const heartR = h * 0.18
     ;[-1, 1].forEach((dir) => {
-      const star = this.add
-        .star(dir * (w / 2 - starR * 0.3), -h * 0.04, 5, starR * 0.45, starR, 0xffffff)
-        .setAlpha(0.9)
-      badge.add(star)
+      const heart = this.add.graphics()
+      const hx = dir * (w / 2 - heartR * 0.5)
+      const hy = -h * 0.02
+      heart.fillStyle(0xff7fb5, 1)
+      heart.fillCircle(hx - heartR * 0.35, hy - heartR * 0.2, heartR * 0.45)
+      heart.fillCircle(hx + heartR * 0.35, hy - heartR * 0.2, heartR * 0.45)
+      heart.fillTriangle(
+        hx - heartR * 0.78, hy - heartR * 0.05,
+        hx + heartR * 0.78, hy - heartR * 0.05,
+        hx, hy + heartR * 0.85
+      )
+      badge.add(heart)
       if (!this.reducedMotion) {
         this.tweens.add({
-          targets: star,
-          angle: dir * 360,
-          duration: 11000,
+          targets: heart,
+          scale: 1.18,
+          duration: 900,
+          delay: dir === -1 ? 0 : 450,
+          yoyo: true,
           repeat: -1,
-          ease: 'Linear'
+          ease: 'Sine.inOut'
         })
       }
     })
@@ -259,8 +294,8 @@ export class MainMenu extends Scene {
     if (!this.reducedMotion) {
       this.tweens.add({
         targets: badge,
-        y: cy - h * 0.14,
-        duration: 1900,
+        y: cy - h * 0.12,
+        duration: 2000,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.inOut'
@@ -272,31 +307,145 @@ export class MainMenu extends Scene {
 
   buildCards() {
     const landscape = this.sWidth > this.sHeight
-    const top = this.sHeight * 0.28
-    const bottom = this.sHeight * 0.93
+    // Title pill sits at y ≈ 0.26 with a ~70px tall footprint — cards start
+    // just below it. Still 6% taller per card than the original pre-redesign
+    // layout because the pill is smaller than before.
+    const top = this.sHeight * 0.31
+    const bottom = this.sHeight * 0.94
     const regionH = bottom - top
 
-    let cardW, cardH
+    const n = GAMES.length
     const positions = []
+    let cardW, cardH
+
+    // Cards align to the shared grid — same LEFT/RIGHT edges as the back
+    // button, cog, and score pill in every other scene.
+    const contentW = this.grid.contentWidth
 
     if (landscape) {
-      const gap = this.sWidth * 0.04
-      cardW = Math.min((this.sWidth * 0.9 - gap * 2) / 3, regionH * 0.82)
+      // Single horizontal row spanning the full content width.
+      const gap = this.sWidth * 0.03
+      cardW = Math.min((contentW - gap * (n - 1)) / n, regionH * 0.85)
       cardH = cardW * 1.18
-      const totalW = cardW * 3 + gap * 2
-      const startX = this.sWidth / 2 - totalW / 2 + cardW / 2
       const cy = top + regionH / 2
-      for (let i = 0; i < 3; i++) positions.push({ x: startX + i * (cardW + gap), y: cy })
+      const startX = this.grid.contentLeft + cardW / 2
+      for (let i = 0; i < n; i++) {
+        positions.push({ x: startX + i * (cardW + gap), y: cy })
+      }
     } else {
-      const gap = regionH * 0.07
-      cardH = (regionH - gap * 2) / 3
-      cardW = Math.min(this.sWidth * 0.82, cardH * 3.4)
-      const startY = top + cardH / 2
-      for (let i = 0; i < 3; i++) positions.push({ x: this.sWidth / 2, y: startY + i * (cardH + gap) })
+      // 2×N/2 grid spanning the full content width — same gridlines as the
+      // back button (left col) and the cog (right col).
+      const cols = 2
+      const rows = Math.ceil(n / cols)
+      const gapX = this.sWidth * 0.04
+      const gapY = regionH * 0.05
+      cardW = (contentW - gapX * (cols - 1)) / cols
+      cardH = (regionH - gapY * (rows - 1)) / rows
+      const totalH = cardH * rows + gapY * (rows - 1)
+      const startX = this.grid.contentLeft + cardW / 2
+      const startY = top + (regionH - totalH) / 2 + cardH / 2
+      for (let i = 0; i < n; i++) {
+        const col = i % cols
+        const row = Math.floor(i / cols)
+        positions.push({
+          x: startX + col * (cardW + gapX),
+          y: startY + row * (cardH + gapY)
+        })
+      }
     }
 
+    // Both layouts use vertical cards (icon on top, label below) — pass
+    // `true` so `createCard()` picks the icon-top branch even in portrait.
     GAMES.forEach((game, i) => {
-      this.createCard(game, positions[i], cardW, cardH, landscape, i)
+      this.createCard(game, positions[i], cardW, cardH, true, i)
+    })
+  }
+
+  // ──────────────────────────────────────────────────────────── settings cog
+  //
+  // Gear icon in the top-right — iOS/Android convention for "secondary
+  // settings" so parents find it instinctively.
+  //
+  // Implementation note: the visible gear lives in a Container (so it can be
+  // animated as a unit) but the INTERACTIVE element is a separate
+  // transparent Phaser Rectangle layered on top. Container input has been
+  // unreliable in this Phaser/iOS WebView combination — taps near the top
+  // of the canvas occasionally never fire `pointerdown`, even though
+  // `input.hitTestPointer` finds the container. A flat `Rectangle` is
+  // Phaser's most battle-tested interactive primitive and always receives
+  // touch events. The Rectangle also lets us push the hit area well beyond
+  // the visible gear without distorting the icon's hover animations.
+  buildSettingsButton() {
+    // Lock to the shared grid so the cog mirrors the back button used in
+    // Settings + every game scene — same radius, same y, same edge alignment.
+    const haloR = this.grid.iconR
+    const gearR = haloR * 0.62
+    const hitR = haloR * 1.6
+    const cx = this.grid.contentRight - haloR // right edge of cog at contentRight
+    const cy = this.grid.navY
+
+    // ── Visuals (animated, NOT interactive) ───────────────────────────────
+    const visuals = this.add.container(cx, cy).setDepth(20)
+
+    const shadow = this.add.circle(0, haloR * 0.14, haloR, 0x000000, 0.18)
+    visuals.add(shadow)
+
+    const halo = this.add.circle(0, 0, haloR, 0xffffff, 0.95)
+    halo.setStrokeStyle(Math.max(2, haloR * 0.09), 0xe8881c, 0.8)
+    visuals.add(halo)
+
+    const g = this.add.graphics()
+    const teeth = 8
+    const innerR = gearR * 0.72
+    const outerR = gearR
+    const halfAngle = (Math.PI * 2 / teeth) * 0.28
+    g.fillStyle(0x5a3a1a, 1)
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2
+      const p1 = { x: Math.cos(a - halfAngle) * innerR, y: Math.sin(a - halfAngle) * innerR }
+      const p2 = { x: Math.cos(a + halfAngle) * innerR, y: Math.sin(a + halfAngle) * innerR }
+      const p3 = { x: Math.cos(a + halfAngle * 0.7) * outerR, y: Math.sin(a + halfAngle * 0.7) * outerR }
+      const p4 = { x: Math.cos(a - halfAngle * 0.7) * outerR, y: Math.sin(a - halfAngle * 0.7) * outerR }
+      g.fillTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+      g.fillTriangle(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y)
+    }
+    g.fillCircle(0, 0, innerR)
+    g.fillStyle(0xffffff, 1)
+    g.fillCircle(0, 0, gearR * 0.32)
+    visuals.add(g)
+
+    // ── Hit zone (a transparent Rectangle on top — the only interactive bit)
+    const hit = this.add
+      .rectangle(cx, cy, hitR * 2, hitR * 2, 0x000000, 0)
+      .setDepth(21)
+      .setInteractive({ useHandCursor: true })
+
+    hit.on('pointerover', () => {
+      if (!this.locked) this.tweens.add({ targets: visuals, scale: 1.06, duration: 140 })
+    })
+    hit.on('pointerout', () => {
+      if (!this.locked) this.tweens.add({ targets: visuals, scale: 1, duration: 140 })
+    })
+    hit.on('pointerdown', () => {
+      if (this.locked) return
+      this.locked = true
+      this.tweens.add({
+        targets: g,
+        angle: 90,
+        duration: 220,
+        ease: 'Quad.easeOut'
+      })
+      this.tweens.add({
+        targets: visuals,
+        scale: 0.9,
+        duration: 110,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      })
+      this.cameras.main.fadeOut(this.reducedMotion ? 0 : 220, 91, 182, 239)
+      this.cameras.main.once('camerafadeoutcomplete', () =>
+        this.scene.start('Settings')
+      )
     })
   }
 
@@ -456,7 +605,7 @@ export class MainMenu extends Scene {
       const ctx = this.sound.context
       if (ctx && ctx.state === 'suspended') ctx.resume()
       if (this.cache.audio.exists('sfx_collect')) {
-        this.sound.play('sfx_collect', { volume: 0.5 })
+        this.sound.play('ui_menu_tap', { volume: 0.6 })
       }
     } catch (e) {
       /* audio is a nice-to-have; never block navigation on it */

@@ -106,9 +106,33 @@ export class Boot extends Scene {
       )
     }
 
-    // AUDIO
-    this.load.audio('collect', 'assets/crateboy/_AUDIO/collect.wav')
-    this.load.audio('sfx_collect', 'assets/crateboy/_AUDIO/sfx_collect.wav')
+    // FRUITS — individual Fluent Emoji 3D PNGs (MIT). See public/assets/fruits/README.md.
+    const fruitFiles = {
+      a: 'red_apple',
+      b: 'banana',
+      c: 'tangerine',
+      d: 'grapes',
+      e: 'strawberry',
+      f: 'watermelon',
+      g: 'pineapple',
+      h: 'cherries',
+      i: 'pear'
+    }
+    for (const [letter, name] of Object.entries(fruitFiles)) {
+      this.load.image(`asset_fruits_${letter}`, `assets/fruits/${letter}_${name}.png`)
+    }
+
+    // AUDIO — Kenney UI Audio (CC0). See public/assets/audio/ui/README.md
+    // for the mapping of each file to where it plays.
+    this.load.audio('ui_letter_pop', 'assets/audio/ui/click5.wav')
+    this.load.audio('ui_match_drop', 'assets/audio/ui/switch7.wav')
+    this.load.audio('ui_celebrate', 'assets/audio/ui/switch33.wav')
+    this.load.audio('ui_menu_tap', 'assets/audio/ui/rollover3.wav')
+
+    // Legacy aliases — kept so the old crateboy keys still resolve while the
+    // codebase migrates. Points at the new Kenney files, not the crateboy WAVs.
+    this.load.audio('collect', 'assets/audio/ui/switch7.wav')
+    this.load.audio('sfx_collect', 'assets/audio/ui/click5.wav')
 
     // ELEMENTS
     this.load.image('cloud-b', 'assets/clouds/cloud-computing.png')

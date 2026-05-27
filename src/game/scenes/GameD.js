@@ -9,34 +9,32 @@ import { addBackButton, addScoreBadge } from '../hud'
 // Cap kept in sync with main.js (2× — see the memory note in main.js).
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
-const NUM_OF_CLOUDS = 10
-const NUM_OF_BIRDS = 2
 const NUM_OF_ANIMALS = 9
 
-export class GameC extends Scene {
+/**
+ * Fruits puzzle — same shadow-matching mechanic as GameA/B/C, drawn over
+ * the grass+sky background_a so the Fluent Emoji 3D fruits feel like
+ * they're scattered in a sunny field.
+ */
+export class GameD extends Scene {
   constructor() {
-    super('GameC')
+    super('GameD')
 
-    this.emojies = ['🙉', '💩', '🚀', '😇', '🤩', '🥳', '🎸', '🎉', '🤓', '😬']
     this.label = null
-    this.clouds = null
     this.animals = null
-    this.birds = null
     this.baseShades = {}
     this.animalsNames = {}
     this.animalsShadows = null
     this.animalLabelObj = null
     this.animalsOnBase = new Set()
     this.score = 0
-    this.packName = 'emojis_lego'
+    this.packName = 'fruits'
   }
 
   preload() {
-    console.log('preload')
-
     this.sWidth = this.cameras.main.width
     this.sHeight = this.cameras.main.height
-    this.fontSize = Math.min(this.sWidth, this.sHeight) * 0.04 // Font size proportional to screen dimensions
+    this.fontSize = Math.min(this.sWidth, this.sHeight) * 0.04
 
     for (let i = 0; i < NUM_OF_ANIMALS; i++) {
       const row = Math.floor(i / 3)
@@ -49,53 +47,14 @@ export class GameC extends Scene {
       }
     }
 
-    const bgImage = this.add
-      .image(this.sWidth / 2, this.sHeight / 2, 'background_e')
+    this.add
+      .image(this.sWidth / 2, this.sHeight / 2, 'background_a')
       .setOrigin(0.5)
       .setDisplaySize(this.sWidth, this.sHeight)
   }
 
-  addAnimalLabel(animal) {
-    const x = this.sWidth / 2
-    const y = this.sHeight * 0.8
-
-    this.resetAnimalLabel()
-
-    const textConfig = {
-      fontFamily: 'Bruno Ace SC',
-      fontSize: 80 * DPR,
-      color: '#ffffff'
-    }
-
-    // this.labelBackground = this.add.graphics()
-
-    this.animalLabelObj = this.add.text(x, y, animal, textConfig)
-    this.animalLabelObj.setPadding(20 * DPR)
-    this.animalLabelObj.x = x - this.animalLabelObj.displayWidth / 2
-    this.animalLabelObj.text = ''
-    this.animalLabelObj.setStroke('#000', 10 * DPR)
-    this.animalLabelObj.setShadow(15 * DPR, 18 * DPR, '#000000', 15 * DPR, true, true)
-
-    let index = 0
-
-    this.time.addEvent({
-      delay: 200,
-      callback: () => {
-        this.animalLabelObj.text += animal[index]
-        index++
-
-        if (index === animal.length) {
-          this.time.removeAllEvents()
-        }
-      },
-      loop: true
-    })
-  }
-
   create() {
-    console.log('create')
-
-    // Ensure audio context is resumed on user interaction for iOS Safari
+    // Unlock the audio context on the first touch (iOS Safari requirement).
     this.input.on('pointerdown', () => {
       if (this.sound.context.state === 'suspended') {
         this.sound.context.resume()
@@ -105,10 +64,11 @@ export class GameC extends Scene {
 
     addBackButton(this)
     this.scoreBoard = addScoreBadge(this, this.score)
+
+    EventBus.emit('current-scene-ready', this)
   }
 
   start() {
-    console.log('start')
     this.celebrated = new Set()
     const availableAnimals = [
       `asset_${this.packName}_a`,
@@ -128,7 +88,6 @@ export class GameC extends Scene {
     for (let index = 0; index < shuffledAnimals.length; index++) {
       const animalKey = shuffledAnimals[index]
       const animalName = `animal${String.fromCharCode(65 + index)}`
-
       this.animalsNames[animalName] = animalKey
     }
 
@@ -136,17 +95,9 @@ export class GameC extends Scene {
     this.addAnimals(shuffledAnimals)
   }
 
-  randomPosition() {
-    return {
-      x: Math.floor(Math.random() * (this.sWidth - 100)),
-      y: Math.floor(Math.random() * (this.sHeight - 150))
-    }
-  }
-
   addAnimalsShadow(animals) {
     this.animalsShadows = this.add.group()
-    // console.log('addAnimalsShadow', animals)
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071
 
     for (let index = 0; index < animals.length; index++) {
       const animalKey = animals[index]
@@ -170,7 +121,7 @@ export class GameC extends Scene {
   addAnimals(animals) {
     this.animals = this.add.group()
 
-    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.0007 // Scale size proportional to screen dimensions
+    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.0007
     const createAnimal = (animalName, index) => {
       const key = `animal${String.fromCharCode(65 + index)}`
       const animal = this.add
@@ -191,9 +142,7 @@ export class GameC extends Scene {
       )
 
       this.animals.add(animal)
-      // console.log('addAnimals', `animal${String.fromCharCode(65 + index)}`)
       this[key] = animal
-
       return animal
     }
 
@@ -209,7 +158,6 @@ export class GameC extends Scene {
         gameObject.displayWidth / 2,
         this.sWidth - gameObject.displayWidth / 2
       )
-
       dragY = Phaser.Math.Clamp(
         dragY,
         gameObject.displayHeight / 2,
@@ -223,8 +171,6 @@ export class GameC extends Scene {
     })
 
     this.input.on('dragend', (pointer, gameObject) => {
-      console.log('dragend')
-
       if (this.animalsOnBase.has(animalDragged)) {
         // Snap exactly onto the base and lock the piece — toddlers shouldn't
         // be able to drag a correctly-placed piece off again.
@@ -241,33 +187,24 @@ export class GameC extends Scene {
         this.sound.play('ui_match_drop', { volume: 0.55 })
         this.score++
         this.scoreBoard.setScore(this.score)
-      } else {
-        this.resetAnimalLabel()
       }
 
       if (this.animalsOnBase.size === animalObjects.length) {
         if (!this.label) {
-          // this.addCongratulationsText(scaleSize)
-          const nextScene = ['GameA', 'GameB', 'GameC', 'GameD'][Math.floor(Math.random() * 4)]
-
+          const nextScene = ['GameA', 'GameB', 'GameC', 'GameD'][
+            Math.floor(Math.random() * 4)
+          ]
           setTimeout(() => {
             this.scene.start(nextScene)
           }, 2000)
-        }
-      } else {
-        if (this.label) {
-          this.label.destroy()
-          this.tweens.killTweensOf(this.label)
-          this.label = null
         }
       }
     })
   }
 
   isAnimalOnBase(animalKey) {
-    // console.log('isAnimalOnBase', animalKey)
-    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.00073 // Scale size proportional to screen dimensions
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.00073
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071
     const isOnBase =
       Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
       Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10
@@ -277,77 +214,14 @@ export class GameC extends Scene {
       this[`${animalKey}Shadow`].setTintFill(0x00ff00)
       this[`${animalKey}Shadow`].setAlpha(1)
       this[`${animalKey}Shadow`].setScale(scaleSizeShadowOnBase)
-
       this.animalsOnBase.add(this.animalsNames[animalKey])
     } else {
       this[`${animalKey}Shadow`].setTint(0x000)
       this[`${animalKey}Shadow`].setAlpha(0.7)
       this[`${animalKey}Shadow`].setScale(scaleSizeShadow)
-
       this.animalsOnBase.delete(this.animalsNames[animalKey])
     }
 
     return isOnBase
   }
-
-  addCongratulationsText(scaleSize) {
-    const emoji = this.emojies[Math.floor(Math.random() * this.emojies.length)]
-
-    this.label = this.add
-      .text(this.sWidth / 2, this.sHeight - this.sHeight / 4, `Ganaste Logan!\n${emoji}`, {
-        fontFamily: 'Bruno Ace SC',
-        fontSize: `${this.fontSize}px`,
-        color: '#ffcc00', // A color that combines well with a typical game background
-        stroke: '#000000',
-        strokeThickness: 20,
-        align: 'center'
-      })
-      .setOrigin(0.5)
-      .setDepth(3)
-
-    this.tweens.add({
-      targets: this.label,
-      scale: { from: 1, to: 1.4 },
-      duration: 2000,
-      ease: 'Power2',
-      yoyo: true,
-      onUpdate: () => {
-        this.label.setFontSize(`${this.fontSize * this.label.scaleX}px`)
-      },
-      onComplete: () => {
-        // this.score++
-        // this.scoreBoard.text = `SCORE: ${this.score}`
-        this.label.destroy()
-        this.label = null
-        this.input.removeAllListeners()
-
-        this.resetAnimals(scaleSize)
-        this.resetAnimalLabel()
-        // this.resetCounters()
-      }
-    })
-  }
-
-  resetAnimalLabel() {
-    if (this.animalLabelObj) {
-      this.time.removeAllEvents()
-      this.animalLabelObj.text = ''
-
-      // this.labelBackground.destroy()
-    }
-  }
-
-  resetAnimals() {
-    this.animals.clear(true, true)
-    this.animalsShadows.clear(true, true)
-    this.animalsOnBase.clear()
-
-    this.start()
-  }
-
-  resetCounters() {
-    this.score = 0
-    this.scoreBoard.text = `SCORE: ${this.score}`
-  }
 }
-

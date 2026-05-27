@@ -1,6 +1,7 @@
 import { EventBus } from '../EventBus'
 import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
+import { addBackButton, addScoreBadge } from '../hud'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
 // crispness; hardcoded pixel constants in this scene get multiplied by DPR
@@ -103,25 +104,10 @@ export class GameA extends Scene {
     // this.addBirds()
     // this.addClouds()
 
-    this.scoreBoard = this.add
-      .text(this.sWidth / 2, 35 * DPR, `SCORE: 0`, {
-        fontFamily: 'Fredoka',
-        fontSize: `${60 * DPR}px`,
-        fill: '#51381e', // Same yellow color as the congratulations text
-        fontStyle: 'bolder' // Make the font bolder
-      })
-      .setOrigin(0.5, 0) // Center horizontally
-      .setDepth(3)
-
-    const backButton = this.add
-      .image(70 * DPR, 70 * DPR, 'button_back')
-      .setInteractive()
-      .setScale(Math.min(this.sWidth, this.sHeight) * 0.0008)
-      .setDepth(5)
-
-    backButton.on('pointerdown', () => {
-      this.scene.start('MainMenu')
-    })
+    // Shared HUD: white-circle chevron back top-left, yellow score pill
+    // top-right. Same visual language as the Settings header + MainMenu cog.
+    addBackButton(this)
+    this.scoreBoard = addScoreBadge(this, this.score)
   }
 
   start() {
@@ -324,18 +310,25 @@ export class GameA extends Scene {
       this.isAnimalOnBase(gameObject.name)
     })
 
-    this.input.on('dragend', () => {
+    this.input.on('dragend', (pointer, gameObject) => {
       console.log('dragend')
 
       if (this.animalsOnBase.has(animalDragged)) {
+        // Snap exactly onto the base and lock the piece — toddlers shouldn't
+        // be able to drag a correctly-placed piece off again.
+        const slot = gameObject.name
+        gameObject.x = this.baseShades[slot].x
+        gameObject.y = this.baseShades[slot].y
+        gameObject.disableInteractive()
+
         if (!this.celebrated.has(animalDragged)) {
           this.celebrated.add(animalDragged)
           showCelebration(this, animalDragged)
         }
 
-        this.sound.play('collect')
+        this.sound.play('ui_match_drop', { volume: 0.55 })
         this.score++
-        this.scoreBoard.text = `SCORE: ${this.score}`
+        this.scoreBoard.setScore(this.score)
       } else {
         this.resetAnimalLabel()
       }
@@ -343,7 +336,7 @@ export class GameA extends Scene {
       if (this.animalsOnBase.size === animalObjects.length) {
         if (!this.label) {
           // this.addCongratulationsText(scaleSize)
-          const nextScene = ['GameA', 'GameB', 'GameC'][Math.floor(Math.random() * 3)]
+          const nextScene = ['GameA', 'GameB', 'GameC', 'GameD'][Math.floor(Math.random() * 4)]
 
           setTimeout(() => {
             this.scene.start(nextScene)
