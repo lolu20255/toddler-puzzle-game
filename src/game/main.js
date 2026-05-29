@@ -2,8 +2,11 @@ import { Boot } from './scenes/Boot'
 import { GameA } from './scenes/GameA'
 import { GameB } from './scenes/GameB'
 import { GameC } from './scenes/GameC'
+import { GameD } from './scenes/GameD'
+import { GameE } from './scenes/GameE'
 import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
+import { Settings } from './scenes/Settings'
 import Phaser from 'phaser'
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -53,7 +56,12 @@ const config = {
     // smaller card windows in MainMenu.
     mipmapFilter: 'LINEAR_MIPMAP_LINEAR'
   },
-  scene: [Boot, MainMenu, GameA, GameB, GameC, GameOver],
+  // Enable a DOM container so the Settings scene can overlay a real
+  // <input> for the toddler-name field (Phaser has no native text input).
+  dom: {
+    createContainer: true
+  },
+  scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameOver],
   physics: {
     default: 'arcade',
     arcade: {

@@ -6,6 +6,7 @@
  */
 export * from './platform'
 export { Storage } from './storage'
+export { settings } from './settings'
 export { haptics } from './haptics'
 export { purchasesService, ENTITLEMENT_ID } from './purchases'
 export { notificationsService } from './notifications'

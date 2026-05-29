@@ -20,7 +20,8 @@
     "build:ios": "bash scripts/build/ios/start.sh",
     "build:android": "bash scripts/build/android/start.sh",
     "cap:sync": "npx cap sync",
-    "cap:assets": "npx capacitor-assets generate"
+    "cap:assets": "npx capacitor-assets generate",
+    "generate:audio": "node scripts/generate-level-audios.mjs"
   },
   "dependencies": {
     "@capacitor-community/in-app-review": "^7.1.0",

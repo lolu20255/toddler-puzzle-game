@@ -19,6 +19,7 @@ import { notificationsService } from './notifications'
 import { appReview } from './appReview'
 import { analytics } from './analytics'
 import { libroAuth } from './libro/auth'
+import { settings } from './settings'
 import { EventBus } from '../game/EventBus'
 
 const REVIEW_PROMPT_EVERY = 5
@@ -35,6 +36,10 @@ async function step(name, fn) {
 }
 
 export async function initNative() {
+  // 0. Hydrate user settings (toddler name + haptics flag) into the in-memory
+  //    cache so every other service / scene can read them synchronously.
+  await settings.load()
+
   // 1. Count launches (works everywhere).
   let opens = 1
   try {
@@ -61,9 +66,16 @@ export async function initNative() {
     notificationsService.initialize()
   )
 
-  // Authenticate against the libro-ai backend so the first pronunciation
-  // request after a successful match doesn't have to wait on the auth dance.
-  // Runs in the background — never blocks the boot sequence.
+  // Install the 401-refresh-retry interceptor BEFORE anything fires a
+  // libro-ai request — it has to be hooked up so the first stale-token
+  // hit gets refreshed + replayed instead of bubbling up as a failure.
+  await step('LibroAuth.setupInterceptor', () => {
+    libroAuth.setupInterceptor()
+  })
+
+  // Then warm up authentication so the first pronunciation request after a
+  // successful match doesn't have to wait on the auth dance. Runs in the
+  // background — never blocks the boot sequence.
   step('LibroAuth.ensureAuthenticated', () =>
     libroAuth.ensureAuthenticated()
   )

@@ -1,6 +1,11 @@
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue'
+
+// Expose the app version (from package.json) to the bundle as a global
+// constant. Cheaper than importing the whole JSON file into a runtime module.
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
 const phasermsg = () => {
     return {
@@ -20,6 +25,9 @@ const phasermsg = () => {
 
 export default defineConfig({
     base: './',
+    define: {
+        __APP_VERSION__: JSON.stringify(pkg.version)
+    },
     plugins: [
         vue(),
         phasermsg()
