@@ -3,6 +3,7 @@ import { GameA } from './scenes/GameA'
 import { GameB } from './scenes/GameB'
 import { GameC } from './scenes/GameC'
 import { GameD } from './scenes/GameD'
+import { GameE } from './scenes/GameE'
 import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
 import { Settings } from './scenes/Settings'
@@ -60,7 +61,7 @@ const config = {
   dom: {
     createContainer: true
   },
-  scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameOver],
+  scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameOver],
   physics: {
     default: 'arcade',
     arcade: {

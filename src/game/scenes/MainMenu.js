@@ -47,8 +47,24 @@ const GAMES = [
     darkHex: '#266b22',
     iconKey: 'asset_fruits_b', // banana — iconic, instantly recognisable, secretly hilarious
     iconFrame: 0 // ignored — fruits are loaded as individual images
+  },
+  {
+    label: 'Numbers',
+    scene: 'GameE',
+    color: 0x3ba4ff, // vibrant sky blue — distinct from the warm 4 above
+    colorDark: 0x1769b8,
+    darkHex: '#0e4b85',
+    iconKey: 'asset_numbers_a', // the digit "1" — instantly tells the toddler what's inside
+    iconFrame: 0
   }
 ]
+
+// Vertical scroll list — 2 cards per row, rows stack downward. Toddler
+// flicks up/down to browse; any pack count works without paging chrome.
+const CARDS_PER_ROW = 2
+// Pointer must travel this many pixels vertically before we count it as a
+// scroll instead of a tap. Toddlers are jittery; under 10px we keep the tap.
+const SCROLL_THRESHOLD = 10
 
 export class MainMenu extends Scene {
   constructor() {
@@ -81,10 +97,12 @@ export class MainMenu extends Scene {
     EventBus.emit('current-scene-ready', this)
   }
 
-  // ---------------------------------------------------------------- background
-
   buildBackground() {
-    const g = this.add.graphics().setDepth(0)
+    // Sky + grass stay pinned to the viewport (`scrollFactor: 0`) so the
+    // background never "runs out" no matter how far the camera scrolls
+    // through the cards. Without this, scrolling past the original viewport
+    // height would reveal Phaser's clear-colour underneath.
+    const g = this.add.graphics().setDepth(0).setScrollFactor(0)
 
     // Sky: a soft vertical gradient so the cards (warm colours) pop against it.
     const skyTop = 0x5bb6ef
@@ -105,6 +123,9 @@ export class MainMenu extends Scene {
     // element above the cards — so it grows from decoration to mascot.
     // Sized so the ray-tips never bleed off the left/top edges of the canvas.
     const r = this.minSide * 0.095
+    // Sun scrolls at full speed with the rest of the page — it sits at the
+    // top of the world and exits the viewport when the toddler scrolls
+    // down, like the hero image on a normal webpage.
     const sun = this.add.container(this.sWidth * 0.2, this.sHeight * 0.135).setDepth(1)
 
     // Rays drawn around the origin so the graphics object can spin in place.
@@ -232,7 +253,12 @@ export class MainMenu extends Scene {
   buildTitle() {
     const cx = this.sWidth / 2
     const cy = this.sHeight * 0.255
-    const badge = this.add.container(cx, cy).setDepth(10)
+    // Pill scrolls at full speed with the cards — like a regular webpage
+    // hero header that leaves the viewport when you scroll past it.
+    // Depth lower than the cards (5) so the pill renders BEHIND any card
+    // that overlaps it during the scroll — otherwise the pill would mount
+    // on top of the cards mid-flick.
+    const badge = this.add.container(cx, cy).setDepth(2)
 
     const fontSize = this.minSide * 0.075
     const text = this.add
@@ -304,60 +330,131 @@ export class MainMenu extends Scene {
   }
 
   // --------------------------------------------------------------------- cards
+  //
+  // Cards live directly in the scene at world coordinates. The CAMERA scrolls
+  // through the world (instead of moving a container with a mask) — that's
+  // the canonical Phaser 3 pattern for menus and it brings two big wins:
+  //
+  //   1. `setScrollFactor` parallax — the title pill, sun, and clouds can
+  //      drift at different rates as the toddler scrolls, giving the menu a
+  //      continuous-page feel instead of a fixed-header-over-list look.
+  //   2. No mask hacks — masks affect rendering but NOT hit-testing, so a
+  //      masked-out card scrolled above the title was still tappable from
+  //      the empty title area. With camera scroll the input system already
+  //      uses screen coords; off-screen cards correctly receive no input.
 
   buildCards() {
     const landscape = this.sWidth > this.sHeight
-    // Title pill sits at y ≈ 0.26 with a ~70px tall footprint — cards start
-    // just below it. Still 6% taller per card than the original pre-redesign
-    // layout because the pill is smaller than before.
-    const top = this.sHeight * 0.31
-    const bottom = this.sHeight * 0.94
-    const regionH = bottom - top
-
-    const n = GAMES.length
-    const positions = []
-    let cardW, cardH
-
-    // Cards align to the shared grid — same LEFT/RIGHT edges as the back
-    // button, cog, and score pill in every other scene.
+    this.cardsTop = this.sHeight * 0.31 // first row sits below the title pill
     const contentW = this.grid.contentWidth
 
-    if (landscape) {
-      // Single horizontal row spanning the full content width.
-      const gap = this.sWidth * 0.03
-      cardW = Math.min((contentW - gap * (n - 1)) / n, regionH * 0.85)
-      cardH = cardW * 1.18
-      const cy = top + regionH / 2
-      const startX = this.grid.contentLeft + cardW / 2
-      for (let i = 0; i < n; i++) {
-        positions.push({ x: startX + i * (cardW + gap), y: cy })
-      }
-    } else {
-      // 2×N/2 grid spanning the full content width — same gridlines as the
-      // back button (left col) and the cog (right col).
-      const cols = 2
-      const rows = Math.ceil(n / cols)
-      const gapX = this.sWidth * 0.04
-      const gapY = regionH * 0.05
-      cardW = (contentW - gapX * (cols - 1)) / cols
-      cardH = (regionH - gapY * (rows - 1)) / rows
-      const totalH = cardH * rows + gapY * (rows - 1)
-      const startX = this.grid.contentLeft + cardW / 2
-      const startY = top + (regionH - totalH) / 2 + cardH / 2
-      for (let i = 0; i < n; i++) {
-        const col = i % cols
-        const row = Math.floor(i / cols)
-        positions.push({
-          x: startX + col * (cardW + gapX),
-          y: startY + row * (cardH + gapY)
-        })
-      }
+    const cols = landscape ? Math.min(GAMES.length, 4) : CARDS_PER_ROW
+    const rows = Math.ceil(GAMES.length / cols)
+    const gapX = this.sWidth * 0.04
+    const gapY = this.sHeight * 0.03
+
+    const visibleRows = landscape ? 1 : 2
+    const visibleH = this.sHeight * 0.67
+    const cardW = (contentW - gapX * (cols - 1)) / cols
+    const cardH = (visibleH - gapY * (visibleRows - 1)) / visibleRows
+
+    const startX = this.grid.contentLeft + cardW / 2
+
+    for (let i = 0; i < GAMES.length; i++) {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const isOrphanLast = i === GAMES.length - 1 && i % cols === 0
+      const pos = isOrphanLast
+        ? {
+            x: this.sWidth / 2,
+            y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
+          }
+        : {
+            x: startX + col * (cardW + gapX),
+            y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
+          }
+      this.createCard(GAMES[i], pos, cardW, cardH, true, i)
     }
 
-    // Both layouts use vertical cards (icon on top, label below) — pass
-    // `true` so `createCard()` picks the icon-top branch even in portrait.
-    GAMES.forEach((game, i) => {
-      this.createCard(game, positions[i], cardW, cardH, true, i)
+    // World height = bottom of last card + a touch of breathing room above
+    // the home-indicator safe area. The camera scrolls within [0, worldH-vp].
+    const totalCardsH = cardH * rows + gapY * (rows - 1)
+    this.worldHeight = this.cardsTop + totalCardsH + this.sHeight * 0.04
+    this.maxScrollY = Math.max(0, this.worldHeight - this.sHeight)
+
+    // Lock the camera horizontally + clamp scrollY to the world bounds.
+    this.cameras.main.setBounds(0, 0, this.sWidth, this.worldHeight)
+
+    if (this.maxScrollY > 0) {
+      this.installScrollGestures()
+    }
+  }
+
+  // ────────────────────────────────────────────────────── scroll gestures
+  //
+  // Scene-level pointer handlers do scroll-vs-tap disambiguation:
+  //   • Pointer movement < SCROLL_THRESHOLD on the Y axis → still a tap
+  //   • Pointer movement ≥ threshold → toddler is scrolling; tap is cancelled
+  //
+  // Card press uses `pointerup` (not pointerdown), so a finger can rest on
+  // a card while the grid drag-scrolls without launching that level.
+  installScrollGestures() {
+    let startY = 0
+    let startScrollY = 0
+    let lastY = 0
+    let lastTime = 0
+    let velocity = 0
+    this.isScrolling = false
+    const cam = this.cameras.main
+
+    this.input.on('pointerdown', (pointer) => {
+      startY = pointer.y
+      lastY = pointer.y
+      lastTime = pointer.event.timeStamp || Date.now()
+      startScrollY = cam.scrollY
+      velocity = 0
+      this.isScrolling = false
+    })
+
+    this.input.on('pointermove', (pointer) => {
+      if (!pointer.isDown) return
+      const dy = pointer.y - startY
+      if (!this.isScrolling && Math.abs(dy) >= SCROLL_THRESHOLD) {
+        this.isScrolling = true
+        this.tweens.killTweensOf(cam)
+      }
+      if (this.isScrolling) {
+        // Finger pulled UP (dy < 0) → camera scrolls DOWN (reveal lower
+        // content). camera.scrollY = how far down the world we are.
+        cam.scrollY = startScrollY - dy
+        // setBounds clamps cam.scrollY for us — no manual clamp needed.
+
+        const now = pointer.event.timeStamp || Date.now()
+        const dt = Math.max(1, now - lastTime)
+        // Negate so positive velocity = scrolling down (camera scrollY up).
+        velocity = -(pointer.y - lastY) / dt
+        lastY = pointer.y
+        lastTime = now
+      }
+    })
+
+    this.input.on('pointerup', () => {
+      if (!this.isScrolling) return
+      const flingPx = velocity * 240 // ~240ms of coast at release velocity
+      const targetY = Phaser.Math.Clamp(
+        cam.scrollY + flingPx,
+        0,
+        this.maxScrollY
+      )
+      this.tweens.add({
+        targets: cam,
+        scrollY: targetY,
+        duration: this.reducedMotion ? 0 : 360,
+        ease: 'Quad.easeOut'
+      })
+      // Keep `isScrolling` true for one more frame so a card pointerup that
+      // also fired during this gesture sees the flag and skips the press.
+      this.time.delayedCall(50, () => { this.isScrolling = false })
     })
   }
 
@@ -384,8 +481,9 @@ export class MainMenu extends Scene {
     const cx = this.grid.contentRight - haloR // right edge of cog at contentRight
     const cy = this.grid.navY
 
-    // ── Visuals (animated, NOT interactive) ───────────────────────────────
-    const visuals = this.add.container(cx, cy).setDepth(20)
+    // ── Visuals (animated, NOT interactive). Sticky to viewport via
+    // scrollFactor 0 so the cog is always accessible even after scrolling.
+    const visuals = this.add.container(cx, cy).setDepth(20).setScrollFactor(0)
 
     const shadow = this.add.circle(0, haloR * 0.14, haloR, 0x000000, 0.18)
     visuals.add(shadow)
@@ -418,6 +516,7 @@ export class MainMenu extends Scene {
     const hit = this.add
       .rectangle(cx, cy, hitR * 2, hitR * 2, 0x000000, 0)
       .setDepth(21)
+      .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
 
     hit.on('pointerover', () => {
@@ -450,6 +549,9 @@ export class MainMenu extends Scene {
   }
 
   createCard(game, pos, w, h, landscape, index) {
+    // Cards live directly in the scene at world coordinates. The camera
+    // (scrollFactor 1 by default) handles scrolling — no parent container,
+    // no mask needed.
     const card = this.add.container(pos.x, pos.y).setDepth(5)
     card.baseY = pos.y
 
@@ -525,7 +627,15 @@ export class MainMenu extends Scene {
     card.on('pointerout', () => {
       if (!this.locked) this.tweens.add({ targets: card, scale: 1, duration: 150 })
     })
-    card.on('pointerdown', () => this.pressCard(card, game))
+    // Use pointerup (not pointerdown) so the toddler can rest a finger on
+    // a card and still drag-scroll the grid without launching that level.
+    // With camera scroll, off-screen cards correctly receive no input
+    // (Phaser hit-tests in screen space, not world space), so no viewport
+    // check is needed — just the scroll-vs-tap disambiguation.
+    card.on('pointerup', () => {
+      if (this.isScrolling) return
+      this.pressCard(card, game)
+    })
 
     // Entrance pop + gentle idle bobbing.
     if (this.reducedMotion) {

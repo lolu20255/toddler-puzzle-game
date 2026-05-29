@@ -1,26 +1,20 @@
 import { nameForAssetKey } from './itemNames'
 import { preload } from '../services/libro/pronunciation'
+import { preloadLevelAudio } from '../services/libro/levelAudio'
 import { settings } from '../services/settings'
 
 /**
- * Generic praise (no name) — said by audio 1. The child's name plays as
- * its own short audio 2 so:
- *   - audio 1 stays cacheable across every child (same word + same language
- *     ⇒ same MP3 returned + cached on the backend AND in our in-memory map).
- *   - audio 2 is a tiny per-name MP3, fetched once per child, replayed for
- *     every match.
+ * Praise phrase — combines "good job" with the toddler's name when set.
+ * Falls back to just the praise if the parent hasn't entered a name.
+ *
+ * This is audio 2 of the celebration. Cache key = name + lang, so once it's
+ * generated for "Logan" in English it persists in IndexedDB and replays
+ * instantly on every subsequent match — no network call after the first.
  */
-function buildPraise(lang) {
-  return lang === 'es' ? 'Muy bien!' : 'Good job!'
-}
-
-/** Standalone "name" phrase — null if the parent hasn't set a name. */
-function buildNamePhrase(lang) {
+function buildPraisePhrase(lang) {
   const name = settings.toddlerName()
-  if (!name) return null
-  // Leading period gives the TTS a brief beat before the name, so when audio
-  // 2 plays the instant audio 1 ends it feels like one continuous sentence.
-  return lang === 'es' ? `${name}!` : `${name}!`
+  if (lang === 'es') return name ? `Muy bien ${name}!` : 'Muy bien!'
+  return name ? `Good job ${name}!` : 'Good job!'
 }
 
 /**
@@ -40,7 +34,7 @@ function buildNamePhrase(lang) {
  *
  * Only one celebration shows at a time — a new match replaces an older one.
  */
-export function showCelebration(scene, assetKey) {
+export function showCelebration(scene, assetKey, onDismissed) {
   const lang = settings.language()
   const assetName = nameForAssetKey(assetKey, lang)
 
@@ -161,7 +155,14 @@ export function showCelebration(scene, assetKey) {
   // sequence runs (or, in the fallback, a sensible default).
   const scheduleDismiss = (ms) => {
     scene.time.delayedCall(ms, () => {
-      if (!modal.scene) return
+      if (!modal.scene) {
+        // Modal was already destroyed (a newer match replaced it). The
+        // caller's dismiss callback should still fire — otherwise a final-
+        // match handoff that's waiting on this modal would never get the
+        // level-complete trigger.
+        if (typeof onDismissed === 'function') onDismissed()
+        return
+      }
       scene.tweens.add({
         targets: modal,
         scale: 0,
@@ -171,6 +172,7 @@ export function showCelebration(scene, assetKey) {
         onComplete: () => {
           modal.destroy()
           if (scene._celebrationModal === modal) scene._celebrationModal = null
+          if (typeof onDismissed === 'function') onDismissed()
         }
       })
     })
@@ -178,20 +180,24 @@ export function showCelebration(scene, assetKey) {
 
   // Kick off the two parallel audio fetches and orchestrate playback +
   // letter reveal. Anything that fails falls back to visual-only timing.
+  // Audio 1 — spelling + pronunciation only ("A, P, P, L, E. APPLE!").
+  // - the trick to make spanish spelling good was to add " ¡¡¡ " before the word and " !!! " after the word
+  // Audio 2 — praise + name combined ("Good job Logan!"). 
   ;(async () => {
-    const spelledPhrase = assetName.split('').join(', ')
-    // Audio 1 — generic, identical for every child playing this word+lang.
-    // Cache hit rate is near-100% after the first child of each language has
-    // heard each word once.
-    const mainPhrase = `${spelledPhrase}. ${assetName}! ${buildPraise(lang)}`
-    // Audio 2 — child-specific assetName only. `null` if no assetName is set, in which
-    // case we just play audio 1 (which already ends in "Good job!" / "Muy bien!").
-    const namePhrase = buildNamePhrase(lang)
-
-    const [mainAudio, nameAudio] = await Promise.all([
-      preload(mainPhrase, lang),
-      namePhrase ? preload(namePhrase, lang) : Promise.resolve(null)
-    ])
+    // Audio 1 — the spelling+pronunciation. Routed through `preloadLevelAudio`
+    // which first tries the bundled MP3 (`public/audio/levels/<lang>/<pack>/
+    // <letter>.mp3`, pre-generated via `npm run generate:audio`), and only
+    // falls back to the API if the file is missing for this asset.
+    // Audio 2 — per-toddler "Good job <Name>!" praise. Always goes through
+    // `preload()` since the name is unique per device.
+    const praisePhrase = buildPraisePhrase(lang)
+    // Kick both fetches off in parallel, but DON'T await them together —
+    // in airplane mode the bundled main audio resolves instantly while the
+    // praise audio has to hit the API and fail, which used to delay the
+    // entire celebration by up to the axios timeout (10s). Awaiting them
+    // independently lets the spelling start the moment the bundle returns.
+    const praisePromise = preload(praisePhrase, lang)
+    const mainAudio = await preloadLevelAudio(assetKey, lang)
 
     if (!modal.scene) return // a newer match already destroyed us
 
@@ -200,16 +206,14 @@ export function showCelebration(scene, assetKey) {
       const mainMs =
         mainAudio.duration > 0 ? mainAudio.duration * 1000 : assetName.length * 700
 
-      // Audio 1 contains spelling + word + praise; the spelling occupies
-      // roughly the first half. Letter-reveal timing is derived from that
-      // estimated portion — keeps the visual pops aligned with the actual
-      // spoken letters without needing a separate spelling-only fetch.
+      // Audio 1 is now spelling + word only (no praise). The spelling fills
+      // a bigger share of the runtime than before — recompute the letter-
+      // reveal cadence accordingly so the visual pops line up with the TTS.
       // Heuristic: each spelled letter ≈ 1 syllable, the word ≈ 0.4 syllables
-      // per char, praise ≈ 2.5 syllables ("Good job") or 3 ("Muy bien").
+      // per character.
       const spellSyl = assetName.length
       const wordSyl = Math.max(assetName.length * 0.4, 1)
-      const praiseSyl = lang === 'es' ? 3 : 2.5
-      const spellingFraction = spellSyl / (spellSyl + wordSyl + praiseSyl)
+      const spellingFraction = spellSyl / (spellSyl + wordSyl)
       const perLetterMs = (mainMs * spellingFraction) / assetName.length
 
       // Small head-start so the entrance pop doesn't clash with the first
@@ -227,44 +231,48 @@ export function showCelebration(scene, assetKey) {
         scene.time.delayedCall(Math.max(0, at), () => revealLetter(i))
       }
 
-      // Chain the assetName to start the instant audio 1 ends — sounds like one
-      // continuous sentence: "…Good job. Lucca!"
+      // Chain the praise to start the instant audio 1 ends — sounds like one
+      // continuous sentence: "…APPLE! Good job Logan!"
+      // The praise fetch is awaited HERE (after main has already started)
+      // so we don't block the spelling on it. If we're offline and the
+      // praise fetch fails, this awaits null and we just skip the chain.
+      const praiseAudio = await praisePromise
       let totalAudioMs = startDelay + mainMs
-      if (nameAudio) {
-        await _audioReady(nameAudio)
-        const nameMs =
-          nameAudio.duration > 0 ? nameAudio.duration * 1000 : 1000
-        mainAudio.addEventListener(
-          'ended',
-          () => {
-            if (!modal.scene) return
-            nameAudio.currentTime = 0
-            nameAudio.play().catch(() => {})
-          },
-          { once: true }
-        )
-        totalAudioMs += nameMs
+      if (praiseAudio) {
+        await _audioReady(praiseAudio)
+        const praiseMs =
+          praiseAudio.duration > 0 ? praiseAudio.duration * 1000 : 1200
+        const playPraise = () => {
+          if (!modal.scene) return
+          praiseAudio.currentTime = 0
+          praiseAudio.play().catch(() => {})
+        }
+        // If main already finished while praise was loading, play praise now;
+        // otherwise queue it to fire the instant main ends.
+        if (mainAudio.ended) playPraise()
+        else mainAudio.addEventListener('ended', playPraise, { once: true })
+        totalAudioMs += praiseMs
       }
       scheduleDismiss(totalAudioMs + 600)
     } else {
       // ─── Fallback: main audio unavailable ───────────────────────────────
-      // Reveal at a fixed interval. If we got the name audio, play it after
+      // Reveal at a fixed interval. If we got the praise audio, play it after
       // the visual reveal as a tiny consolation.
       const perLetterMs = 280
       for (let i = 0; i < assetName.length; i++) {
         scene.time.delayedCall(360 + i * perLetterMs, () => revealLetter(i))
       }
       const visualEnd = 360 + assetName.length * perLetterMs
-      if (nameAudio) {
-        await _audioReady(nameAudio)
-        const nameMs =
-          nameAudio.duration > 0 ? nameAudio.duration * 1000 : 1000
+      if (praiseAudio) {
+        await _audioReady(praiseAudio)
+        const praiseMs =
+          praiseAudio.duration > 0 ? praiseAudio.duration * 1000 : 1200
         scene.time.delayedCall(visualEnd + 200, () => {
           if (!modal.scene) return
-          nameAudio.currentTime = 0
-          nameAudio.play().catch(() => {})
+          praiseAudio.currentTime = 0
+          praiseAudio.play().catch(() => {})
         })
-        scheduleDismiss(visualEnd + 200 + nameMs + 600)
+        scheduleDismiss(visualEnd + 200 + praiseMs + 600)
       } else {
         scheduleDismiss(visualEnd + 1500)
       }

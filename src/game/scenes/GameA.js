@@ -1,6 +1,7 @@
 import { EventBus } from '../EventBus'
 import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
+import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
@@ -321,9 +322,28 @@ export class GameA extends Scene {
         gameObject.y = this.baseShades[slot].y
         gameObject.disableInteractive()
 
+        const isFinal = this.animalsOnBase.size === animalObjects.length
+        const triggerEnd = isFinal && !this.label
+        if (triggerEnd) this.label = 'completing'
+        const launchLevelEnd = () =>
+          showLevelComplete(this, () =>
+            this.scene.start(pickNextSceneExcluding('GameA'))
+          )
+
         if (!this.celebrated.has(animalDragged)) {
           this.celebrated.add(animalDragged)
-          showCelebration(this, animalDragged)
+          // On the final match, chain the level celebration to fire AFTER
+          // the per-match spelling modal auto-dismisses — never on top of it.
+          const modal = showCelebration(
+            this,
+            animalDragged,
+            triggerEnd ? launchLevelEnd : null
+          )
+          if (triggerEnd && !modal) launchLevelEnd()
+        } else if (triggerEnd) {
+          // Defensive: piece already celebrated but this IS the final match —
+          // still need to advance. Brief delay so the drop sound lands first.
+          this.time.delayedCall(800, launchLevelEnd)
         }
 
         this.sound.play('ui_match_drop', { volume: 0.55 })
@@ -333,16 +353,7 @@ export class GameA extends Scene {
         this.resetAnimalLabel()
       }
 
-      if (this.animalsOnBase.size === animalObjects.length) {
-        if (!this.label) {
-          // this.addCongratulationsText(scaleSize)
-          const nextScene = ['GameA', 'GameB', 'GameC', 'GameD'][Math.floor(Math.random() * 4)]
-
-          setTimeout(() => {
-            this.scene.start(nextScene)
-          }, 2000)
-        }
-      } else {
+      if (this.animalsOnBase.size !== animalObjects.length) {
         if (this.label) {
           this.label.destroy()
           this.tweens.killTweensOf(this.label)

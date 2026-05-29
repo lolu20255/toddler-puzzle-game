@@ -26,6 +26,11 @@ export const ITEM_NAMES = {
     fruits: {
       a: 'APPLE', b: 'BANANA', c: 'ORANGE', d: 'GRAPES',
       e: 'STRAWBERRY', f: 'WATERMELON', g: 'PINEAPPLE', h: 'CHERRY', i: 'PEAR'
+    },
+    // pack E (procedural) — digits 1-9 spoken as words for TTS spelling
+    numbers: {
+      a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR',
+      e: 'FIVE', f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE'
     }
   },
   es: {
@@ -35,15 +40,19 @@ export const ITEM_NAMES = {
     },
     mistic_lego: {
       a: 'MAGO', b: 'VIKINGO', c: 'CALAVERA', d: 'CABALLERO',
-      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'DEMONIO', i: 'ANGEL'
+      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'DEMONIO', i: 'ÁNGEL'
     },
     emojis_lego: {
       a: 'FELIZ', b: 'ENOJADO', c: 'LLORA', d: 'TRISTE',
       e: 'AMOR', f: 'SONRISA', g: 'GENIAL', h: 'RISA', i: 'BESO'
     },
     fruits: {
-      a: 'MANZANA', b: 'PLATANO', c: 'NARANJA', d: 'UVAS',
-      e: 'FRESA', f: 'SANDIA', g: 'PINA', h: 'CEREZA', i: 'PERA'
+      a: 'MANZANA', b: 'PLÁTANO', c: 'NARANJA', d: 'UVAS',
+      e: 'FRESA', f: 'SANDÍA', g: 'PIÑA', h: 'CEREZA', i: 'PERA'
+    },
+    numbers: {
+      a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO',
+      e: 'CINCO', f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE'
     }
   }
 }
