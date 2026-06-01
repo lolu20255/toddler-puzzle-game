@@ -31,6 +31,20 @@ export const ITEM_NAMES = {
     numbers: {
       a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR',
       e: 'FIVE', f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE'
+    },
+    // pack F (procedural) — first 9 letters of the alphabet, spoken as
+    // their letter name. celebrate.js treats single-char phrases specially
+    // (no spelling prefix) so the audio is just "A!" not "A. A!".
+    letters: {
+      a: 'A', b: 'B', c: 'C', d: 'D',
+      e: 'E', f: 'F', g: 'G', h: 'H', i: 'I'
+    },
+    // pack G (procedural) — basic geometric shapes a toddler should learn.
+    // Multi-character so the celebration spelling kicks in: "C,I,R,C,L,E. CIRCLE!"
+    // gives them spelling + word pronunciation in one playback.
+    shapes: {
+      a: 'CIRCLE', b: 'SQUARE', c: 'TRIANGLE', d: 'RECTANGLE',
+      e: 'STAR', f: 'HEART', g: 'DIAMOND', h: 'HEXAGON', i: 'OVAL'
     }
   },
   es: {
@@ -53,6 +67,14 @@ export const ITEM_NAMES = {
     numbers: {
       a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO',
       e: 'CINCO', f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE'
+    },
+    letters: {
+      a: 'A', b: 'B', c: 'C', d: 'D',
+      e: 'E', f: 'F', g: 'G', h: 'H', i: 'I'
+    },
+    shapes: {
+      a: 'CÍRCULO', b: 'CUADRADO', c: 'TRIÁNGULO', d: 'RECTÁNGULO',
+      e: 'ESTRELLA', f: 'CORAZÓN', g: 'ROMBO', h: 'HEXÁGONO', i: 'ÓVALO'
     }
   }
 }

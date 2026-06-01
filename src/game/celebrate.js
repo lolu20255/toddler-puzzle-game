@@ -2,6 +2,7 @@ import { nameForAssetKey } from './itemNames'
 import { preload } from '../services/libro/pronunciation'
 import { preloadLevelAudio } from '../services/libro/levelAudio'
 import { settings } from '../services/settings'
+import { EventBus } from './EventBus'
 
 /**
  * Praise phrase — combines "good job" with the toddler's name when set.
@@ -39,6 +40,11 @@ export function showCelebration(scene, assetKey, onDismissed) {
   const assetName = nameForAssetKey(assetKey, lang)
 
   if (!assetName) return null
+
+  // EventBus → Amplitude. One emit per successful match. Captured here (not
+  // at the per-scene drop handler) so EVERY pack contributes uniformly to
+  // the per-piece engagement stat without each GameX file having to know.
+  EventBus.emit('puzzle:matched', { assetKey, lang })
   if (scene._celebrationModal) {
     scene._celebrationModal.destroy()
     scene._celebrationModal = null
@@ -183,6 +189,12 @@ export function showCelebration(scene, assetKey, onDismissed) {
   // Audio 1 — spelling + pronunciation only ("A, P, P, L, E. APPLE!").
   // - the trick to make spanish spelling good was to add " ¡¡¡ " before the word and " !!! " after the word
   // Audio 2 — praise + name combined ("Good job Logan!"). 
+  // Single-character names (e.g. the Letters pack: "A", "B", "C") sound
+  // silly when run through the spelling format ("A. A!"). The generator
+  // script applies the same exception, so the bundled MP3 for a letter
+  // says just "A!" — not "A. A!".
+  const isSingleChar = assetName.length === 1
+
   ;(async () => {
     // Audio 1 — the spelling+pronunciation. Routed through `preloadLevelAudio`
     // which first tries the bundled MP3 (`public/audio/levels/<lang>/<pack>/

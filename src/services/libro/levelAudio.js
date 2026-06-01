@@ -131,8 +131,26 @@ export async function preloadLevelAudio(assetKey, lang = 'en') {
   // exactly so the IDB key + the file we'd have on disk would line up.
   const word = nameForAssetKey(assetKey, lang)
   if (!word) return null
+  return preload(buildPhrase(word, lang), lang)
+}
+
+/**
+ * Build the spelling+pronunciation phrase the TTS reads.
+ *
+ *   - Multi-character word: "A, P, P, L, E. APPLE!"  (English)
+ *                           "¡¡¡A, P, P, L, E. APPLE!!!"  (Spanish — the
+ *                           inverted-bang framing makes ElevenLabs pick the
+ *                           right intonation, discovered by trial-and-error)
+ *   - Single-character word (Letters pack, e.g. "A"): just "A!" — spelling
+ *                           a single letter as itself sounds redundant.
+ *
+ * Must stay in lockstep with `scripts/generate-level-audios.mjs` so the
+ * bundled MP3 filename and the runtime fallback phrase agree.
+ */
+export function buildPhrase(word, lang) {
+  if (word.length === 1) {
+    return lang === 'es' ? `¡${word}!` : `${word}!`
+  }
   const spelled = word.split('').join(', ')
-  const phrase =
-    lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
-  return preload(phrase, lang)
+  return lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
 }

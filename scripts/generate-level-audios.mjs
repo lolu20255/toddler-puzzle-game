@@ -75,11 +75,19 @@ async function authenticate() {
   }
 }
 
-/** Build the same phrase the runtime uses in `celebrate.js`. */
+/**
+ * Build the same phrase the runtime uses (kept in lockstep with
+ * `src/services/libro/levelAudio.js → buildPhrase()`).
+ *
+ *   - Multi-character word → spelling + word (e.g. "A, P, P, L, E. APPLE!")
+ *   - Single-character word (Letters pack) → just the letter (e.g. "A!")
+ *     because spelling "A" as "A. A!" sounds redundant.
+ */
 function buildMainPhrase(word, lang) {
+  if (word.length === 1) {
+    return lang === 'es' ? `¡${word}!` : `${word}!`
+  }
   const spelled = word.split('').join(', ')
-  // Spanish needs `¡¡¡…!!!` framing so ElevenLabs picks the right intonation —
-  // discovered via trial and error in celebrate.js.
   return lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
 }
 

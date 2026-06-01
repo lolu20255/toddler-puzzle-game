@@ -1,6 +1,7 @@
 import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { getGrid } from '../layout'
+import { purchasesService } from '../../services/purchases'
 
 /**
  * The four puzzles share one shadow-matching mechanic but use different art
@@ -11,6 +12,10 @@ import { getGrid } from '../layout'
  * green — so the 2×2 grid in portrait reads as a satisfying complementary
  * pattern rather than four random colours.
  */
+// `free: true` packs are always playable. Premium packs show a lock badge
+// until the toddler's parent unlocks all puzzles via the Paywall scene.
+// Picked: Toys (cartoon taste) + Numbers (educational taste). Heroes,
+// Faces, Fruits, Letters are the "more variety" upsell.
 const GAMES = [
   {
     label: 'Toys',
@@ -19,7 +24,8 @@ const GAMES = [
     colorDark: 0xd97e00,
     darkHex: '#a85f00',
     iconKey: 'asset_animal_cartoon_a',
-    iconFrame: 7 // teddy bear
+    iconFrame: 7, // teddy bear
+    free: true
   },
   {
     label: 'Heroes',
@@ -55,6 +61,52 @@ const GAMES = [
     colorDark: 0x1769b8,
     darkHex: '#0e4b85',
     iconKey: 'asset_numbers_a', // the digit "1" — instantly tells the toddler what's inside
+    iconFrame: 0,
+    free: true
+  },
+  {
+    label: 'Letters',
+    scene: 'GameF',
+    color: 0xffd23f, // sunshine yellow — alphabet-blocks vibe, only primary not yet used
+    colorDark: 0xc99e00,
+    darkHex: '#7d5d00',
+    iconKey: 'asset_letters_a', // the letter "A" — instantly tells the toddler what's inside
+    iconFrame: 0
+  },
+  {
+    label: 'Shapes',
+    scene: 'GameG',
+    color: 0x29c7b8, // teal — last primary not yet on the menu
+    colorDark: 0x127a70,
+    darkHex: '#0b5b54',
+    iconKey: 'asset_shapes_card_icon', // composite of triangle + circle + square (baked in Boot)
+    iconFrame: 0
+  },
+  {
+    label: 'Memory',
+    scene: 'GameH',
+    color: 0x5e60ce, // indigo — fresh primary, signals "thinky" / focus
+    colorDark: 0x3a3c8c,
+    darkHex: '#252660',
+    iconKey: 'asset_memory_icon', // baked 🧠 emoji texture from Boot
+    iconFrame: 0
+  },
+  {
+    label: 'Sort',
+    scene: 'GameI',
+    color: 0xff6b4a, // warm coral — fresh primary, distinct from Faces pink
+    colorDark: 0xb43e22,
+    darkHex: '#6e2511',
+    iconKey: 'asset_sort_icon', // baked tri-circle (red/blue/yellow) from Boot
+    iconFrame: 0
+  },
+  {
+    label: 'Count',
+    scene: 'GameJ',
+    color: 0x84cc16, // vibrant lime — distinct from Fruits' leaf green
+    colorDark: 0x4d7c0f,
+    darkHex: '#2e470a',
+    iconKey: 'asset_count_icon', // baked 🔢 keycap-numbers emoji from Boot
     iconFrame: 0
   }
 ]
@@ -93,6 +145,15 @@ export class MainMenu extends Scene {
     this.buildSettingsButton()
 
     this.cameras.main.fadeIn(this.reducedMotion ? 0 : 400, 91, 182, 239)
+
+    // Rebuild the scene after a successful purchase / restore so the lock
+    // icons disappear and the free-first sort stops re-ordering. Emitted
+    // by the Vue Paywall component.
+    this._onEntitlementUpdated = () => this.scene.restart()
+    EventBus.on('entitlement:updated', this._onEntitlementUpdated)
+    this.events.once('shutdown', () => {
+      EventBus.off('entitlement:updated', this._onEntitlementUpdated)
+    })
 
     EventBus.emit('current-scene-ready', this)
   }
@@ -348,8 +409,17 @@ export class MainMenu extends Scene {
     this.cardsTop = this.sHeight * 0.31 // first row sits below the title pill
     const contentW = this.grid.contentWidth
 
-    const cols = landscape ? Math.min(GAMES.length, 4) : CARDS_PER_ROW
-    const rows = Math.ceil(GAMES.length / cols)
+    // Free-first ordering for non-premium users: hoist the always-playable
+    // packs (Toys, Numbers) to the top so the toddler doesn't have to scroll
+    // past locked cards to reach something they can actually play. Premium
+    // users see the original by-theme order since nothing is locked.
+    // Array#sort with a 0/1 key acts as a stable partition in modern JS engines.
+    const orderedGames = purchasesService.cachedFullAccess
+      ? GAMES
+      : [...GAMES].sort((a, b) => Number(!a.free) - Number(!b.free))
+
+    const cols = landscape ? Math.min(orderedGames.length, 4) : CARDS_PER_ROW
+    const rows = Math.ceil(orderedGames.length / cols)
     const gapX = this.sWidth * 0.04
     const gapY = this.sHeight * 0.03
 
@@ -360,10 +430,10 @@ export class MainMenu extends Scene {
 
     const startX = this.grid.contentLeft + cardW / 2
 
-    for (let i = 0; i < GAMES.length; i++) {
+    for (let i = 0; i < orderedGames.length; i++) {
       const col = i % cols
       const row = Math.floor(i / cols)
-      const isOrphanLast = i === GAMES.length - 1 && i % cols === 0
+      const isOrphanLast = i === orderedGames.length - 1 && i % cols === 0
       const pos = isOrphanLast
         ? {
             x: this.sWidth / 2,
@@ -373,7 +443,7 @@ export class MainMenu extends Scene {
             x: startX + col * (cardW + gapX),
             y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
           }
-      this.createCard(GAMES[i], pos, cardW, cardH, true, i)
+      this.createCard(orderedGames[i], pos, cardW, cardH, true, i)
     }
 
     // World height = bottom of last card + a touch of breathing room above
@@ -615,6 +685,27 @@ export class MainMenu extends Scene {
     label.setStroke(game.darkHex, labelSize * 0.16)
     card.add(label)
 
+    // Lock badge — drawn LAST so it sits on top of the icon/label. Premium
+    // packs get a small gold circle with a lock glyph in the upper-right
+    // corner of the card. Hidden once the user owns the `premium`
+    // entitlement (cached at boot in purchasesService).
+    const isLocked = !game.free && !purchasesService.cachedFullAccess
+    card.isLocked = isLocked
+    if (isLocked) {
+      const lockR = Math.min(w, h) * 0.14
+      const lockX = w / 2 - lockR * 0.95
+      const lockY = -h / 2 + lockR * 0.95
+      const lockShadow = this.add.circle(lockX, lockY + lockR * 0.18, lockR, 0x000000, 0.22)
+      const lockDisc = this.add.circle(lockX, lockY, lockR, 0xffffff, 0.97)
+      lockDisc.setStrokeStyle(Math.max(2, lockR * 0.12), game.colorDark, 1)
+      const lockGlyph = this.add
+        .text(lockX, lockY + lockR * 0.05, '🔒', {
+          fontSize: `${lockR * 1.1}px`
+        })
+        .setOrigin(0.5)
+      card.add([lockShadow, lockDisc, lockGlyph])
+    }
+
     // Interaction.
     card.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h),
@@ -665,8 +756,39 @@ export class MainMenu extends Scene {
 
   pressCard(card, game) {
     if (this.locked) return
-    this.locked = true
 
+    // EventBus → Amplitude. Captures both locked + unlocked taps so the
+    // funnel "card tapped → paywall opened" can be measured. The amplitude
+    // service translates this to a `scene_view` event.
+    EventBus.emit('scene:view', {
+      scene: game.scene,
+      label: game.label,
+      locked: !!card.isLocked
+    })
+
+    // Locked premium pack → open the Vue paywall overlay (which lives above
+    // the Phaser canvas). We DON'T start a Phaser scene — MainMenu stays
+    // mounted underneath. When the parent closes or completes the purchase,
+    // the Paywall emits 'entitlement:updated' and we rebuild this scene to
+    // pick up the new lock state.
+    if (card.isLocked) {
+      console.log('[MainMenu] locked card pressed → emit paywall:open', game.label)
+      this.playPressSound()
+      this.burstStars(card.x, card.y)
+      this.tweens.killTweensOf(card)
+      card.setScale(1)
+      this.tweens.add({
+        targets: card,
+        scale: 0.96,
+        duration: 110,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      })
+      EventBus.emit('paywall:open')
+      return
+    }
+
+    this.locked = true
     this.playPressSound()
     this.burstStars(card.x, card.y)
 
@@ -681,7 +803,9 @@ export class MainMenu extends Scene {
       ease: 'Quad.easeOut',
       onComplete: () => {
         this.cameras.main.fadeOut(this.reducedMotion ? 0 : 260, 91, 182, 239)
-        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(game.scene))
+        this.cameras.main.once('camerafadeoutcomplete', () =>
+          this.scene.start(game.scene)
+        )
       }
     })
   }

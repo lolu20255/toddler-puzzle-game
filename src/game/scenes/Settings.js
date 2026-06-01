@@ -1,12 +1,21 @@
 import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { settings, SUPPORTED_LANGUAGES } from '../../services/settings'
+import { purchasesService } from '../../services/purchases'
 import { addBackButton } from '../hud'
 import { getGrid } from '../layout'
 
 // Provided by Vite `define` in vite/config.*.mjs from package.json#version.
 const APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'
+
+// TODO: replace with the real App Store listing ID once the build is in
+// review. Until then this URL 404s gracefully and the card stays tappable
+// so the design surface is testable.
+const RATE_APP_URL_IOS =
+  'https://apps.apple.com/app/idYOUR_APP_ID?action=write-review'
+const MANAGE_SUBSCRIPTION_URL_IOS =
+  'itms-apps://apps.apple.com/account/subscriptions'
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
@@ -110,8 +119,8 @@ export class Settings extends Scene {
 
   // ─── Stacked setting cards ───────────────────────────────────────────────
   buildContent() {
-    const top = this.sHeight * 0.17
-    const bottom = this.sHeight * 0.88
+    const top = this.sHeight * 0.16
+    const bottom = this.sHeight * 0.9
     const regionH = bottom - top
 
     // Cards align to the shared grid — same LEFT edge as the back button,
@@ -119,20 +128,261 @@ export class Settings extends Scene {
     const cardX = this.grid.contentCenter
     const cardW = this.grid.contentWidth
 
-    // Card heights proportional to content. They sum to ~94% of regionH so
-    // gaps absorb the remaining 6%.
-    const nameH = regionH * 0.30
-    const langH = regionH * 0.34
-    const vibH = regionH * 0.18
-    const totalCardsH = nameH + langH + vibH
-    const gap = (regionH - totalCardsH) / 2
+    // Card heights proportional to content. 5 cards now: premium banner at
+    // the top (parents always see it first), the original 3 setting cards,
+    // and the rate-us card at the bottom (closes the page on a positive note).
+    const premiumH = regionH * 0.16
+    const nameH = regionH * 0.21
+    const langH = regionH * 0.22
+    const vibH = regionH * 0.11
+    const rateH = regionH * 0.14
+    const totalCardsH = premiumH + nameH + langH + vibH + rateH
+    const gap = (regionH - totalCardsH) / 4 // 4 gaps between 5 cards
 
-    let cy = top + nameH / 2
+    let cy = top + premiumH / 2
+    this.buildPremiumCard(cardX, cy, cardW, premiumH)
+    cy += premiumH / 2 + gap + nameH / 2
     this.buildNameCard(cardX, cy, cardW, nameH)
     cy += nameH / 2 + gap + langH / 2
     this.buildLanguageCard(cardX, cy, cardW, langH)
     cy += langH / 2 + gap + vibH / 2
     this.buildVibrationCard(cardX, cy, cardW, vibH)
+    cy += vibH / 2 + gap + rateH / 2
+    this.buildRateUsCard(cardX, cy, cardW, rateH)
+
+    // Rebuild the premium card if the parent buys / restores while sitting
+    // on this screen (the Vue Paywall sits on top of Settings, not over MainMenu).
+    this._onEntitlementUpdated = () => this.scene.restart()
+    EventBus.on('entitlement:updated', this._onEntitlementUpdated)
+    this.events.once('shutdown', () =>
+      EventBus.off('entitlement:updated', this._onEntitlementUpdated)
+    )
+  }
+
+  // ─── Premium badge (top) — pattern from snapvault Settings ───────────────
+  //
+  // Two states:
+  //   • Not premium → sunshine-yellow card with crown + "Go Premium" + tagline.
+  //     Tap → emits `paywall:open` (handled by the Vue Paywall overlay).
+  //   • Premium    → same card, "Premium Active" + green ACTIVE pill.
+  //     Tap → opens iOS subscription management (no-op on web).
+  //
+  // Yellow palette is intentionally different from the white-cream of the
+  // other settings cards: this card is the SHOWPIECE, parents should glance
+  // at it once and know "this is the upsell / membership status."
+  buildPremiumCard(cx, cy, w, h) {
+    const isPremium = purchasesService.cachedFullAccess
+    const radius = Math.min(h * 0.32, this.minSide * 0.06)
+
+    // 3-D card stack: shadow + dark-gold lip + sunshine face + glossy top.
+    const g = this.add.graphics().setDepth(4)
+    g.fillStyle(0x000000, 0.2)
+    g.fillRoundedRect(cx - w / 2, cy - h / 2 + h * 0.07, w, h, radius)
+    g.fillStyle(0xc99e00, 1) // dark gold lip
+    g.fillRoundedRect(cx - w / 2, cy - h / 2 + h * 0.04, w, h, radius)
+    g.fillStyle(0xffd23f, 1) // sunshine yellow face
+    g.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, radius)
+    g.fillStyle(0xffffff, 0.34)
+    g.fillRoundedRect(
+      cx - w / 2 + w * 0.04,
+      cy - h / 2 + h * 0.08,
+      w * 0.92,
+      h * 0.28,
+      radius * 0.7
+    )
+
+    // Crown — emoji 👑 renders crisply on iOS WKWebView and Android WebView,
+    // no procedural drawing needed (consistent with the pack icons that use
+    // the OS emoji font for the Letters/Numbers icon overlays).
+    const iconX = cx - w / 2 + h * 0.52
+    const iconY = cy
+    const iconR = h * 0.34
+    this.add
+      .text(iconX, iconY, '👑', { fontSize: `${iconR * 1.4}px` })
+      .setOrigin(0.5)
+      .setDepth(6)
+
+    // Text block (title + subtitle, left-aligned)
+    const textX = iconX + iconR * 1.2
+    const titleSize = h * 0.22
+    const subSize = h * 0.14
+    const title = this.add
+      .text(textX, cy - h * 0.13, isPremium ? 'Premium Active' : 'Go Premium', {
+        fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
+        fontSize: `${titleSize}px`,
+        color: '#4a2c8a',
+        fontStyle: 'bold'
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(6)
+
+    this.add
+      .text(
+        textX,
+        cy + h * 0.14,
+        isPremium
+          ? 'Tap to manage subscription'
+          : 'Unlock all puzzles & games',
+        {
+          fontFamily: '"Fredoka", sans-serif',
+          fontSize: `${subSize}px`,
+          color: '#7a4400'
+        }
+      )
+      .setOrigin(0, 0.5)
+      .setDepth(6)
+
+    // Right-side accessory: green ACTIVE pill when premium, chevron when not.
+    if (isPremium) {
+      const pillW = w * 0.2
+      const pillH = h * 0.28
+      const pillX = cx + w / 2 - pillW / 2 - w * 0.05
+      const pillG = this.add.graphics().setDepth(6)
+      pillG.fillStyle(0x266b22, 1)
+      pillG.fillRoundedRect(
+        pillX - pillW / 2,
+        cy - pillH / 2 + 2,
+        pillW,
+        pillH,
+        pillH / 2
+      )
+      pillG.fillStyle(0x5fc34a, 1)
+      pillG.fillRoundedRect(
+        pillX - pillW / 2,
+        cy - pillH / 2,
+        pillW,
+        pillH,
+        pillH / 2
+      )
+      this.add
+        .text(pillX, cy, 'ACTIVE', {
+          fontFamily: '"Fredoka", sans-serif',
+          fontSize: `${pillH * 0.42}px`,
+          color: '#ffffff',
+          fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(7)
+    } else {
+      this.add
+        .text(cx + w / 2 - w * 0.06, cy, '›', {
+          fontFamily: '"Fredoka", sans-serif',
+          fontSize: `${h * 0.55}px`,
+          color: '#7d5d00',
+          fontStyle: 'bold'
+        })
+        .setOrigin(0.5)
+        .setDepth(6)
+    }
+
+    // Hit zone — Rectangle on top because Container input is unreliable in
+    // this Phaser/iOS WebView combo (same rationale as the cog button).
+    const hit = this.add
+      .rectangle(cx, cy, w, h, 0x000000, 0)
+      .setDepth(8)
+      .setInteractive({ useHandCursor: true })
+    hit.on('pointerdown', () => {
+      this.tweens.add({
+        targets: [title],
+        scale: { from: 1, to: 0.96 },
+        duration: 90,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      })
+      if (isPremium) {
+        try {
+          window.open(MANAGE_SUBSCRIPTION_URL_IOS, '_blank')
+        } catch {
+          /* ignore */
+        }
+      } else {
+        EventBus.emit('paywall:open')
+      }
+    })
+  }
+
+  // ─── Rate-us card (bottom) — pattern from snapvault RateUsCard ───────────
+  //
+  // Pink card (matches the Faces pack on MainMenu, intentional callback so
+  // the colour reads as "warm / friendly" rather than "warning / alert").
+  // Star icon in a yellow bubble + title + subtitle + chevron.
+  // Tap → opens the App Store rate page in the system browser.
+  buildRateUsCard(cx, cy, w, h) {
+    const radius = Math.min(h * 0.32, this.minSide * 0.06)
+
+    const g = this.add.graphics().setDepth(4)
+    g.fillStyle(0x000000, 0.2)
+    g.fillRoundedRect(cx - w / 2, cy - h / 2 + h * 0.07, w, h, radius)
+    g.fillStyle(0xdb3f82, 1) // dark pink lip (matches Faces pack)
+    g.fillRoundedRect(cx - w / 2, cy - h / 2 + h * 0.04, w, h, radius)
+    g.fillStyle(0xff5da2, 1) // bubblegum pink face
+    g.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, radius)
+    g.fillStyle(0xffffff, 0.32)
+    g.fillRoundedRect(
+      cx - w / 2 + w * 0.04,
+      cy - h / 2 + h * 0.08,
+      w * 0.92,
+      h * 0.28,
+      radius * 0.7
+    )
+
+    // Star icon — yellow disc with star emoji inside (echoes the upgrade
+    // card's crown bubble visually so the two end-cards rhyme).
+    const iconX = cx - w / 2 + h * 0.52
+    const iconY = cy
+    const iconR = h * 0.34
+    const bubble = this.add.circle(iconX, iconY, iconR, 0xffd23f).setDepth(5)
+    bubble.setStrokeStyle(Math.max(2, iconR * 0.12), 0xc99e00, 1)
+    this.add
+      .text(iconX, iconY + iconR * 0.02, '⭐', { fontSize: `${iconR * 1.05}px` })
+      .setOrigin(0.5)
+      .setDepth(6)
+
+    // Title + subtitle
+    const textX = iconX + iconR * 1.25
+    const titleSize = h * 0.22
+    const subSize = h * 0.14
+    this.add
+      .text(textX, cy - h * 0.13, 'Loving Toddler Puzzles?', {
+        fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
+        fontSize: `${titleSize}px`,
+        color: '#ffffff',
+        fontStyle: 'bold'
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(6)
+    this.add
+      .text(textX, cy + h * 0.14, 'Drop a star — it really helps!', {
+        fontFamily: '"Fredoka", sans-serif',
+        fontSize: `${subSize}px`,
+        color: '#ffffff'
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(6)
+      .setAlpha(0.94)
+
+    // Chevron
+    this.add
+      .text(cx + w / 2 - w * 0.06, cy, '›', {
+        fontFamily: '"Fredoka", sans-serif',
+        fontSize: `${h * 0.55}px`,
+        color: '#ffffff',
+        fontStyle: 'bold'
+      })
+      .setOrigin(0.5)
+      .setDepth(6)
+
+    const hit = this.add
+      .rectangle(cx, cy, w, h, 0x000000, 0)
+      .setDepth(8)
+      .setInteractive({ useHandCursor: true })
+    hit.on('pointerdown', () => {
+      try {
+        window.open(RATE_APP_URL_IOS, '_blank')
+      } catch {
+        /* ignore */
+      }
+    })
   }
 
   /** Shared card background — white pill with shadow + orange accent border. */

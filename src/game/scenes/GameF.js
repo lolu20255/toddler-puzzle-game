@@ -4,22 +4,26 @@ import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
 
-const NUM_OF_NUMBERS = 9
+const NUM_OF_LETTERS = 9
 
 /**
- * Numbers puzzle — same shadow-matching mechanic as GameA/B/C/D, but the
- * pack is the procedurally-generated `asset_numbers_<a-i>` chips (digits
- * 1-9) drawn over a starry-night cosmos background. Background is rendered
- * in Phaser graphics rather than a bitmap so it stays crisp at every
- * resolution and adds zero bytes to the asset bundle.
+ * Letters puzzle — same shadow-matching mechanic as GameA-E, with the
+ * procedural `asset_letters_<a-i>` chips (A-I) drawn over a pastel-dawn
+ * sky with a rainbow arc and soft clouds.
  *
- * Shadow tinting is INVERTED here (light shadow on dark sky) because the
- * standard black tint used by the daytime levels would vanish against the
- * indigo background.
+ * Visual identity:
+ *   - Numbers (GameE) = starry night cosmos (deep, dreamy)
+ *   - Letters (GameF) = pastel dawn rainbow (soft, hopeful)
+ *   Both pure procedural — zero asset bytes added, perfectly resolution-
+ *   independent on any device.
+ *
+ * Shadow tinting uses a soft warm peach (not the dark-grey of the daytime
+ * packs) so it reads cleanly against the warm-pink dawn gradient without
+ * the harsh contrast that would feel out of place in this palette.
  */
-export class GameE extends Scene {
+export class GameF extends Scene {
   constructor() {
-    super('GameE')
+    super('GameF')
 
     this.label = null
     this.animals = null
@@ -28,7 +32,7 @@ export class GameE extends Scene {
     this.animalsShadows = null
     this.animalsOnBase = new Set()
     this.score = 0
-    this.packName = 'numbers'
+    this.packName = 'letters'
   }
 
   preload() {
@@ -36,7 +40,7 @@ export class GameE extends Scene {
     this.sHeight = this.cameras.main.height
     this.fontSize = Math.min(this.sWidth, this.sHeight) * 0.04
 
-    for (let i = 0; i < NUM_OF_NUMBERS; i++) {
+    for (let i = 0; i < NUM_OF_LETTERS; i++) {
       const row = Math.floor(i / 3)
       const col = i % 3
       const animalKey = `animal${String.fromCharCode(65 + i)}`
@@ -47,7 +51,7 @@ export class GameE extends Scene {
       }
     }
 
-    this.drawStarryBackground()
+    this.drawDawnBackground()
   }
 
   create() {
@@ -65,96 +69,112 @@ export class GameE extends Scene {
   }
 
   /**
-   * Hand-painted starry-night composition. Layered from back to front:
-   *  1. Indigo→midnight-purple→soft-pink vertical gradient (deep cosmos)
-   *  2. Two large translucent nebula blooms (pink + violet)
-   *  3. ~90 small stars scattered above the horizon, varying size + alpha
-   *  4. A friendly crescent moon top-right
-   *  5. Two dark rolling-hill silhouettes anchoring the bottom edge
+   * Pastel-dawn composition, layered back to front:
+   *   1. Vertical gradient: peach → soft pink → lavender → sky blue.
+   *   2. A wide rainbow arc spanning the lower-middle of the screen.
+   *   3. 4-5 fluffy white clouds at varying heights and sizes.
+   *   4. A soft pastel hill silhouette at the bottom edge to anchor the
+   *      composition (mirrors the grass in the daytime levels without
+   *      reusing the same hue).
    */
-  drawStarryBackground() {
+  drawDawnBackground() {
+    const sW = this.sWidth
+    const sH = this.sHeight
+    const minSide = Math.min(sW, sH)
     const g = this.add.graphics().setDepth(0)
 
-    const top = 0x0d0a2c // deep midnight indigo
-    const mid = 0x2a1a5e // royal cosmos purple
-    const horizon = 0x6a3a8c // dusk lavender
-    g.fillGradientStyle(top, top, mid, horizon, 1)
-    g.fillRect(0, 0, this.sWidth, this.sHeight)
+    // Sky gradient — warm at the horizon, cool at the top, with a touch of
+    // pink in the middle band. Reads as "the moment just after sunrise".
+    const top = 0xffd5c8 // peach
+    const upperMid = 0xffbed4 // pastel pink
+    const lowerMid = 0xd5c8ff // lavender
+    const bottom = 0xb8e0ff // soft blue
+    g.fillGradientStyle(top, top, lowerMid, upperMid, 1)
+    g.fillRect(0, 0, sW, sH * 0.5)
+    g.fillGradientStyle(lowerMid, upperMid, bottom, bottom, 1)
+    g.fillRect(0, sH * 0.5, sW, sH * 0.5)
 
-    // Nebula glows — large, very soft, two complementary hues so the sky
-    // doesn't read as a flat gradient.
-    g.fillStyle(0xff7fb5, 0.08)
-    g.fillCircle(this.sWidth * 0.28, this.sHeight * 0.42, this.sWidth * 0.5)
-    g.fillStyle(0x6c4ad6, 0.1)
-    g.fillCircle(this.sWidth * 0.78, this.sHeight * 0.62, this.sWidth * 0.45)
+    // Rainbow arc — 7 concentric stroked arcs, ROYGBIV. Centred below the
+    // visible area so only the top of the arc shows, like a half-rainbow.
+    const cx = sW / 2
+    const cy = sH * 0.95
+    const outerR = sW * 0.7
+    const bandThickness = Math.max(8, minSide * 0.018)
+    const bandGap = 0
+    const colors = [
+      0xff5d5d, // red
+      0xff9f1c, // orange
+      0xffd23f, // yellow
+      0x5fc34a, // green
+      0x3ba4ff, // blue
+      0x6c4ad6, // indigo
+      0x9b5de5  // violet
+    ]
+    colors.forEach((color, i) => {
+      const r = outerR - i * (bandThickness + bandGap)
+      g.lineStyle(bandThickness, color, 0.85)
+      g.beginPath()
+      g.arc(cx, cy, r, Math.PI, 0, false)
+      g.strokePath()
+    })
 
-    // Stars — deterministic-ish but with enough randomness that they feel
-    // sprinkled. Sized in fractions of minSide so they scale with device.
-    const minSide = Math.min(this.sWidth, this.sHeight)
-    const starCount = 90
-    for (let i = 0; i < starCount; i++) {
-      const x = Math.random() * this.sWidth
-      const y = Math.random() * this.sHeight * 0.78
-      const r = (0.4 + Math.random() * 0.9) * minSide * 0.005
-      const a = 0.5 + Math.random() * 0.45
-      g.fillStyle(0xffffff, a)
-      g.fillCircle(x, y, r)
-    }
+    // Pastel rolling hill silhouette at the bottom — slightly different
+    // from the grass hills on the daytime levels so the dawn palette
+    // stays consistent.
+    g.fillStyle(0xa8d8c8, 1) // muted mint
+    g.fillEllipse(sW * 0.3, sH + sW * 0.18, sW * 1.7, sW * 0.6)
+    g.fillStyle(0x8ec9b6, 1) // slightly darker mint
+    g.fillEllipse(sW * 0.78, sH + sW * 0.25, sW * 1.55, sW * 0.5)
 
-    // A handful of brighter "4-point" stars for sparkle accents.
-    for (let i = 0; i < 6; i++) {
-      const x = Math.random() * this.sWidth
-      const y = Math.random() * this.sHeight * 0.6 + this.sHeight * 0.05
-      const r = minSide * 0.012
-      const star = this.add
-        .star(x, y, 4, r * 0.35, r, 0xffffff)
-        .setAlpha(0.9)
-        .setDepth(0)
-      this.tweens.add({
-        targets: star,
-        scale: 0.4,
-        alpha: 0.35,
-        duration: 1100 + Math.random() * 600,
-        delay: Math.random() * 1500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.inOut'
+    // Fluffy white clouds drifting at three altitudes. Each cloud is a
+    // cluster of 4 overlapping circles for that classic cartoon-puff shape.
+    const clouds = [
+      { x: sW * 0.18, y: sH * 0.12, scale: 1.0 },
+      { x: sW * 0.78, y: sH * 0.07, scale: 0.7 },
+      { x: sW * 0.55, y: sH * 0.22, scale: 0.85 },
+      { x: sW * 0.1, y: sH * 0.35, scale: 0.55 }
+    ]
+    const baseR = minSide * 0.06
+    clouds.forEach((c) => {
+      const r = baseR * c.scale
+      g.fillStyle(0xffffff, 0.92)
+      g.fillCircle(c.x, c.y, r)
+      g.fillCircle(c.x + r * 0.85, c.y + r * 0.2, r * 0.78)
+      g.fillCircle(c.x - r * 0.85, c.y + r * 0.25, r * 0.7)
+      g.fillCircle(c.x + r * 0.2, c.y - r * 0.45, r * 0.65)
+    })
+
+    // A handful of tiny twinkles for extra magic — staggered tween so they
+    // pulse independently.
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const twinkleSpots = [
+        [0.35, 0.08],
+        [0.65, 0.18],
+        [0.45, 0.3]
+      ]
+      twinkleSpots.forEach(([fx, fy], i) => {
+        const r = minSide * 0.01
+        const star = this.add
+          .star(sW * fx, sH * fy, 5, r * 0.4, r, 0xffffff)
+          .setAlpha(0.85)
+          .setDepth(0)
+        this.tweens.add({
+          targets: star,
+          scale: 0.3,
+          alpha: 0.4,
+          duration: 1100 + Math.random() * 500,
+          delay: i * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.inOut'
+        })
       })
     }
-
-    // Crescent moon — top-right corner. Drawn as a yellow disc with a
-    // background-coloured disc "biting" into its left edge.
-    const moonR = minSide * 0.075
-    const moonX = this.sWidth - moonR * 1.8
-    const moonY = this.sHeight * 0.12
-    g.fillStyle(0x000000, 0.25)
-    g.fillCircle(moonX + moonR * 0.05, moonY + moonR * 0.12, moonR * 1.02)
-    g.fillStyle(0xfff3a0, 1)
-    g.fillCircle(moonX, moonY, moonR)
-    // Bite — match the upper midnight indigo so the crescent reads cleanly.
-    g.fillStyle(top, 1)
-    g.fillCircle(moonX - moonR * 0.35, moonY - moonR * 0.05, moonR * 0.92)
-
-    // Rolling hill silhouettes — deep midnight, two layers for depth.
-    g.fillStyle(0x1a0a3c, 1)
-    g.fillEllipse(
-      this.sWidth * 0.3,
-      this.sHeight + this.sWidth * 0.18,
-      this.sWidth * 1.6,
-      this.sWidth * 0.65
-    )
-    g.fillStyle(0x0d0526, 1)
-    g.fillEllipse(
-      this.sWidth * 0.78,
-      this.sHeight + this.sWidth * 0.25,
-      this.sWidth * 1.45,
-      this.sWidth * 0.55
-    )
   }
 
   start() {
     this.celebrated = new Set()
-    const availableNumbers = [
+    const availableLetters = [
       `asset_${this.packName}_a`,
       `asset_${this.packName}_b`,
       `asset_${this.packName}_c`,
@@ -165,26 +185,24 @@ export class GameE extends Scene {
       `asset_${this.packName}_h`,
       `asset_${this.packName}_i`
     ]
-    // No shuffle — numbers always shown 1→9 in reading order so the spatial
-    // layout reinforces sequence learning. (Other packs shuffle for variety;
-    // here, predictability is the feature.)
-    const numbers = availableNumbers
+    // No shuffle — letters always shown A→I in reading order so the spatial
+    // layout reinforces alphabet sequence learning.
+    const letters = availableLetters
 
-    for (let index = 0; index < numbers.length; index++) {
-      const animalKey = numbers[index]
+    for (let index = 0; index < letters.length; index++) {
+      const animalKey = letters[index]
       const animalName = `animal${String.fromCharCode(65 + index)}`
       this.animalsNames[animalName] = animalKey
     }
 
-    this.addAnimalsShadow(numbers)
-    this.addAnimals(numbers)
+    this.addAnimalsShadow(letters)
+    this.addAnimals(letters)
   }
 
   addAnimalsShadow(animals) {
     this.animalsShadows = this.add.group()
-    // Numbers render bigger than the other packs (20% bump) — the glyph
-    // takes less optical space than the chunky 3-D emoji art, so it needs
-    // the extra size to read at the same visual weight.
+    // Slightly larger than the daytime packs (20% bump, same as numbers) so
+    // the chunky glyphs read at the same visual weight as the 3-D emoji art.
     const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0008946
 
     for (let index = 0; index < animals.length; index++) {
@@ -198,10 +216,10 @@ export class GameE extends Scene {
         .setScale(scaleSizeShadow)
         .setInteractive()
         .setDepth(1)
-      // Light tint on dark sky — a soft moonlit "outline" of where each
-      // number belongs. Standard black-on-light shadow would disappear here.
-      animalShadow.setTint(0xffffff)
-      animalShadow.setAlpha(0.18)
+      // Warm peach tint at low alpha — visible on the dawn gradient
+      // without the harshness of pure black.
+      animalShadow.setTint(0xffe0c4)
+      animalShadow.setAlpha(0.5)
 
       this.animalsShadows.add(animalShadow)
       this[`animal${String.fromCharCode(65 + index)}Shadow`] = animalShadow
@@ -272,13 +290,11 @@ export class GameE extends Scene {
         if (triggerEnd) this.label = 'completing'
         const launchLevelEnd = () =>
           showLevelComplete(this, () =>
-            this.scene.start(pickNextSceneExcluding('GameE'))
+            this.scene.start(pickNextSceneExcluding('GameF'))
           )
 
         if (!this.celebrated.has(animalDragged)) {
           this.celebrated.add(animalDragged)
-          // On the final match, chain level celebration to fire AFTER the
-          // per-match spelling modal auto-dismisses — never on top of it.
           const modal = showCelebration(
             this,
             animalDragged,
@@ -304,16 +320,16 @@ export class GameE extends Scene {
       Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10
 
     if (isOnBase) {
-      // Matched: shadow blooms bright yellow (matches the moon) — clearly
-      // visible against the starry sky and thematically "lit up".
-      this[`${animalKey}Shadow`].setTint(0xfff3a0)
-      this[`${animalKey}Shadow`].setTintFill(0xfff3a0)
+      // Matched: shadow blooms warm yellow (matches the rainbow's yellow band)
+      // — clearly visible against the pastel sky and thematically "lit up".
+      this[`${animalKey}Shadow`].setTint(0xffd23f)
+      this[`${animalKey}Shadow`].setTintFill(0xffd23f)
       this[`${animalKey}Shadow`].setAlpha(1)
       this[`${animalKey}Shadow`].setScale(scaleSizeShadowOnBase)
       this.animalsOnBase.add(this.animalsNames[animalKey])
     } else {
-      this[`${animalKey}Shadow`].setTint(0xffffff)
-      this[`${animalKey}Shadow`].setAlpha(0.18)
+      this[`${animalKey}Shadow`].setTint(0xffe0c4)
+      this[`${animalKey}Shadow`].setAlpha(0.5)
       this[`${animalKey}Shadow`].setScale(scaleSizeShadow)
       this.animalsOnBase.delete(this.animalsNames[animalKey])
     }

@@ -1,6 +1,7 @@
 import { settings } from '../services/settings'
+import { EventBus } from './EventBus'
 
-const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE']
+const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE', 'GameF', 'GameG', 'GameH', 'GameI', 'GameJ']
 
 /**
  * Pick the next pack to play, excluding the one the toddler just finished.
@@ -137,6 +138,11 @@ export function showLevelComplete(scene, onComplete) {
     /* sound is best-effort */
   }
 
+  // EventBus → Amplitude. Mirrors `level:started` (TBD) and `puzzle:matched`
+  // so the per-pack completion funnel is reportable. `scene.scene.key` is
+  // the Phaser scene key, which matches the pack identifier ('GameA' …).
+  EventBus.emit('level:completed', { pack: scene.scene.key })
+
   // ─── Hold then hand control back ────────────────────────────────────────
   scene.time.delayedCall(3000, () => {
     if (!container.scene) return
@@ -148,6 +154,20 @@ export function showLevelComplete(scene, onComplete) {
       onComplete: () => {
         container.destroy()
         if (typeof onComplete === 'function') onComplete()
+        // Bump the lifetime puzzles-completed counter, then poke the
+        // RateUs Vue overlay to decide if NOW is a good moment to ask
+        // for a rating. The overlay does all the gating (count, cooldown,
+        // already-rated, minimum puzzles) — we just fire-and-forget.
+        // Done AFTER `onComplete` so the scene transition kicks off
+        // first; the rate prompt then layers on top.
+        settings
+          .incrementPuzzlesCompleted()
+          .catch(() => {
+            /* persisted-counter bump is best-effort */
+          })
+          .finally(() => {
+            EventBus.emit('rate-us:check')
+          })
       }
     })
   })
