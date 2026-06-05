@@ -37,6 +37,25 @@ const DEFAULT_PROVIDER = import.meta.env.VITE_LIBRO_PRONUNCIATION_PROVIDER || 'e
 const audioByKey = new Map() // key → HTMLAudioElement
 const inflight = new Map() // key → Promise<HTMLAudioElement|null>
 
+/**
+ * Pause every cached pronunciation audio that is currently playing and rewind
+ * it to the start. Called when the toddler leaves a game scene mid-celebration
+ * so the praise voice doesn't trail into MainMenu.
+ *
+ * Pause-not-stop is intentional: the HTMLAudioElement stays in the cache so
+ * the next celebration replays it instantly without a fetch.
+ */
+export function stopAllPronunciations() {
+  audioByKey.forEach((audio) => {
+    try {
+      if (!audio.paused) audio.pause()
+      audio.currentTime = 0
+    } catch {
+      /* the element may already be in a bad state — ignore */
+    }
+  })
+}
+
 function cacheKey(word, lang, provider) {
   return `${provider}:${lang}:${String(word).toLowerCase()}`
 }

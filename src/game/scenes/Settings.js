@@ -343,7 +343,7 @@ export class Settings extends Scene {
     const titleSize = h * 0.22
     const subSize = h * 0.14
     this.add
-      .text(textX, cy - h * 0.13, 'Loving Toddler Puzzles?', {
+      .text(textX, cy - h * 0.13, 'Loving Puzzle Pals?', {
         fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
         fontSize: `${titleSize}px`,
         color: '#ffffff',

@@ -14,8 +14,8 @@ export const ITEM_NAMES = {
     },
     // pack B.png — fantasy lego heroes
     mistic_lego: {
-      a: 'WIZARD', b: 'VIKING', c: 'SKULL', d: 'KNIGHT',
-      e: 'ORC', f: 'ELF', g: 'MAGE', h: 'DEMON', i: 'ANGEL'
+      a: 'WIZARD', b: 'VIKING', c: 'PIRATE', d: 'KNIGHT',
+      e: 'ORC', f: 'ELF', g: 'MAGE', h: 'FAIRY', i: 'ANGEL'
     },
     // pack C.png — emoji shapes
     emojis_lego: {
@@ -53,8 +53,8 @@ export const ITEM_NAMES = {
       e: 'CARRO', f: 'AROS', g: 'TREN', h: 'OSO', i: 'TAMBOR'
     },
     mistic_lego: {
-      a: 'MAGO', b: 'VIKINGO', c: 'CALAVERA', d: 'CABALLERO',
-      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'DEMONIO', i: 'ÁNGEL'
+      a: 'MAGO', b: 'VIKINGO', c: 'PIRATA', d: 'CABALLERO',
+      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'HADA', i: 'ÁNGEL'
     },
     emojis_lego: {
       a: 'FELIZ', b: 'ENOJADO', c: 'LLORA', d: 'TRISTE',

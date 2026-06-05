@@ -28,6 +28,23 @@ import { preload } from './pronunciation'
 // reload latency the WKWebView would add on the second play.
 const audioByKey = new Map()
 
+/**
+ * Pause every cached level-pack audio that is currently playing and rewind
+ * it to the start. Mirrors `stopAllPronunciations` in pronunciation.js and is
+ * called from the same scene-exit hook so both the spelling audio (this file)
+ * and the praise audio (pronunciation.js) silence together.
+ */
+export function stopAllLevelAudio() {
+  audioByKey.forEach((audio) => {
+    try {
+      if (!audio.paused) audio.pause()
+      audio.currentTime = 0
+    } catch {
+      /* the element may already be in a bad state — ignore */
+    }
+  })
+}
+
 /** Parse an asset key like `asset_animal_cartoon_a` → `{ pack, letter }`. */
 function parseAssetKey(assetKey) {
   const m = /^asset_(.+)_([a-i])$/.exec(assetKey || '')

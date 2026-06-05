@@ -3,6 +3,7 @@ import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
 // crispness; hardcoded pixel constants in this scene get multiplied by DPR
@@ -269,6 +270,8 @@ export class GameC extends Scene {
         }
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {

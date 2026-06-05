@@ -3,6 +3,7 @@ import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
 // crispness; hardcoded pixel constants in this scene get multiplied by DPR
@@ -51,7 +52,7 @@ export class GameB extends Scene {
     }
 
     const bgImage = this.add
-      .image(this.sWidth / 2, this.sHeight / 2, 'background_a')
+      .image(this.sWidth / 2, this.sHeight / 2, 'background_f')
       .setOrigin(0.5)
       .setDisplaySize(this.sWidth, this.sHeight)
   }
@@ -356,6 +357,8 @@ export class GameB extends Scene {
         }
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {

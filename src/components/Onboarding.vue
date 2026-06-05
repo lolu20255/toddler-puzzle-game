@@ -224,7 +224,7 @@ function onNameKeydown(e) {
               class="mt-6 text-4xl font-bold leading-tight text-white"
               style="text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15)"
             >
-              Toddler Puzzles
+              Puzzle Pals
             </h1>
             <p class="mt-3 text-lg leading-snug text-white/90 max-w-sm">
               Made for little ones to learn to speak — one bright puzzle at a time

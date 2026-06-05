@@ -1,5 +1,5 @@
 /**
- * Tailwind configuration for Toddler Puzzles.
+ * Tailwind configuration for ABC Kids Puzzle Pals.
  *
  * Design tokens here are the SAME palette used in the Phaser scenes (see
  * `src/game/scenes/MainMenu.js` GAMES array, `Paywall.js`, etc.). Reusing

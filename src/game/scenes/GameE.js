@@ -3,6 +3,7 @@ import Phaser, { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 const NUM_OF_NUMBERS = 9
 
@@ -294,6 +295,8 @@ export class GameE extends Scene {
         this.scoreBoard.setScore(this.score)
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {

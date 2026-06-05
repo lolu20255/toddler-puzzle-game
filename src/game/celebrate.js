@@ -1,6 +1,7 @@
 import { nameForAssetKey } from './itemNames'
 import { preload } from '../services/libro/pronunciation'
 import { preloadLevelAudio } from '../services/libro/levelAudio'
+import { stopAllSpeech } from '../services/libro'
 import { settings } from '../services/settings'
 import { EventBus } from './EventBus'
 
@@ -48,6 +49,17 @@ export function showCelebration(scene, assetKey, onDismissed) {
   if (scene._celebrationModal) {
     scene._celebrationModal.destroy()
     scene._celebrationModal = null
+  }
+
+  // Register a one-time scene shutdown hook (idempotent per scene) so any
+  // exit path — back button, level complete, settings, restart — silences
+  // the TTS audio. The back button handler ALSO calls stopAllSpeech()
+  // directly so audio stops the instant the tap registers, before the
+  // 240ms fade. This hook is the safety net for non-back-button exits.
+  if (!scene._speechShutdownHooked) {
+    scene._speechShutdownHooked = true
+    scene.events.once('shutdown', stopAllSpeech)
+    scene.events.once('destroy', stopAllSpeech)
   }
 
   const sW = scene.sWidth

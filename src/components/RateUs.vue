@@ -284,7 +284,7 @@ function onCloseX() {
             class="mt-6 text-3xl font-bold leading-tight text-royal"
             style="text-shadow: 0 1px 0 #fff"
           >
-            Loving Toddler Puzzles?
+            Loving Puzzle Pals?
           </h1>
 
           <p

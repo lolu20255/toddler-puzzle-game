@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Toddler Puzzles · App Icon Proposals</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Outfit', 'system-ui', 'sans-serif'],
+          fredoka: ['Fredoka', 'system-ui', 'sans-serif'],
+        },
+        animation: {
+          'float': 'float 6s ease-in-out infinite',
+          'fade-up': 'fadeUp 600ms ease-out both',
+        },
+        keyframes: {
+          float: {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-8px)' },
+          },
+          fadeUp: {
+            'from': { opacity: '0', transform: 'translateY(20px)' },
+            'to':   { opacity: '1', transform: 'translateY(0)' },
+          },
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse at 15% 0%,  rgba(155, 93, 229, 0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 30%, rgba(59, 164, 255, 0.20) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%, rgba(255, 93, 162, 0.20) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0623 0%, #1a0d3f 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: #f5f3ff;
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  /* iOS-style icon frame (Apple uses a superellipse, 22.5% radius is the
+     standard CSS approximation) */
+  .ios-mask {
+    border-radius: 22.5%;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.18) inset,
+      0 30px 60px -20px rgba(0, 0, 0, 0.6),
+      0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  }
+  .ios-mask::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    pointer-events: none;
+  }
+
+  /* Animated gradient border for concept badges */
+  .concept-badge {
+    position: relative;
+    z-index: 0;
+  }
+  .concept-badge::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, #ff9f1c, #ff5da2, #9b5de5, #3ba4ff);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    z-index: -1;
+  }
+
+  /* Subtle grain over the page (premium feel) */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .download-btn {
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  }
+  .download-btn:hover {
+    transform: translateY(-1px);
+  }
+  .download-btn:active {
+    transform: translateY(1px);
+  }
+</style>
+</head>
+<body class="relative">
+
+  <main class="relative z-10 max-w-7xl mx-auto px-6 py-16 md:py-24">
+
+    <!-- ─────────────────────── header ─────────────────────── -->
+    <header class="text-center mb-16 md:mb-20 animate-fade-up">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-6">
+        <span class="w-2 h-2 rounded-full bg-gradient-to-r from-fuchsia-400 to-amber-300 animate-pulse"></span>
+        <span class="text-xs font-medium tracking-wider uppercase text-white/70">App Icon Proposals</span>
+      </div>
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
+        <span class="bg-gradient-to-r from-amber-200 via-fuchsia-300 to-sky-300 bg-clip-text text-transparent">
+          Toddler Puzzles
+        </span>
+      </h1>
+      <p class="mt-4 max-w-2xl mx-auto text-white/60 text-lg leading-relaxed">
+        Three distinct design directions for the App Store icon. Each rendered as inline SVG, exportable as 1024×1024 PNG or JPEG straight from your browser.
+      </p>
+    </header>
+
+    <!-- ─────────────────────── icon grid ─────────────────────── -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+
+      <!-- ════════════════════════════════════════════════════════
+           CONCEPT 1 · Modern Minimalist / Geometric
+           Three primary-color shapes (circle + triangle + square)
+           arranged as a friendly trio on a soft cream surface.
+           Speaks "preschool fundamentals" without any literal cue;
+           the shape vocabulary itself is the brand.
+      ═══════════════════════════════════════════════════════════ -->
+      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 100ms">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
+            Concept 01 · Minimalist
+          </span>
+        </div>
+
+        <!-- ICON 1 -->
+        <div class="ios-mask w-full aspect-square animate-float" style="background: linear-gradient(180deg, #fff8e7 0%, #ffe0c4 100%)">
+          <svg id="icon-minimalist" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
+            <defs>
+              <linearGradient id="m-bg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0"   stop-color="#fff8e7"/>
+                <stop offset="1"   stop-color="#ffe0c4"/>
+              </linearGradient>
+              <linearGradient id="m-circle" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffe072"/>
+                <stop offset="1" stop-color="#f4b400"/>
+              </linearGradient>
+              <linearGradient id="m-tri" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff7575"/>
+                <stop offset="1" stop-color="#e63946"/>
+              </linearGradient>
+              <linearGradient id="m-square" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#6cc6ff"/>
+                <stop offset="1" stop-color="#2b8de8"/>
+              </linearGradient>
+              <filter id="m-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#7a4400" flood-opacity="0.18"/>
+              </filter>
+            </defs>
+
+            <!-- background -->
+            <rect width="512" height="512" fill="url(#m-bg)"/>
+
+            <!-- subtle dotted texture for tactile preschool feel -->
+            <g fill="#7a4400" opacity="0.06">
+              <circle cx="70"  cy="80"  r="3"/>
+              <circle cx="440" cy="90"  r="3"/>
+              <circle cx="80"  cy="430" r="3"/>
+              <circle cx="450" cy="450" r="3"/>
+              <circle cx="256" cy="60"  r="3"/>
+              <circle cx="60"  cy="256" r="3"/>
+              <circle cx="460" cy="256" r="3"/>
+            </g>
+
+            <!-- circle (top, big, the "head" of the composition) -->
+            <g filter="url(#m-shadow)">
+              <circle cx="256" cy="172" r="92" fill="url(#m-circle)"/>
+              <circle cx="256" cy="172" r="92" fill="none" stroke="#8a6500" stroke-width="6"/>
+              <!-- subtle inner highlight -->
+              <ellipse cx="222" cy="138" rx="34" ry="22" fill="white" opacity="0.5"/>
+            </g>
+
+            <!-- triangle (bottom-left, gently tilted) -->
+            <g filter="url(#m-shadow)" transform="rotate(-6 152 372)">
+              <path d="M 152 290 L 232 412 L 72 412 Z" fill="url(#m-tri)" stroke="#7a1f1f" stroke-width="6" stroke-linejoin="round"/>
+            </g>
+
+            <!-- square (bottom-right, gently tilted other way) -->
+            <g filter="url(#m-shadow)" transform="rotate(8 360 372)">
+              <rect x="280" y="300" width="160" height="144" rx="22" fill="url(#m-square)" stroke="#0e4b85" stroke-width="6"/>
+              <rect x="290" y="310" width="140" height="22" rx="8" fill="white" opacity="0.28"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-6">
+          <h2 class="text-2xl font-semibold text-white">Shape Trio</h2>
+          <p class="mt-2 text-white/60 text-sm leading-relaxed">
+            Circle, triangle, square. The vocabulary every toddler learns first, arranged as a friendly composition. Calm, modern, and instantly recognisable at thumbnail size.
+          </p>
+
+          <!-- swatches -->
+          <div class="mt-4 flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full" style="background:#ffd23f"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#e63946"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#3ba4ff"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#fff8e7; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"></span>
+          </div>
+
+          <!-- downloads -->
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button onclick="downloadIcon('icon-minimalist', 'png', 'toddler-puzzles-minimalist.png', '#fff8e7')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              PNG
+            </button>
+            <button onclick="downloadIcon('icon-minimalist', 'jpeg', 'toddler-puzzles-minimalist.jpg', '#fff8e7')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              JPEG
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════════════════════════════════════════════════════════
+           CONCEPT 2 · Vibrant Gradients / Modern Depth
+           Liquid rainbow orb with a tiny smile, glassy highlight,
+           and a soft halo. Premium 2026 aesthetic (think Threads,
+           Apple Intelligence, Linear) — modern, dimensional, but
+           still toddler-warm via the rainbow palette + smile.
+      ═══════════════════════════════════════════════════════════ -->
+      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 250ms">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
+            Concept 02 · Gradient Depth
+          </span>
+        </div>
+
+        <!-- ICON 2 -->
+        <div class="ios-mask w-full aspect-square animate-float" style="background: radial-gradient(circle at 50% 50%, #2d1b69, #0a0623); animation-delay: 1.5s">
+          <svg id="icon-gradient" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
+            <defs>
+              <radialGradient id="g-bg" cx="0.5" cy="0.45" r="0.7">
+                <stop offset="0"   stop-color="#2d1b69"/>
+                <stop offset="0.6" stop-color="#15093f"/>
+                <stop offset="1"   stop-color="#0a0623"/>
+              </radialGradient>
+              <radialGradient id="g-halo" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0"   stop-color="#ff5da2" stop-opacity="0.45"/>
+                <stop offset="0.5" stop-color="#9b5de5" stop-opacity="0.25"/>
+                <stop offset="1"   stop-color="#3ba4ff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="g-orb" cx="0.32" cy="0.32" r="0.85">
+                <stop offset="0"    stop-color="#fff3a8"/>
+                <stop offset="0.18" stop-color="#ffd23f"/>
+                <stop offset="0.42" stop-color="#ff7a4a"/>
+                <stop offset="0.62" stop-color="#ff5da2"/>
+                <stop offset="0.82" stop-color="#9b5de5"/>
+                <stop offset="1"    stop-color="#3ba4ff"/>
+              </radialGradient>
+              <radialGradient id="g-gloss" cx="0.5" cy="0.5">
+                <stop offset="0" stop-color="white" stop-opacity="0.7"/>
+                <stop offset="1" stop-color="white" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="g-blur"><feGaussianBlur stdDeviation="16"/></filter>
+            </defs>
+
+            <!-- background -->
+            <rect width="512" height="512" fill="url(#g-bg)"/>
+
+            <!-- twinkles in deep space -->
+            <g fill="white">
+              <circle cx="64"  cy="100" r="2" opacity="0.7"/>
+              <circle cx="440" cy="80"  r="2.5" opacity="0.85"/>
+              <circle cx="80"  cy="420" r="2" opacity="0.7"/>
+              <circle cx="460" cy="440" r="3" opacity="0.85"/>
+              <circle cx="120" cy="240" r="1.5" opacity="0.5"/>
+              <circle cx="400" cy="260" r="1.5" opacity="0.5"/>
+              <circle cx="256" cy="42"  r="2" opacity="0.7"/>
+              <circle cx="256" cy="470" r="2" opacity="0.7"/>
+            </g>
+
+            <!-- sparkle (4-point star) accents -->
+            <g fill="white">
+              <path d="M 90 90 L 96 84 L 102 90 L 96 96 Z" opacity="0.9"/>
+              <path d="M 422 122 L 428 116 L 434 122 L 428 128 Z" opacity="0.9"/>
+              <path d="M 102 400 L 108 394 L 114 400 L 108 406 Z" opacity="0.8"/>
+            </g>
+
+            <!-- glow halo -->
+            <circle cx="256" cy="256" r="220" fill="url(#g-halo)" filter="url(#g-blur)"/>
+
+            <!-- main orb -->
+            <circle cx="256" cy="256" r="160" fill="url(#g-orb)"/>
+
+            <!-- glossy highlight (top-left) -->
+            <ellipse cx="208" cy="190" rx="60" ry="42" fill="url(#g-gloss)" opacity="0.75"/>
+
+            <!-- rim light (bottom-right, subtle) -->
+            <circle cx="256" cy="256" r="160" fill="none" stroke="white" stroke-width="2" opacity="0.18"/>
+
+            <!-- friendly smile inside the orb -->
+            <g>
+              <ellipse cx="220" cy="268" rx="9" ry="13" fill="white"/>
+              <ellipse cx="292" cy="268" rx="9" ry="13" fill="white"/>
+              <path d="M 218 308 Q 256 348 294 308"
+                    stroke="white" stroke-width="9" fill="none" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-6">
+          <h2 class="text-2xl font-semibold text-white">Liquid Rainbow</h2>
+          <p class="mt-2 text-white/60 text-sm leading-relaxed">
+            A dimensional gradient orb on deep night-violet, with a small white smile in the centre. Premium and 2026-modern, but the rainbow palette keeps it firmly in the toddler zone.
+          </p>
+
+          <div class="mt-4 flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full" style="background:#ffd23f"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#ff5da2"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#9b5de5"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#3ba4ff"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#0a0623; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"></span>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button onclick="downloadIcon('icon-gradient', 'png', 'toddler-puzzles-gradient.png', '#0a0623')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              PNG
+            </button>
+            <button onclick="downloadIcon('icon-gradient', 'jpeg', 'toddler-puzzles-gradient.jpg', '#0a0623')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              JPEG
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════════════════════════════════════════════════════════
+           CONCEPT 3 · Illustrative / Domain Metaphor
+           Stacked alphabet-style wooden blocks (A, 1, ♥) on the
+           app's signature sky-blue gradient, with the mascot sun
+           peeking from the corner. The most "toddler app" of the
+           three — universal preschool iconography.
+      ═══════════════════════════════════════════════════════════ -->
+      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 400ms">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
+            Concept 03 · Illustrative
+          </span>
+        </div>
+
+        <!-- ICON 3 -->
+        <div class="ios-mask w-full aspect-square animate-float" style="background: linear-gradient(180deg, #5bb6ef 0%, #c6ecff 100%); animation-delay: 3s">
+          <svg id="icon-blocks" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
+            <defs>
+              <linearGradient id="b-sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0"   stop-color="#5bb6ef"/>
+                <stop offset="0.5" stop-color="#92cef1"/>
+                <stop offset="1"   stop-color="#c6ecff"/>
+              </linearGradient>
+              <linearGradient id="b-red" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff7575"/>
+                <stop offset="1" stop-color="#e63946"/>
+              </linearGradient>
+              <linearGradient id="b-yellow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffe072"/>
+                <stop offset="1" stop-color="#f4b400"/>
+              </linearGradient>
+              <linearGradient id="b-blue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#6cc6ff"/>
+                <stop offset="1" stop-color="#2b8de8"/>
+              </linearGradient>
+              <filter id="b-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#0e3b6b" flood-opacity="0.28"/>
+              </filter>
+            </defs>
+
+            <!-- sky -->
+            <rect width="512" height="512" fill="url(#b-sky)"/>
+
+            <!-- cloud (top-left) -->
+            <g fill="white" opacity="0.95">
+              <ellipse cx="92"  cy="110" rx="40" ry="18"/>
+              <ellipse cx="122" cy="96"  rx="32" ry="22"/>
+              <ellipse cx="68"  cy="104" rx="26" ry="16"/>
+            </g>
+
+            <!-- sun mascot peeking top-right (the existing brand sun, tiny) -->
+            <g transform="translate(432 96)">
+              <g fill="#FFD23F">
+                <polygon points="0,-80 -10,-50 10,-50"/>
+                <polygon points="80,0 50,-10 50,10"/>
+                <polygon points="-80,0 -50,-10 -50,10"/>
+                <polygon points="56,-56 38,-40 28,-50"/>
+                <polygon points="-56,-56 -38,-40 -28,-50"/>
+                <polygon points="56,56 38,40 28,50"/>
+              </g>
+              <circle r="48" fill="#FFD23F"/>
+              <circle cx="-14" cy="-14" r="14" fill="#fff3a8" opacity="0.7"/>
+              <circle cx="-12" cy="-2" r="4.5" fill="#7d5d00"/>
+              <circle cx="12"  cy="-2" r="4.5" fill="#7d5d00"/>
+              <path d="M -14 14 Q 0 28 14 14"
+                    stroke="#7d5d00" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+            </g>
+
+            <!-- grass (rounded hill behind blocks) -->
+            <ellipse cx="256" cy="510" rx="320" ry="60" fill="#9bd34f"/>
+            <ellipse cx="120" cy="510" rx="200" ry="44" fill="#7cc242" opacity="0.85"/>
+
+            <!-- ── BLOCK STACK ──────────────────────────────────────
+                 Bottom (red, "1"), middle (yellow, "A"), top (blue, ♥).
+                 Each block is the same size; we offset the stacks
+                 horizontally so the tower has a hand-built, slightly
+                 wobbly look that toddlers respond to. -->
+
+            <!-- bottom: red block with "1" -->
+            <g filter="url(#b-shadow)" transform="translate(160 332)">
+              <rect width="200" height="116" rx="18" fill="url(#b-red)" stroke="#7a1f1f" stroke-width="6"/>
+              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.22"/>
+              <text x="100" y="92" text-anchor="middle"
+                    font-family="Fredoka, Outfit, sans-serif"
+                    font-size="78" font-weight="700"
+                    fill="white" stroke="#7a1f1f" stroke-width="3" paint-order="stroke fill">1</text>
+            </g>
+
+            <!-- middle: yellow block with "A" -->
+            <g filter="url(#b-shadow)" transform="translate(138 220)">
+              <rect width="200" height="116" rx="18" fill="url(#b-yellow)" stroke="#8a6500" stroke-width="6"/>
+              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.32"/>
+              <text x="100" y="94" text-anchor="middle"
+                    font-family="Fredoka, Outfit, sans-serif"
+                    font-size="82" font-weight="700"
+                    fill="#7a4400" stroke="#5a3a1a" stroke-width="2.5" paint-order="stroke fill">A</text>
+            </g>
+
+            <!-- top: blue block with heart -->
+            <g filter="url(#b-shadow)" transform="translate(178 108)">
+              <rect width="200" height="116" rx="18" fill="url(#b-blue)" stroke="#0e4b85" stroke-width="6"/>
+              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.26"/>
+              <!-- heart (two lobes + bottom V) -->
+              <g transform="translate(100 64)">
+                <circle cx="-20" cy="-8" r="22" fill="#ff5da2" stroke="#a72869" stroke-width="3"/>
+                <circle cx="20"  cy="-8" r="22" fill="#ff5da2" stroke="#a72869" stroke-width="3"/>
+                <path d="M -39 -1 L 39 -1 L 0 46 Z" fill="#ff5da2" stroke="#a72869" stroke-width="3" stroke-linejoin="round"/>
+                <!-- cover the seam between lobes and triangle -->
+                <path d="M -39 -1 L 39 -1 L 0 46 Z" fill="#ff5da2"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="mt-6">
+          <h2 class="text-2xl font-semibold text-white">Alphabet Stack</h2>
+          <p class="mt-2 text-white/60 text-sm leading-relaxed">
+            Three stacked toy blocks on a sunny sky-blue background, with the app's mascot sun peeking from the corner. Reads as "preschool learning toy" before the toddler can read.
+          </p>
+
+          <div class="mt-4 flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full" style="background:#5bb6ef"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#e63946"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#f4b400"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#2b8de8"></span>
+            <span class="w-5 h-5 rounded-full" style="background:#ff5da2"></span>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button onclick="downloadIcon('icon-blocks', 'png', 'toddler-puzzles-blocks.png', '#5bb6ef')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              PNG
+            </button>
+            <button onclick="downloadIcon('icon-blocks', 'jpeg', 'toddler-puzzles-blocks.jpg', '#5bb6ef')"
+                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+              JPEG
+            </button>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ─────────────────────── footer ─────────────────────── -->
+    <footer class="mt-20 text-center">
+      <div class="glass inline-block rounded-2xl px-6 py-4 max-w-2xl">
+        <p class="text-sm text-white/60 leading-relaxed">
+          Pick one, click <span class="text-white font-medium">PNG</span> or <span class="text-white font-medium">JPEG</span> to download at 1024×1024, drop the file into <code class="px-1.5 py-0.5 rounded bg-white/10 text-amber-200 font-mono text-xs">assets/icon-only.png</code> then run <code class="px-1.5 py-0.5 rounded bg-white/10 text-amber-200 font-mono text-xs">npm run cap:assets</code> to generate every device-size asset.
+        </p>
+      </div>
+    </footer>
+
+  </main>
+
+<script>
+  /**
+   * Serialise the inline SVG, paint it onto a 1024×1024 canvas, then trigger
+   * a download. Done fully client-side — no server, no deps, the page is
+   * self-contained.
+   *
+   * For PNG the canvas stays transparent so the icon's own background is
+   * the only background. For JPEG (no alpha) we pre-fill with the icon's
+   * own background colour so the mask edges look correct.
+   *
+   * Quality 0.95 keeps file sizes well under App Store Connect's 1 MB icon
+   * ceiling while staying crisp on Retina.
+   */
+  async function downloadIcon(svgId, format, filename, bgColor) {
+    const svgEl = document.getElementById(svgId);
+    if (!svgEl) {
+      console.warn(`Icon "${svgId}" not found`);
+      return;
+    }
+
+    const SIZE = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+
+    // Serialise SVG. Clone first so we can safely add xmlns if missing.
+    const clone = svgEl.cloneNode(true);
+    if (!clone.getAttribute('xmlns')) {
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    }
+    let svgString = new XMLSerializer().serializeToString(clone);
+
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      // JPEG has no alpha; pre-fill matching background colour so the mask
+      // edges don't get a white halo around dark icons.
+      if (format === 'jpeg') {
+        ctx.fillStyle = bgColor || '#ffffff';
+        ctx.fillRect(0, 0, SIZE, SIZE);
+      }
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const dataUrl = canvas.toDataURL(mime, format === 'jpeg' ? 0.95 : undefined);
+
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = (e) => {
+      console.error('SVG → image conversion failed', e);
+      URL.revokeObjectURL(url);
+      alert('Could not export this icon. Open DevTools for the error.');
+    };
+    img.src = url;
+  }
+</script>
+
+</body>
+</html>
