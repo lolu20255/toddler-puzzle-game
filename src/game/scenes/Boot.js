@@ -280,6 +280,7 @@ export class Boot extends Scene {
       this.generateColorTextures()
       this.generateColorsIcon()
       this.generatePatternIcon()
+      this.generateBubbleIcon()
 
       // First-launch parent onboarding gate. If the parent hasn't completed
       // the welcome → name → language flow yet, hold here, let the Vue
@@ -429,6 +430,49 @@ export class Boot extends Scene {
     rt.draw(g, 0, 0)
     g.destroy()
     rt.saveTexture('asset_pattern_icon')
+    rt.destroy()
+  }
+
+  /**
+   * Bake `asset_bubble_icon` — two translucent bubbles holding a letter "A" and
+   * a number "3" for the Bubble Pop game (GameM) menu card. Reuses the baked
+   * glyph textures, so it must run AFTER generateLetterTextures() +
+   * generateNumberTextures().
+   */
+  generateBubbleIcon() {
+    if (this.textures.exists('asset_bubble_icon')) return
+    const size = 240
+    const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+    const g = this.make.graphics({ x: 0, y: 0 }, false)
+
+    const drawBubble = (cx, cy, r) => {
+      g.fillStyle(0x000000, 0.16)
+      g.fillCircle(cx, cy + r * 0.1, r)
+      g.fillStyle(0xbfe9f7, 0.92)
+      g.lineStyle(Math.max(3, r * 0.08), 0x2f8fc4, 0.9)
+      g.fillCircle(cx, cy, r)
+      g.strokeCircle(cx, cy, r)
+      g.fillStyle(0xffffff, 0.6)
+      g.fillCircle(cx - r * 0.34, cy - r * 0.36, r * 0.2)
+    }
+
+    const r = size * 0.27
+    const b1 = { x: size * 0.35, y: size * 0.4 }
+    const b2 = { x: size * 0.66, y: size * 0.64 }
+    drawBubble(b1.x, b1.y, r)
+    drawBubble(b2.x, b2.y, r)
+    rt.draw(g, 0, 0)
+    g.destroy()
+
+    const glyphScale = (r * 1.1) / 240
+    const a = this.add.image(0, 0, 'asset_letters_a').setScale(glyphScale).setVisible(false)
+    rt.draw(a, b1.x, b1.y)
+    a.destroy()
+    const three = this.add.image(0, 0, 'asset_numbers_c').setScale(glyphScale).setVisible(false)
+    rt.draw(three, b2.x, b2.y)
+    three.destroy()
+
+    rt.saveTexture('asset_bubble_icon')
     rt.destroy()
   }
 

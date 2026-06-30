@@ -131,6 +131,16 @@ const GAMES = [
     darkHex: '#0a4f63',
     iconKey: 'asset_pattern_icon', // baked circle-square-circle row from Boot
     iconFrame: 0
+  },
+  {
+    label: 'Bubbles',
+    scene: 'GameM',
+    color: 0x0e9f6e, // deep teal-green — distinct from the other blues/greens
+    colorDark: 0x0a6e4d,
+    darkHex: '#064d36',
+    iconKey: 'asset_bubble_icon', // baked A + 3 bubbles from Boot
+    iconFrame: 0,
+    free: true
   }
 ]
 

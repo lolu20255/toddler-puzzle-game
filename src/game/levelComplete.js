@@ -1,7 +1,7 @@
 import { settings } from '../services/settings'
 import { EventBus } from './EventBus'
 
-const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE', 'GameF', 'GameG', 'GameH', 'GameI', 'GameJ', 'GameK', 'GameL']
+const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE', 'GameF', 'GameG', 'GameH', 'GameI', 'GameJ', 'GameK', 'GameL', 'GameM']
 
 /**
  * Pick the next pack to play, excluding the one the toddler just finished.
