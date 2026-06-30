@@ -122,6 +122,15 @@ const GAMES = [
     iconKey: 'asset_colors_icon', // baked 2×2 rainbow gumballs from Boot
     iconFrame: 0,
     free: true
+  },
+  {
+    label: 'Patterns',
+    scene: 'GameL',
+    color: 0x06b6d4, // cyan — fresh, signals the early-logic mechanic
+    colorDark: 0x0e7490,
+    darkHex: '#0a4f63',
+    iconKey: 'asset_pattern_icon', // baked circle-square-circle row from Boot
+    iconFrame: 0
   }
 ]
 

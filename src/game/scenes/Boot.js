@@ -279,6 +279,7 @@ export class Boot extends Scene {
       this.generateCountIcon()
       this.generateColorTextures()
       this.generateColorsIcon()
+      this.generatePatternIcon()
 
       // First-launch parent onboarding gate. If the parent hasn't completed
       // the welcome → name → language flow yet, hold here, let the Vue
@@ -393,6 +394,41 @@ export class Boot extends Scene {
       img.destroy()
     })
     rt.saveTexture('asset_colors_icon')
+    rt.destroy()
+  }
+
+  /**
+   * Bake `asset_pattern_icon` — three mini shapes in a row (circle, square,
+   * circle) that read as a repeating A-B-A sequence for the Patterns game
+   * (GameL) menu card. Reuses the `_drawShape` helper for the cookie-cutter
+   * look shared with the Shapes pack.
+   */
+  generatePatternIcon() {
+    if (this.textures.exists('asset_pattern_icon')) return
+    const size = 240
+    const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+    const g = this.make.graphics({ x: 0, y: 0 }, false)
+    const r = size * 0.13
+    const stroke = Math.max(5, size * 0.035)
+    const shadowOffset = size * 0.022
+    const cy = size * 0.5
+
+    const drawMini = (shape, cx, fill, strokeColor) => {
+      g.fillStyle(0x000000, 0.22)
+      g.lineStyle(0, 0, 0)
+      this._drawShape(g, shape, cx, cy + shadowOffset, r)
+      g.fillStyle(fill, 1)
+      g.lineStyle(stroke, strokeColor, 1)
+      this._drawShape(g, shape, cx, cy, r)
+    }
+
+    drawMini('circle', size * 0.22, 0xff5d5d, 0x7a1f1f)
+    drawMini('square', size * 0.5, 0x3ba4ff, 0x0e4b85)
+    drawMini('circle', size * 0.78, 0xff5d5d, 0x7a1f1f)
+
+    rt.draw(g, 0, 0)
+    g.destroy()
+    rt.saveTexture('asset_pattern_icon')
     rt.destroy()
   }
 
