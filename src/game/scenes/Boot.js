@@ -277,6 +277,8 @@ export class Boot extends Scene {
       this.generateMemoryIcon()
       this.generateSortIcon()
       this.generateCountIcon()
+      this.generateColorTextures()
+      this.generateColorsIcon()
 
       // First-launch parent onboarding gate. If the parent hasn't completed
       // the welcome → name → language flow yet, hold here, let the Vue
@@ -312,6 +314,87 @@ export class Boot extends Scene {
     '#7a1f1f', '#7a4400', '#856100', '#1a4f17', '#0e4b85',
     '#2a1a70', '#421e7a', '#871a4a', '#0b5b54', '#7a3a00'
   ]
+
+  // Seven teaching colours for the Colours game (GameK), keyed a-g in rainbow
+  // order. `fill` is the bright gumball body, `dark` the cookie-cutter stroke +
+  // drop shadow tone. Names live in itemNames.js (`colors` pack).
+  static COLOR_PALETTE = [
+    { letter: 'a', fill: 0xff4d4d, dark: 0xb01818 }, // red
+    { letter: 'b', fill: 0xff9f1c, dark: 0xb86a00 }, // orange
+    { letter: 'c', fill: 0xffd23f, dark: 0xc99400 }, // yellow
+    { letter: 'd', fill: 0x4cc44c, dark: 0x227a22 }, // green
+    { letter: 'e', fill: 0x3aa0ff, dark: 0x1664b8 }, // blue
+    { letter: 'f', fill: 0x9b5de5, dark: 0x6a32b0 }, // purple
+    { letter: 'g', fill: 0xff7fc4, dark: 0xc94e93 } // pink
+  ]
+
+  /**
+   * Bake seven `asset_colors_<a-g>` glossy "gumball" textures — a bright
+   * coloured disc with a dark cookie-cutter stroke, a soft drop shadow, and a
+   * white gloss highlight so each colour reads as a tappable candy. Used by the
+   * Colours game (GameK) for both the prompt swatch and the choice gumballs.
+   * The `asset_colors_<letter>` key doubles as the audio/name lookup key.
+   */
+  generateColorTextures() {
+    const size = 240
+    const cx = size / 2
+    const cy = size / 2
+    const r = size * 0.4
+    const stroke = Math.max(6, size * 0.05)
+
+    for (const { letter, fill, dark } of Boot.COLOR_PALETTE) {
+      const key = `asset_colors_${letter}`
+      if (this.textures.exists(key)) continue
+
+      const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+      const g = this.make.graphics({ x: 0, y: 0 }, false)
+
+      // Drop shadow.
+      g.fillStyle(0x000000, 0.22)
+      g.fillCircle(cx, cy + size * 0.03, r)
+      // Body + stroke.
+      g.fillStyle(fill, 1)
+      g.lineStyle(stroke, dark, 1)
+      g.fillCircle(cx, cy, r)
+      g.strokeCircle(cx, cy, r)
+      // Gloss highlight + sparkle dot, upper-left.
+      g.fillStyle(0xffffff, 0.45)
+      g.fillEllipse(cx - r * 0.3, cy - r * 0.34, r * 0.62, r * 0.42)
+      g.fillStyle(0xffffff, 0.9)
+      g.fillCircle(cx - r * 0.42, cy - r * 0.42, r * 0.1)
+
+      rt.draw(g, 0, 0)
+      g.destroy()
+      rt.saveTexture(key)
+      rt.destroy()
+    }
+  }
+
+  /**
+   * Bake `asset_colors_icon` — four gumballs (red, yellow, blue, green) in a
+   * 2×2 cluster for the MainMenu Colours card. Reuses the baked gumball
+   * textures, so it must run AFTER `generateColorTextures()`.
+   */
+  generateColorsIcon() {
+    if (this.textures.exists('asset_colors_icon')) return
+    const size = 240
+    const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+    const scale = 0.46
+    const spots = [
+      { key: 'asset_colors_a', x: size * 0.33, y: size * 0.33 },
+      { key: 'asset_colors_c', x: size * 0.67, y: size * 0.33 },
+      { key: 'asset_colors_e', x: size * 0.33, y: size * 0.67 },
+      { key: 'asset_colors_d', x: size * 0.67, y: size * 0.67 }
+    ]
+    spots.forEach(({ key, x, y }) => {
+      if (!this.textures.exists(key)) return
+      const img = this.add.image(0, 0, key).setScale(scale).setVisible(false)
+      rt.draw(img, x, y)
+      img.destroy()
+    })
+    rt.saveTexture('asset_colors_icon')
+    rt.destroy()
+  }
 
   /**
    * Bake nine `asset_<pack>_<a-i>` textures — chunky cookie-cutter glyphs,

@@ -9,6 +9,7 @@ import { GameG } from './scenes/GameG'
 import { GameH } from './scenes/GameH'
 import { GameI } from './scenes/GameI'
 import { GameJ } from './scenes/GameJ'
+import { GameK } from './scenes/GameK'
 import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
 import { Settings } from './scenes/Settings'
@@ -62,7 +63,7 @@ const config = {
     // smaller card windows in MainMenu.
     mipmapFilter: 'LINEAR_MIPMAP_LINEAR'
   },
-  scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameF, GameG, GameH, GameI, GameJ, GameOver],
+  scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameF, GameG, GameH, GameI, GameJ, GameK, GameOver],
   physics: {
     // Matter.js (bundled with Phaser) so the falling puzzle pieces collide by
     // their actual body shape and stack cleanly without ever overlapping —

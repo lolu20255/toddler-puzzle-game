@@ -112,6 +112,16 @@ const GAMES = [
     iconKey: 'asset_count_icon', // baked 🔢 keycap-numbers emoji from Boot
     iconFrame: 0,
     free: true
+  },
+  {
+    label: 'Colors',
+    scene: 'GameK',
+    color: 0xc026d3, // vibrant fuchsia — fresh, distinct from purple/pink
+    colorDark: 0x8312a0,
+    darkHex: '#5e0a73',
+    iconKey: 'asset_colors_icon', // baked 2×2 rainbow gumballs from Boot
+    iconFrame: 0,
+    free: true
   }
 ]
 

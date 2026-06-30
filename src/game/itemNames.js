@@ -52,6 +52,12 @@ export const ITEM_NAMES = {
     shapes: {
       a: 'CIRCLE', b: 'SQUARE', c: 'TRIANGLE', d: 'RECTANGLE',
       e: 'STAR', f: 'HEART', g: 'DIAMOND', h: 'HEXAGON', i: 'OVAL'
+    },
+    // Colours game (GameK) — spoken bare ("Red!"), no spelling. Keyed a-g in
+    // the same rainbow order as Boot.COLOR_PALETTE / the baked gumball textures.
+    colors: {
+      a: 'RED', b: 'ORANGE', c: 'YELLOW', d: 'GREEN',
+      e: 'BLUE', f: 'PURPLE', g: 'PINK'
     }
   },
   es: {
@@ -87,6 +93,11 @@ export const ITEM_NAMES = {
     shapes: {
       a: 'CÍRCULO', b: 'CUADRADO', c: 'TRIÁNGULO', d: 'RECTÁNGULO',
       e: 'ESTRELLA', f: 'CORAZÓN', g: 'ROMBO', h: 'HEXÁGONO', i: 'ÓVALO'
+    },
+    // Colours game (GameK) — bare colour words, no spelling. See en.colors.
+    colors: {
+      a: 'ROJO', b: 'NARANJA', c: 'AMARILLO', d: 'VERDE',
+      e: 'AZUL', f: 'MORADO', g: 'ROSA'
     }
   }
 }
@@ -96,7 +107,7 @@ export const ITEM_NAMES = {
 // counting. (The Letters pack is handled separately by the single-character
 // rule in the phrase builders.) Shared by the runtime (levelAudio.js) and the
 // batch generator (generate-level-audios.mjs) so both build the same phrase.
-export const WORD_ONLY_PACKS = new Set(['count'])
+export const WORD_ONLY_PACKS = new Set(['count', 'colors'])
 
 /** True if `pack`'s audio should be the plain word with no spelling prefix. */
 export function isWordOnlyPack(pack) {
