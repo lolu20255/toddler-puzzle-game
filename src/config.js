@@ -29,3 +29,16 @@ export const TESTING_FEATURES = false
  * `purchases.js` so MainMenu's card-build also picks it up synchronously.
  */
 export const FORCE_PREMIUM = true
+
+/**
+ * Master switch for the "rate the app" feature (the RateUs.vue overlay AND the
+ * rate card in the Settings scene). Disabled for the initial submission: the
+ * app has no live App Store listing yet, so `InAppReview.requestReview()` shows
+ * nothing and the Settings card's review URL is a placeholder — both read as
+ * "unresponsive" to a reviewer (Apple Guideline 2.1(a)).
+ *
+ * To re-enable after the app is live: set this to `true` and replace the
+ * placeholder `RATE_APP_URL_IOS` in `src/game/scenes/Settings.js` with the real
+ * `https://apps.apple.com/app/id<APP_ID>?action=write-review` link.
+ */
+export const RATE_US_ENABLED = false

@@ -50,10 +50,8 @@ export function showLevelComplete(scene, onComplete) {
   container.add(dim)
 
   // Banner text.
-  const name = settings.toddlerName()
   const lang = settings.language()
   const headline = lang === 'es' ? '¡GENIAL!' : 'GREAT JOB!'
-  const subline = name ? (lang === 'es' ? `¡${name}!` : `${name}!`) : ''
 
   const headlineSize = minSide * 0.16
   const headlineText = scene.add
@@ -67,31 +65,6 @@ export function showLevelComplete(scene, onComplete) {
   headlineText.setStroke('#e8881c', headlineSize * 0.12)
   headlineText.setShadow(0, headlineSize * 0.05, 'rgba(0,0,0,0.35)', 6)
   container.add(headlineText)
-
-  if (subline) {
-    const subSize = minSide * 0.12
-    const subText = scene.add
-      .text(0, minSide * 0.08, subline, {
-        fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
-        fontSize: `${subSize}px`,
-        color: '#ffce3a',
-        fontStyle: 'bold'
-      })
-      .setOrigin(0.5)
-    subText.setStroke('#5a3a1a', subSize * 0.13)
-    subText.setShadow(0, subSize * 0.05, 'rgba(0,0,0,0.35)', 5)
-    container.add(subText)
-
-    if (!reducedMotion) {
-      scene.tweens.add({
-        targets: subText,
-        scale: { from: 0, to: 1 },
-        duration: 460,
-        delay: 200,
-        ease: 'Back.out'
-      })
-    }
-  }
 
   if (!reducedMotion) {
     // Headline slams in from above with a bounce.

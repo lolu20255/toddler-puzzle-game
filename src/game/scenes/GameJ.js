@@ -2,14 +2,14 @@ import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { addBackButton, addScoreBadge } from '../hud'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
-import { preloadLevelAudio } from '../../services/libro/levelAudio'
+import { preloadLevelAudio, stopAllLevelAudio } from '../../services/libro/levelAudio'
 import { settings } from '../../services/settings'
 
 // Each game session walks the toddler through five counting rounds, each
 // with one MORE item than the last (1 → 2 → 3 → 4 → 5). This reinforces
 // the COUNT SEQUENCE alongside one-to-one correspondence (tap an item →
 // hear the next number → see the next digit fill into the slot row).
-const MAX_COUNT = 5
+const MAX_COUNT = 10
 
 // Asset pools we draw the "thing to count" from. Numbers/Letters/Shapes
 // excluded — they read as digits/glyphs, which would confuse the counting
@@ -34,7 +34,12 @@ const ITEM_POSITIONS = {
   2: [[0.32, 0.36], [0.68, 0.36]],
   3: [[0.5, 0.26], [0.3, 0.46], [0.7, 0.46]],
   4: [[0.3, 0.28], [0.7, 0.28], [0.3, 0.5], [0.7, 0.5]],
-  5: [[0.3, 0.26], [0.7, 0.26], [0.5, 0.4], [0.3, 0.54], [0.7, 0.54]]
+  5: [[0.3, 0.26], [0.7, 0.26], [0.5, 0.4], [0.3, 0.54], [0.7, 0.54]],
+  6: [[0.28, 0.30], [0.5, 0.30], [0.72, 0.30], [0.28, 0.52], [0.5, 0.52], [0.72, 0.52]],
+  7: [[0.3, 0.27], [0.5, 0.27], [0.7, 0.27], [0.22, 0.50], [0.41, 0.50], [0.59, 0.50], [0.78, 0.50]],
+  8: [[0.22, 0.30], [0.41, 0.30], [0.59, 0.30], [0.78, 0.30], [0.22, 0.52], [0.41, 0.52], [0.59, 0.52], [0.78, 0.52]],
+  9: [[0.28, 0.24], [0.5, 0.24], [0.72, 0.24], [0.28, 0.42], [0.5, 0.42], [0.72, 0.42], [0.28, 0.60], [0.5, 0.60], [0.72, 0.60]],
+  10: [[0.15, 0.30], [0.325, 0.30], [0.5, 0.30], [0.675, 0.30], [0.85, 0.30], [0.15, 0.52], [0.325, 0.52], [0.5, 0.52], [0.675, 0.52], [0.85, 0.52]]
 }
 
 /**
@@ -86,7 +91,9 @@ export class GameJ extends Scene {
     // file-fetch latency. All five are bundled MP3s in production.
     const lang = settings.language()
     for (let n = 1; n <= MAX_COUNT; n++) {
-      preloadLevelAudio(`asset_numbers_${String.fromCharCode(96 + n)}`, lang).catch(() => {})
+      // `count` audio = bare spoken number ("One!") with no spelling, unlike
+      // the `numbers` pack ("O, N, E. ONE!") used by the Numbers shadow game.
+      preloadLevelAudio(`asset_count_${String.fromCharCode(96 + n)}`, lang).catch(() => {})
     }
 
     this._startRound(1)
@@ -137,8 +144,10 @@ export class GameJ extends Scene {
     const assetKey = `asset_${pool.pack}_${letter}`
 
     // ── Items ────────────────────────────────────────────────────────
+    // Item radius shrinks as the count grows so 6-10 copies don't overlap.
+    // Capped at 0.085 so the small rounds (1-5) look exactly as before.
     const positions = ITEM_POSITIONS[count]
-    const itemR = this.minSide * 0.085
+    const itemR = this.minSide * Math.min(0.085, 0.45 / count)
     positions.forEach((p, i) => {
       const x = this.sWidth * p[0]
       const y = this.sHeight * p[1]
@@ -170,8 +179,12 @@ export class GameJ extends Scene {
     // corresponding digit texture (asset_numbers_a..e) when the toddler
     // taps an item in sequence.
     const slotY = this.sHeight * 0.82
-    const slotSize = this.minSide * 0.13
-    const slotGap = this.minSide * 0.04
+    // Slot size shrinks to keep the whole row inside 94% of the width once the
+    // count climbs (10 slots at the old 0.13 size would overflow). The 0.13 cap
+    // and 0.3 gap-ratio keep rounds 1-5 identical to before.
+    const maxRowW = this.sWidth * 0.94
+    const slotSize = Math.min(this.minSide * 0.13, maxRowW / (count + 0.3 * (count - 1)))
+    const slotGap = slotSize * 0.3
     const totalW = slotSize * count + slotGap * (count - 1)
     const startX = (this.sWidth - totalW) / 2 + slotSize / 2
     for (let i = 0; i < count; i++) {
@@ -215,9 +228,16 @@ export class GameJ extends Scene {
     // 2. Play the spoken number ("ONE!", "TWO!"…). Reuses the bundled
     // `/audio/levels/{lang}/numbers/{letter}.mp3` library — instant playback
     // because they're loaded as static assets, not API calls.
+    //
+    // Silence any number still playing first: a toddler tapping fast would
+    // otherwise hear "one" and "two" overlap. stopAllLevelAudio() pauses +
+    // rewinds every cached clip (including the one we're about to replay).
+    stopAllLevelAudio()
     const lang = settings.language()
     const letter = String.fromCharCode(96 + count) // 1→'a', 2→'b'...
-    preloadLevelAudio(`asset_numbers_${letter}`, lang)
+    // Spoken count word only ("One!"), via the `count` pack — NOT the spelled
+    // `numbers` audio. The digit-glyph texture below still uses `asset_numbers`.
+    preloadLevelAudio(`asset_count_${letter}`, lang)
       .then((audio) => {
         if (!audio) return
         try {

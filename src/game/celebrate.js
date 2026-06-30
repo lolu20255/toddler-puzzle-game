@@ -1,23 +1,8 @@
 import { nameForAssetKey } from './itemNames'
-import { preload } from '../services/libro/pronunciation'
-import { preloadLevelAudio } from '../services/libro/levelAudio'
+import { preloadLevelAudio, preloadPraise } from '../services/libro/levelAudio'
 import { stopAllSpeech } from '../services/libro'
 import { settings } from '../services/settings'
 import { EventBus } from './EventBus'
-
-/**
- * Praise phrase — combines "good job" with the toddler's name when set.
- * Falls back to just the praise if the parent hasn't entered a name.
- *
- * This is audio 2 of the celebration. Cache key = name + lang, so once it's
- * generated for "Logan" in English it persists in IndexedDB and replays
- * instantly on every subsequent match — no network call after the first.
- */
-function buildPraisePhrase(lang) {
-  const name = settings.toddlerName()
-  if (lang === 'es') return name ? `Muy bien ${name}!` : 'Muy bien!'
-  return name ? `Good job ${name}!` : 'Good job!'
-}
 
 /**
  * Pop a celebratory modal when a toddler matches a piece.
@@ -212,15 +197,10 @@ export function showCelebration(scene, assetKey, onDismissed) {
     // which first tries the bundled MP3 (`public/audio/levels/<lang>/<pack>/
     // <letter>.mp3`, pre-generated via `npm run generate:audio`), and only
     // falls back to the API if the file is missing for this asset.
-    // Audio 2 — per-toddler "Good job <Name>!" praise. Always goes through
-    // `preload()` since the name is unique per device.
-    const praisePhrase = buildPraisePhrase(lang)
-    // Kick both fetches off in parallel, but DON'T await them together —
-    // in airplane mode the bundled main audio resolves instantly while the
-    // praise audio has to hit the API and fail, which used to delay the
-    // entire celebration by up to the axios timeout (10s). Awaiting them
-    // independently lets the spelling start the moment the bundle returns.
-    const praisePromise = preload(praisePhrase, lang)
+    // Audio 2 — generic "Good job!" praise from the bundled MP3 (no API call,
+    // no personal data, works offline). Kicked off in parallel with audio 1 but
+    // awaited independently so the spelling can start the moment audio 1 loads.
+    const praisePromise = preloadPraise(lang)
     const mainAudio = await preloadLevelAudio(assetKey, lang)
 
     if (!modal.scene) return // a newer match already destroyed us

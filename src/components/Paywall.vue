@@ -14,7 +14,7 @@
  * Parental gate (math question) sits in front of the purchase call, per
  * Apple kids-category requirements.
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, markRaw, toRaw } from 'vue'
 import { EventBus } from '../game/EventBus'
 import { purchasesService } from '../services/purchases'
 import { isAndroid } from '../services/platform'
@@ -33,14 +33,15 @@ const restoring = ref(false)
 const toast = ref('')
 let toastTimer = null
 
-// Parental gate state
+// Parental gate state. Kids-category (Guideline 5.1.4) requires any purchase
+// to sit behind a task a young child can't complete. We use a TYPED answer to
+// a two-digit sum (e.g. "2 + 15") rather than multiple choice, so it can't be
+// passed by guessing.
 const gateOpen = ref(false)
 const gateA = ref(0)
 const gateB = ref(0)
-const gateOptions = ref([])
+const gateAnswer = ref('')
 const gateCorrect = computed(() => gateA.value + gateB.value)
-const answerFlash = ref(null) // 'correct' | 'wrong' | null
-const wrongPick = ref(null)
 const shaking = ref(false)
 
 const termsUrl = computed(() =>
@@ -95,7 +96,11 @@ async function loadOffering() {
     pkgs.find((p) => /custom/i.test(p.packageType || '')) ||
     pkgs[0]
   if (!lifetime) return
-  lifetimePackage.value = lifetime
+  // markRaw: keep the RevenueCat package a PLAIN object. If Vue wraps it in a
+  // reactive Proxy, passing it back through the Capacitor bridge to
+  // purchasePackage() loses the package and the native SDK rejects the call
+  // with "Must provide aPackage parameter".
+  lifetimePackage.value = markRaw(lifetime)
   priceString.value = lifetime.product?.priceString || PREVIEW_PRICE
 }
 
@@ -104,39 +109,39 @@ function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-function openParentalGate() {
+// The action to run once the parental gate is solved. Set by openParentalGate
+// so the SAME gate guards the purchase AND the outbound Privacy/Terms links —
+// Apple Kids Category (Guideline 1.3 / 5.1.4) requires a parental gate in front
+// of both purchases and any link that leaves the app.
+let gateAction = null
+
+/** Open a URL in the system browser (matches the window.open pattern in Settings). */
+function openExternal(url) {
+  window.open(url, '_blank')
+}
+
+function openParentalGate(action) {
   if (processing.value) return
-  // Random easy sum so toddlers can't solve it. Distractors stay close to
-  // the correct answer for plausibility.
+  gateAction = action
+  // Two-digit sum a parent solves instantly but a toddler can't (e.g. 2 + 15).
   gateA.value = rand(2, 9)
-  gateB.value = rand(2, 9)
-  const correct = gateA.value + gateB.value
-  const distractors = new Set()
-  while (distractors.size < 3) {
-    const d = correct + rand(-4, 4)
-    if (d !== correct && d > 0) distractors.add(d)
-  }
-  gateOptions.value = [...distractors, correct].sort(() => Math.random() - 0.5)
-  answerFlash.value = null
-  wrongPick.value = null
+  gateB.value = rand(11, 19)
+  gateAnswer.value = ''
+  shaking.value = false
   gateOpen.value = true
 }
 
-function tryAnswer(opt) {
-  if (opt === gateCorrect.value) {
-    answerFlash.value = 'correct'
-    setTimeout(() => {
-      gateOpen.value = false
-      purchase()
-    }, 250)
+function submitAnswer() {
+  if (parseInt(gateAnswer.value, 10) === gateCorrect.value) {
+    gateOpen.value = false
+    const action = gateAction
+    gateAction = null
+    if (action) action()
   } else {
-    answerFlash.value = 'wrong'
-    wrongPick.value = opt
     shaking.value = true
+    gateAnswer.value = ''
     setTimeout(() => {
       shaking.value = false
-      answerFlash.value = null
-      wrongPick.value = null
     }, 450)
   }
 }
@@ -152,7 +157,9 @@ async function purchase() {
   // Play Billing modal is invoked — the four branches below resolve to one
   // of `purchase_completed`, `purchase_cancelled`, or `purchase_failed`.
   EventBus.emit('paywall:purchase_started')
-  const result = await purchasesService.purchasePackage(lifetimePackage.value)
+  // toRaw: unwrap any Vue reactive proxy so the Capacitor bridge receives the
+  // plain RevenueCat package object (see markRaw note in loadOffering).
+  const result = await purchasesService.purchasePackage(toRaw(lifetimePackage.value))
   processing.value = false
   if (result.success) {
     EventBus.emit('paywall:purchase_completed')
@@ -422,7 +429,7 @@ function showToast(message) {
             :disabled="processing"
             class="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-coral to-coralDark text-lg font-bold text-white shadow-chunkySm transition-transform active:scale-[0.98] disabled:opacity-60"
             style="text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3)"
-            @click="openParentalGate"
+            @click="openParentalGate(purchase)"
           >
             <span aria-hidden="true">🔓</span>
             <span>{{ processing ? 'Processing…' : 'Unlock Everything' }}</span>
@@ -441,23 +448,21 @@ function showToast(message) {
               {{ restoring ? 'Restoring…' : 'Restore' }}
             </button>
             <span aria-hidden="true">·</span>
-            <a
-              :href="PRIVACY_URL"
-              target="_blank"
-              rel="noopener"
+            <button
+              type="button"
               class="font-semibold underline-offset-2 hover:underline"
+              @click="openParentalGate(() => openExternal(PRIVACY_URL))"
             >
               Privacy
-            </a>
+            </button>
             <span aria-hidden="true">·</span>
-            <a
-              :href="termsUrl"
-              target="_blank"
-              rel="noopener"
+            <button
+              type="button"
               class="font-semibold underline-offset-2 hover:underline"
+              @click="openParentalGate(() => openExternal(termsUrl))"
             >
               Terms
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -500,7 +505,7 @@ function showToast(message) {
               </button>
             </div>
             <p class="mt-1 text-sm text-warm">
-              Solve this to continue with purchase
+              Type the answer to continue
             </p>
             <p
               class="mt-6 text-center text-4xl font-bold text-royal"
@@ -508,25 +513,24 @@ function showToast(message) {
             >
               {{ gateA }} + {{ gateB }} = ?
             </p>
-            <div class="mt-6 grid grid-cols-2 gap-3">
-              <button
-                v-for="opt in gateOptions"
-                :key="opt"
-                type="button"
-                :class="[
-                  'h-12 rounded-full text-lg font-bold transition-colors',
-                  answerFlash === 'correct' && opt === gateCorrect
-                    ? 'bg-green-500 text-white'
-                    : answerFlash === 'wrong' && opt === wrongPick
-                    ? 'bg-red-500 text-white'
-                    : 'bg-sunshine text-royal hover:bg-yellow-300'
-                ]"
-                :aria-label="`Answer ${opt}`"
-                @click="tryAnswer(opt)"
-              >
-                {{ opt }}
-              </button>
-            </div>
+            <input
+              v-model="gateAnswer"
+              type="number"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="?"
+              aria-label="Your answer"
+              class="mt-6 h-14 w-full rounded-2xl border-2 border-coral/40 bg-cream text-center text-3xl font-bold text-royal focus:border-coral focus:outline-none"
+              @keyup.enter="submitAnswer"
+            />
+            <button
+              type="button"
+              :disabled="gateAnswer === ''"
+              class="mt-4 h-12 w-full rounded-full bg-gradient-to-b from-coral to-coralDark text-lg font-bold text-white shadow-chunkySm transition-transform active:scale-[0.98] disabled:opacity-50"
+              @click="submitAnswer"
+            >
+              Continue
+            </button>
           </div>
         </div>
       </Transition>

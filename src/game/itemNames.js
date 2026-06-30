@@ -32,6 +32,13 @@ export const ITEM_NAMES = {
       a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR',
       e: 'FIVE', f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE'
     },
+    // Count game (GameJ) audio — same number words, but spoken bare ("One!")
+    // with NO letter spelling. Listed in WORD_ONLY_PACKS below so the phrase
+    // builders skip the "O, N, E." prefix that the Numbers shadow pack uses.
+    count: {
+      a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR', e: 'FIVE',
+      f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE', j: 'TEN'
+    },
     // pack F (procedural) — first 9 letters of the alphabet, spoken as
     // their letter name. celebrate.js treats single-char phrases specially
     // (no spelling prefix) so the audio is just "A!" not "A. A!".
@@ -68,6 +75,11 @@ export const ITEM_NAMES = {
       a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO',
       e: 'CINCO', f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE'
     },
+    // Count game (GameJ) audio — bare number words, no spelling. See en.count.
+    count: {
+      a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO', e: 'CINCO',
+      f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE', j: 'DIEZ'
+    },
     letters: {
       a: 'A', b: 'B', c: 'C', d: 'D',
       e: 'E', f: 'F', g: 'G', h: 'H', i: 'I'
@@ -79,9 +91,21 @@ export const ITEM_NAMES = {
   }
 }
 
+// Packs whose audio is the bare word, NOT spelled out letter-by-letter. The
+// Count game says "One!", "Two!"; spelling numbers ("O, N, E…") is wrong for
+// counting. (The Letters pack is handled separately by the single-character
+// rule in the phrase builders.) Shared by the runtime (levelAudio.js) and the
+// batch generator (generate-level-audios.mjs) so both build the same phrase.
+export const WORD_ONLY_PACKS = new Set(['count'])
+
+/** True if `pack`'s audio should be the plain word with no spelling prefix. */
+export function isWordOnlyPack(pack) {
+  return WORD_ONLY_PACKS.has(pack)
+}
+
 /** Turn an asset key into a printable word in the given language. */
 export function nameForAssetKey(assetKey, lang = 'en') {
-  const match = /^asset_(.+)_([a-i])$/.exec(assetKey || '')
+  const match = /^asset_(.+)_([a-j])$/.exec(assetKey || '')
   if (!match) return ''
   const [, pack, letter] = match
   const table = ITEM_NAMES[lang] || ITEM_NAMES.en

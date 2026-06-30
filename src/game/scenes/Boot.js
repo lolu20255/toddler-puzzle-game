@@ -302,13 +302,15 @@ export class Boot extends Scene {
   // Rainbow palette + matching dark strokes shared by both procedural glyph
   // packs (numbers + letters). 1→7 follow rainbow order, then pink + teal
   // for slots 8 + 9.
+  // 1-9 (rainbow + pink + teal), then a 10th warm orange for "10" in the
+  // Count game. The 10th entry is unused by the 9-glyph Letters/Shapes packs.
   static GLYPH_FILLS = [
     '#ff5d5d', '#ff9f1c', '#ffd23f', '#5fc34a', '#3ba4ff',
-    '#6c4ad6', '#9b5de5', '#ff5da2', '#29c7b8'
+    '#6c4ad6', '#9b5de5', '#ff5da2', '#29c7b8', '#ff7a00'
   ]
   static GLYPH_STROKES = [
     '#7a1f1f', '#7a4400', '#856100', '#1a4f17', '#0e4b85',
-    '#2a1a70', '#421e7a', '#871a4a', '#0b5b54'
+    '#2a1a70', '#421e7a', '#871a4a', '#0b5b54', '#7a3a00'
   ]
 
   /**
@@ -322,7 +324,6 @@ export class Boot extends Scene {
    */
   _generateGlyphPack(packKey, glyphs) {
     const size = 240
-    const fontSize = Math.round(size * 0.88)
     const fills = Boot.GLYPH_FILLS
     const strokes = Boot.GLYPH_STROKES
 
@@ -331,6 +332,10 @@ export class Boot extends Scene {
       const letter = String.fromCharCode(97 + i)
       const key = `asset_${packKey}_${letter}`
       if (this.textures.exists(key)) continue
+
+      // Two-character glyphs ("10") render smaller so they fit the 240px box
+      // without clipping; single glyphs keep the chunky 0.88 size.
+      const fontSize = Math.round(size * (glyph.length > 1 ? 0.56 : 0.88))
 
       const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
 
@@ -376,7 +381,7 @@ export class Boot extends Scene {
   }
 
   generateNumberTextures() {
-    this._generateGlyphPack('numbers', ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+    this._generateGlyphPack('numbers', ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
   }
 
   generateLetterTextures() {

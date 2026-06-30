@@ -4,6 +4,7 @@ import { settings, SUPPORTED_LANGUAGES } from '../../services/settings'
 import { purchasesService } from '../../services/purchases'
 import { addBackButton } from '../hud'
 import { getGrid } from '../layout'
+import { RATE_US_ENABLED } from '../../config'
 
 // Provided by Vite `define` in vite/config.*.mjs from package.json#version.
 const APP_VERSION =
@@ -21,10 +22,9 @@ const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
 /**
  * Parent-facing Settings, reached via the cog top-right of the MainMenu.
- * Three consistent rounded-white cards stacked vertically:
- *   1. Toddler's name (DOM input)
- *   2. Learning language — English / Español pill picker
- *   3. Vibration on/off toggle
+ * Consistent rounded-white cards stacked vertically:
+ *   1. Learning language — English / Español pill picker
+ *   2. Vibration on/off toggle
  *
  * Each card uses the same visual recipe (shadow → body → orange accent border
  * → top highlight + tiny uppercase section label) so the screen reads as a
@@ -128,27 +128,30 @@ export class Settings extends Scene {
     const cardX = this.grid.contentCenter
     const cardW = this.grid.contentWidth
 
-    // Card heights proportional to content. 5 cards now: premium banner at
-    // the top (parents always see it first), the original 3 setting cards,
-    // and the rate-us card at the bottom (closes the page on a positive note).
-    const premiumH = regionH * 0.16
-    const nameH = regionH * 0.21
-    const langH = regionH * 0.22
-    const vibH = regionH * 0.11
-    const rateH = regionH * 0.14
-    const totalCardsH = premiumH + nameH + langH + vibH + rateH
-    const gap = (regionH - totalCardsH) / 4 // 4 gaps between 5 cards
+    // Card list (top to bottom). The rate-us card only appears when the rating
+    // feature is enabled — it's off until the app is live, since its review
+    // link is a placeholder that reads as an unresponsive button (Apple 2.1(a)).
+    // `weight` is the card's height as a fraction of the region; gaps fill the
+    // remainder evenly. Premium banner sits first (parents always see it).
+    const cards = [
+      { weight: 0.22, build: (cx, cy, w, h) => this.buildPremiumCard(cx, cy, w, h) },
+      { weight: 0.32, build: (cx, cy, w, h) => this.buildLanguageCard(cx, cy, w, h) },
+      { weight: 0.18, build: (cx, cy, w, h) => this.buildVibrationCard(cx, cy, w, h) }
+    ]
+    if (RATE_US_ENABLED) {
+      cards.push({ weight: 0.16, build: (cx, cy, w, h) => this.buildRateUsCard(cx, cy, w, h) })
+    }
 
-    let cy = top + premiumH / 2
-    this.buildPremiumCard(cardX, cy, cardW, premiumH)
-    cy += premiumH / 2 + gap + nameH / 2
-    this.buildNameCard(cardX, cy, cardW, nameH)
-    cy += nameH / 2 + gap + langH / 2
-    this.buildLanguageCard(cardX, cy, cardW, langH)
-    cy += langH / 2 + gap + vibH / 2
-    this.buildVibrationCard(cardX, cy, cardW, vibH)
-    cy += vibH / 2 + gap + rateH / 2
-    this.buildRateUsCard(cardX, cy, cardW, rateH)
+    const totalCardsH = cards.reduce((sum, c) => sum + c.weight * regionH, 0)
+    const gap = (regionH - totalCardsH) / (cards.length - 1)
+
+    let cy = top
+    for (const card of cards) {
+      const h = card.weight * regionH
+      cy += h / 2
+      card.build(cardX, cy, cardW, h)
+      cy += h / 2 + gap
+    }
 
     // Rebuild the premium card if the parent buys / restores while sitting
     // on this screen (the Vue Paywall sits on top of Settings, not over MainMenu).
@@ -433,59 +436,7 @@ export class Settings extends Scene {
       .setDepth(6)
   }
 
-  // ─── Card 1: toddler's name ──────────────────────────────────────────────
-  buildNameCard(cx, cy, w, h) {
-    this._drawCard(cx, cy, w, h)
-    this._sectionLabel(cx, cy - h / 2 + h * 0.13, "TODDLER'S NAME")
-
-    const inputW = w * 0.84
-    const inputH = h * 0.42
-    const inputFont = inputH * 0.42
-    const radius = inputH / 2
-    // `text-transform: uppercase` makes typed letters APPEAR uppercase live;
-    // the `input` handler below also force-uppercases the stored .value so
-    // the saved name + the TTS audio stay uppercase too.
-    const inputHTML = `
-      <input type="text" id="toddler-name-input"
-             maxlength="20"
-             placeholder="TYPE A NAME…"
-             autocomplete="off"
-             autocapitalize="characters"
-             spellcheck="false"
-             value="${escapeHtml(settings.toddlerName().toUpperCase())}"
-             style="width:${inputW}px; height:${inputH}px;
-                    font-family: Fredoka, 'Arial Rounded MT Bold', sans-serif;
-                    font-size: ${inputFont}px; font-weight: 600;
-                    text-align: center; color: #5a3a1a;
-                    background: #fff8e7;
-                    border: 4px solid #e8881c;
-                    border-radius: ${radius}px;
-                    padding: 0 ${inputH * 0.3}px;
-                    box-sizing: border-box;
-                    outline: none;
-                    -webkit-appearance: none;
-                    text-transform: uppercase;
-                    box-shadow: 0 4px 0 rgba(0,0,0,0.12);" />`
-    const dom = this.add.dom(cx, cy + h * 0.02).createFromHTML(inputHTML).setDepth(8)
-    const input = dom.getChildByID('toddler-name-input')
-    const onInput = (e) => {
-      const upper = (e.target.value || '').toUpperCase()
-      if (e.target.value !== upper) {
-        // Preserve the caret position when rewriting the value, otherwise the
-        // cursor would jump to the end on every keystroke.
-        const pos = e.target.selectionStart
-        e.target.value = upper
-        try { e.target.setSelectionRange(pos, pos) } catch { /* ignore */ }
-      }
-      settings.setToddlerName(upper)
-    }
-    input.addEventListener('input', onInput)
-    this._domHandles.push(() => input.removeEventListener('input', onInput))
-
-    this._hintLabel(cx, cy + h / 2 - h * 0.1, 'Used in "Good job …!"')
-  }
-
-  // ─── Card 2: learning language ───────────────────────────────────────────
+  // ─── Card: learning language ─────────────────────────────────────────────
   buildLanguageCard(cx, cy, w, h) {
     this._drawCard(cx, cy, w, h)
     this._sectionLabel(cx, cy - h / 2 + h * 0.11, 'LEARNING')
@@ -677,18 +628,4 @@ export class Settings extends Scene {
     g.lineStyle(1, 0x5a3a1a, 0.22)
     g.strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, radius)
   }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[c]
-  )
 }

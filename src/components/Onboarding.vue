@@ -1,13 +1,10 @@
 <script setup>
 /**
- * Parent-facing 3-step onboarding. Captures the two settings that
- * otherwise hide in the cog menu (toddler's name + language) so the
- * first match the kid completes uses personalised "Good job <Name>!"
- * in the correct language.
+ * Parent-facing 2-step onboarding. Captures the language so the first match
+ * the kid completes spells words in the correct language.
  *
  *   1. Welcome     — mascot + value prop + Get Started
- *   2. Name        — text input + Skip
- *   3. Language    — English / Español pills + Continue
+ *   2. Language    — English / Español pills + Continue
  *
  * Persisted: `settings.setOnboardingComplete(true)` on finish. Boot
  * checks this flag and emits `onboarding:open` only on first launch.
@@ -18,31 +15,26 @@
  *
  * On finish, emits `onboarding:complete` so Boot can hand off to MainMenu.
  */
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { EventBus } from '../game/EventBus'
 import { settings } from '../services/settings'
 
 const open = ref(false)
-const step = ref(0) // 0 = welcome, 1 = name, 2 = language
-const totalSteps = 3
+const step = ref(0) // 0 = welcome, 1 = language
+const totalSteps = 2
 
-const name = ref('')
 const language = ref('en') // 'en' | 'es'
 
-const nameInput = ref(null)
-
-// Step index → human-readable name for analytics. Keeps the amplitude
-// event ('welcome' / 'name' / 'language') decoupled from the integer step
-// index that drives the v-if branches.
-const STEP_NAMES = ['welcome', 'name', 'language']
+// Step index → human-readable name for analytics, decoupled from the integer
+// step index that drives the v-if branches.
+const STEP_NAMES = ['welcome', 'language']
 
 // ─── EventBus wiring ──────────────────────────────────────────────────
 const onOpen = () => {
   open.value = true
   step.value = 0
   // Pre-populate from existing settings (re-running the flow after a manual
-  // reset shouldn't blow away values that were already set).
-  name.value = settings.toddlerName() || ''
+  // reset shouldn't blow away a value that was already set).
   language.value = settings.language() || 'en'
   // EventBus → Amplitude. Fire the first step view; subsequent step views
   // fire from `next()` as the parent advances.
@@ -57,17 +49,11 @@ onUnmounted(() => {
 })
 
 // ─── Step navigation ──────────────────────────────────────────────────
-async function next() {
+function next() {
   if (step.value < totalSteps - 1) {
     step.value++
     // EventBus → Amplitude. One emit per step the parent reaches.
     EventBus.emit('onboarding:step', { step: STEP_NAMES[step.value] })
-    // Auto-focus the name input the moment step 2 lands so a parent who
-    // tapped through quickly can start typing without an extra tap.
-    if (step.value === 1) {
-      await nextTick()
-      nameInput.value?.focus()
-    }
   } else {
     finish()
   }
@@ -81,44 +67,14 @@ function skip() {
 }
 
 async function finish() {
-  // Persist whatever's in our local state. Empty name is fine — the
-  // celebration audio falls back to just "Good job!" in that case.
-  if (name.value.trim()) {
-    await settings.setToddlerName(name.value.trim().toUpperCase())
-  }
   await settings.setLanguage(language.value)
   await settings.setOnboardingComplete(true)
   open.value = false
   // `onboarding:complete` is consumed by BOTH Boot (to hand off to MainMenu)
-  // and the amplitude service (to fire the funnel-end event). The payload
-  // gives the funnel the user's final answers without a cross-event join.
+  // and the amplitude service (to fire the funnel-end event).
   EventBus.emit('onboarding:complete', {
-    name_set: !!settings.toddlerName(),
     language: settings.language()
   })
-}
-
-// ─── Name input — keep uppercase live, same UX as Settings ────────────
-function onNameInput(e) {
-  const upper = (e.target.value || '').toUpperCase()
-  if (e.target.value !== upper) {
-    const pos = e.target.selectionStart
-    e.target.value = upper
-    try {
-      e.target.setSelectionRange(pos, pos)
-    } catch {
-      /* ignore */
-    }
-  }
-  name.value = upper
-}
-
-function onNameKeydown(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    e.target.blur()
-    next()
-  }
 }
 </script>
 
@@ -231,56 +187,8 @@ function onNameKeydown(e) {
             </p>
           </template>
 
-          <!-- ── Step 1: Toddler name ───────────────────────────────── -->
+          <!-- ── Step 1: Language pick ──────────────────────────────── -->
           <template v-else-if="step === 1">
-            <div class="text-5xl">👋</div>
-            <h2
-              class="mt-4 text-3xl font-bold text-white"
-              style="text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15)"
-            >
-              What's your little one's name?
-            </h2>
-
-            <!-- "Optional" pill — sets expectations up front so parents
-                 don't feel a forced sign-up vibe. -->
-            <span
-              class="mt-3 inline-block rounded-full bg-white/25 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white/95"
-            >
-              Optional
-            </span>
-
-            <p class="mt-3 text-lg leading-snug text-white/90 max-w-sm">
-              We use it to personalize the puzzle voice — your toddler will
-              hear their own name in every celebration.
-            </p>
-
-            <input
-              ref="nameInput"
-              type="text"
-              :value="name"
-              maxlength="20"
-              placeholder="TYPE A NAME…"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              class="mt-6 h-14 w-full max-w-xs rounded-full border-4 border-coral bg-cream px-5 text-center text-2xl font-bold uppercase text-warmInk outline-none shadow-chunkySm"
-              style="text-transform: uppercase"
-              @input="onNameInput"
-              @keydown="onNameKeydown"
-            />
-
-            <!-- Live preview of what the celebration will sound like, so
-                 parents can hear the value before they commit. -->
-            <p class="mt-4 text-base text-white/80">
-              Like:&nbsp;
-              <span class="font-bold text-white">
-                "Good job {{ name || '___' }}!"
-              </span>
-            </p>
-          </template>
-
-          <!-- ── Step 2: Language pick ──────────────────────────────── -->
-          <template v-else-if="step === 2">
             <div class="text-5xl">🌍</div>
             <h2
               class="mt-4 text-3xl font-bold text-white"

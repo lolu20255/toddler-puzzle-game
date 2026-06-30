@@ -24,7 +24,6 @@
     "generate:audio": "node scripts/generate-level-audios.mjs"
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.42.5",
     "@capacitor-community/in-app-review": "^7.1.0",
     "@capacitor/android": "^7.6.5",
     "@capacitor/app": "^7.1.2",

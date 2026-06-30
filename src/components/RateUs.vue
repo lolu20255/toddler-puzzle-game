@@ -30,6 +30,7 @@ import { InAppReview } from '@capacitor-community/in-app-review'
 import { EventBus } from '../game/EventBus'
 import { settings } from '../services/settings'
 import { isNativePlatform } from '../services/platform'
+import { RATE_US_ENABLED } from '../config'
 
 const MAX_PROMPTS = 3
 const MIN_PUZZLES_BEFORE_PROMPT = 3
@@ -53,6 +54,7 @@ function shouldPrompt() {
 }
 
 async function onCheck() {
+  if (!RATE_US_ENABLED) return // feature off until the app is live (see config.js)
   if (open.value) return
   if (!shouldPrompt()) return
   // Bump the prompt count BEFORE showing so a closed/crashed app on the
@@ -65,6 +67,7 @@ async function onCheck() {
 function onOpenForce() {
   // Debug / test entry — skip gating but still bump the count so we don't
   // double-prompt in the same session.
+  if (!RATE_US_ENABLED) return // feature off until the app is live (see config.js)
   if (open.value) return
   didRate = false
   open.value = true

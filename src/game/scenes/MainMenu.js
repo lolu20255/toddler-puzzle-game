@@ -14,8 +14,9 @@ import { purchasesService } from '../../services/purchases'
  */
 // `free: true` packs are always playable. Premium packs show a lock badge
 // until the toddler's parent unlocks all puzzles via the Paywall scene.
-// Picked: Toys (cartoon taste) + Numbers (educational taste). Heroes,
-// Faces, Fruits, Letters are the "more variety" upsell.
+// 5 free / 5 locked. Free: Toys, Numbers, Faces, Letters, Count (a balanced
+// taste across art packs + basics + the counting mechanic). Locked upsell:
+// Heroes, Fruits, Shapes, Memory, Sort.
 const GAMES = [
   {
     label: 'Toys',
@@ -43,7 +44,8 @@ const GAMES = [
     colorDark: 0xdb3f82,
     darkHex: '#b32a63',
     iconKey: 'asset_emojis_lego_a',
-    iconFrame: 0 // big laughing face
+    iconFrame: 0, // big laughing face
+    free: true
   },
   {
     label: 'Fruits',
@@ -71,7 +73,8 @@ const GAMES = [
     colorDark: 0xc99e00,
     darkHex: '#7d5d00',
     iconKey: 'asset_letters_a', // the letter "A" — instantly tells the toddler what's inside
-    iconFrame: 0
+    iconFrame: 0,
+    free: true
   },
   {
     label: 'Shapes',
@@ -107,7 +110,8 @@ const GAMES = [
     colorDark: 0x4d7c0f,
     darkHex: '#2e470a',
     iconKey: 'asset_count_icon', // baked 🔢 keycap-numbers emoji from Boot
-    iconFrame: 0
+    iconFrame: 0,
+    free: true
   }
 ]
 

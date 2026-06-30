@@ -1,591 +1,722 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Toddler Puzzles · App Icon Proposals</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: {
-          sans: ['Outfit', 'system-ui', 'sans-serif'],
-          fredoka: ['Fredoka', 'system-ui', 'sans-serif'],
-        },
-        animation: {
-          'float': 'float 6s ease-in-out infinite',
-          'fade-up': 'fadeUp 600ms ease-out both',
-        },
-        keyframes: {
-          float: {
-            '0%, 100%': { transform: 'translateY(0)' },
-            '50%': { transform: 'translateY(-8px)' },
-          },
-          fadeUp: {
-            'from': { opacity: '0', transform: 'translateY(20px)' },
-            'to':   { opacity: '1', transform: 'translateY(0)' },
-          },
-        }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ABC Kids Puzzle Pals — Icon Proposals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-0: #0b0817;
+        --bg-1: #150f2e;
+        --line: rgba(255, 255, 255, 0.08);
+        --ink: #f4eefe;
+        --muted: #a098c4;
       }
-    }
-  }
-</script>
-<style>
-  :root {
-    color-scheme: dark;
-  }
-
-  body {
-    font-family: 'Outfit', system-ui, sans-serif;
-    background:
-      radial-gradient(ellipse at 15% 0%,  rgba(155, 93, 229, 0.25) 0%, transparent 50%),
-      radial-gradient(ellipse at 85% 30%, rgba(59, 164, 255, 0.20) 0%, transparent 55%),
-      radial-gradient(ellipse at 50% 100%, rgba(255, 93, 162, 0.20) 0%, transparent 60%),
-      linear-gradient(180deg, #0a0623 0%, #1a0d3f 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    color: #f5f3ff;
-  }
-
-  /* Glass card */
-  .glass {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-  }
-
-  /* iOS-style icon frame (Apple uses a superellipse, 22.5% radius is the
-     standard CSS approximation) */
-  .ios-mask {
-    border-radius: 22.5%;
-    overflow: hidden;
-    position: relative;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.18) inset,
-      0 30px 60px -20px rgba(0, 0, 0, 0.6),
-      0 12px 30px -10px rgba(0, 0, 0, 0.5);
-  }
-  .ios-mask::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-    pointer-events: none;
-  }
-
-  /* Animated gradient border for concept badges */
-  .concept-badge {
-    position: relative;
-    z-index: 0;
-  }
-  .concept-badge::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(120deg, #ff9f1c, #ff5da2, #9b5de5, #3ba4ff);
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
-    z-index: -1;
-  }
-
-  /* Subtle grain over the page (premium feel) */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.025;
-    z-index: 1;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
-
-  .download-btn {
-    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
-  }
-  .download-btn:hover {
-    transform: translateY(-1px);
-  }
-  .download-btn:active {
-    transform: translateY(1px);
-  }
-</style>
-</head>
-<body class="relative">
-
-  <main class="relative z-10 max-w-7xl mx-auto px-6 py-16 md:py-24">
-
-    <!-- ─────────────────────── header ─────────────────────── -->
-    <header class="text-center mb-16 md:mb-20 animate-fade-up">
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-6">
-        <span class="w-2 h-2 rounded-full bg-gradient-to-r from-fuchsia-400 to-amber-300 animate-pulse"></span>
-        <span class="text-xs font-medium tracking-wider uppercase text-white/70">App Icon Proposals</span>
+      html,
+      body {
+        background: radial-gradient(
+            1200px 700px at 80% -10%,
+            rgba(124, 70, 218, 0.22),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 600px at -10% 100%,
+            rgba(57, 134, 255, 0.18),
+            transparent 60%
+          ),
+          linear-gradient(180deg, var(--bg-0), var(--bg-1));
+        color: var(--ink);
+        font-family: "Outfit", "Inter", system-ui, sans-serif;
+        font-feature-settings: "ss01" on, "cv11" on;
+        min-height: 100vh;
+      }
+      .mono {
+        font-family: "JetBrains Mono", ui-monospace, "Menlo", monospace;
+      }
+      .glass {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.015)
+        );
+        border: 1px solid var(--line);
+        backdrop-filter: blur(8px);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--line);
+        font-size: 0.75rem;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+      .gradient-text {
+        background: linear-gradient(90deg, #ffd23f 0%, #ff9f1c 35%, #ff5da2 70%, #9b5de5 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .icon-tile {
+        border-radius: 22.37%;
+        overflow: hidden;
+        box-shadow:
+          0 30px 60px -25px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        transition: transform 200ms ease, box-shadow 200ms ease;
+      }
+      .icon-tile:hover {
+        transform: translateY(-3px);
+        box-shadow:
+          0 40px 80px -25px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 150ms ease;
+        border: 1px solid var(--line);
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, #ffd23f, #f0a91c);
+        color: #3a2a08;
+        border: none;
+        box-shadow:
+          0 8px 20px -8px rgba(240, 169, 28, 0.6),
+          0 1px 0 rgba(255, 255, 255, 0.4) inset,
+          0 -1px 0 rgba(0, 0, 0, 0.1) inset;
+      }
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 12px 24px -8px rgba(240, 169, 28, 0.7),
+          0 1px 0 rgba(255, 255, 255, 0.4) inset,
+          0 -1px 0 rgba(0, 0, 0, 0.1) inset;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .concept-title {
+        font-family: "Outfit", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .iphone-frame {
+        background: linear-gradient(180deg, #2a2238, #1a1428);
+        border-radius: 32px;
+        padding: 16px 14px 28px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .iphone-bezel {
+        background: #000;
+        border-radius: 22px;
+        padding: 28px 14px 14px;
+        position: relative;
+      }
+      .iphone-notch {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 18px;
+        background: #000;
+        border-radius: 999px;
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <!-- HEADER -->
+    <header class="max-w-7xl mx-auto px-6 lg:px-10 pt-14 pb-10">
+      <div class="flex items-center gap-3 mb-6">
+        <div
+          class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 via-pink-400 to-purple-500 grid place-items-center text-white font-bold text-sm"
+        >
+          AP
+        </div>
+        <span class="pill">Icon Design Proposals</span>
       </div>
-      <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
-        <span class="bg-gradient-to-r from-amber-200 via-fuchsia-300 to-sky-300 bg-clip-text text-transparent">
-          Toddler Puzzles
-        </span>
+      <h1 class="text-5xl lg:text-7xl font-bold leading-[0.95] tracking-tight">
+        Three icons for
+        <span class="gradient-text">ABC Kids Puzzle Pals</span>
       </h1>
-      <p class="mt-4 max-w-2xl mx-auto text-white/60 text-lg leading-relaxed">
-        Three distinct design directions for the App Store icon. Each rendered as inline SVG, exportable as 1024×1024 PNG or JPEG straight from your browser.
+      <p class="mt-6 max-w-2xl text-lg text-[color:var(--muted)] leading-relaxed">
+        A bilingual shadow-matching puzzle for ages 2 to 4 covering ABCs,
+        numbers, shapes, words, memory and sort. Each concept below is a
+        production-ready SVG icon at App Store and Play Store dimensions.
+        Hover any icon to preview, then download as transparent PNG or
+        solid-background JPEG at 1024 by 1024.
       </p>
+
+      <div class="mt-10 flex flex-wrap gap-3">
+        <div class="pill">
+          <span class="swatch" style="background: #4d2c8a"></span> Royal purple
+        </div>
+        <div class="pill">
+          <span class="swatch" style="background: #ffd23f"></span> Sunshine yellow
+        </div>
+        <div class="pill">
+          <span class="swatch" style="background: #ff5da2"></span> Bubblegum pink
+        </div>
+        <div class="pill">
+          <span class="swatch" style="background: #5fc34a"></span> Leaf green
+        </div>
+        <div class="pill">
+          <span class="swatch" style="background: #3ba4ff"></span> Sky blue
+        </div>
+      </div>
     </header>
 
-    <!-- ─────────────────────── icon grid ─────────────────────── -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+    <!-- ICON GRID -->
+    <main class="max-w-7xl mx-auto px-6 lg:px-10 pb-20">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- CONCEPT 1: BOLD A -->
+        <article class="glass rounded-3xl p-7">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <div class="pill mb-3">Concept 01 / Minimalist</div>
+              <h2 class="concept-title text-2xl">Bold A</h2>
+            </div>
+            <span class="text-xs text-[color:var(--muted)] mono">512×512</span>
+          </div>
 
-      <!-- ════════════════════════════════════════════════════════
-           CONCEPT 1 · Modern Minimalist / Geometric
-           Three primary-color shapes (circle + triangle + square)
-           arranged as a friendly trio on a soft cream surface.
-           Speaks "preschool fundamentals" without any literal cue;
-           the shape vocabulary itself is the brand.
-      ═══════════════════════════════════════════════════════════ -->
-      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 100ms">
-        <div class="flex items-center gap-2 mb-6">
-          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
-            Concept 01 · Minimalist
-          </span>
-        </div>
+          <div class="grid place-items-center py-4">
+            <div class="icon-tile w-72 h-72">
+              <svg
+                id="icon-1"
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+                width="100%"
+                height="100%"
+              >
+                <defs>
+                  <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#7a55c8" />
+                    <stop offset="100%" stop-color="#3d1f8a" />
+                  </linearGradient>
+                  <linearGradient id="aFill1" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffd23f" />
+                    <stop offset="100%" stop-color="#f0a91c" />
+                  </linearGradient>
+                  <filter id="drop1" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
+                    <feOffset dx="0" dy="8" result="off" />
+                    <feFlood flood-color="#000" flood-opacity="0.35" />
+                    <feComposite in2="off" operator="in" />
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect width="512" height="512" fill="url(#bg1)" />
 
-        <!-- ICON 1 -->
-        <div class="ios-mask w-full aspect-square animate-float" style="background: linear-gradient(180deg, #fff8e7 0%, #ffe0c4 100%)">
-          <svg id="icon-minimalist" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
-            <defs>
-              <linearGradient id="m-bg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0"   stop-color="#fff8e7"/>
-                <stop offset="1"   stop-color="#ffe0c4"/>
-              </linearGradient>
-              <linearGradient id="m-circle" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ffe072"/>
-                <stop offset="1" stop-color="#f4b400"/>
-              </linearGradient>
-              <linearGradient id="m-tri" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ff7575"/>
-                <stop offset="1" stop-color="#e63946"/>
-              </linearGradient>
-              <linearGradient id="m-square" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#6cc6ff"/>
-                <stop offset="1" stop-color="#2b8de8"/>
-              </linearGradient>
-              <filter id="m-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#7a4400" flood-opacity="0.18"/>
-              </filter>
-            </defs>
+                <g fill="#ffffff" opacity="0.8">
+                  <path d="M70 110 l4 -12 l4 12 l12 4 l-12 4 l-4 12 l-4 -12 l-12 -4 z" />
+                  <path d="M430 90 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 z" />
+                  <path d="M445 405 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 z" />
+                  <path d="M65 420 l4 -12 l4 12 l12 4 l-12 4 l-4 12 l-4 -12 l-12 -4 z" />
+                  <circle cx="380" cy="170" r="4" />
+                  <circle cx="120" cy="320" r="4" />
+                </g>
 
-            <!-- background -->
-            <rect width="512" height="512" fill="url(#m-bg)"/>
+                <g filter="url(#drop1)">
+                  <text
+                    x="256"
+                    y="370"
+                    text-anchor="middle"
+                    font-family="'Arial Black', 'Helvetica Neue', Impact, sans-serif"
+                    font-weight="900"
+                    font-size="420"
+                    fill="url(#aFill1)"
+                    stroke="#5a3a1a"
+                    stroke-width="22"
+                    stroke-linejoin="round"
+                    paint-order="stroke fill"
+                  >A</text>
+                </g>
 
-            <!-- subtle dotted texture for tactile preschool feel -->
-            <g fill="#7a4400" opacity="0.06">
-              <circle cx="70"  cy="80"  r="3"/>
-              <circle cx="440" cy="90"  r="3"/>
-              <circle cx="80"  cy="430" r="3"/>
-              <circle cx="450" cy="450" r="3"/>
-              <circle cx="256" cy="60"  r="3"/>
-              <circle cx="60"  cy="256" r="3"/>
-              <circle cx="460" cy="256" r="3"/>
-            </g>
+                <text
+                  x="256"
+                  y="475"
+                  text-anchor="middle"
+                  font-family="'Arial Black', sans-serif"
+                  font-weight="900"
+                  font-size="48"
+                  fill="#ffffff"
+                  opacity="0.95"
+                  letter-spacing="6"
+                >KIDS</text>
+              </svg>
+            </div>
+          </div>
 
-            <!-- circle (top, big, the "head" of the composition) -->
-            <g filter="url(#m-shadow)">
-              <circle cx="256" cy="172" r="92" fill="url(#m-circle)"/>
-              <circle cx="256" cy="172" r="92" fill="none" stroke="#8a6500" stroke-width="6"/>
-              <!-- subtle inner highlight -->
-              <ellipse cx="222" cy="138" rx="34" ry="22" fill="white" opacity="0.5"/>
-            </g>
-
-            <!-- triangle (bottom-left, gently tilted) -->
-            <g filter="url(#m-shadow)" transform="rotate(-6 152 372)">
-              <path d="M 152 290 L 232 412 L 72 412 Z" fill="url(#m-tri)" stroke="#7a1f1f" stroke-width="6" stroke-linejoin="round"/>
-            </g>
-
-            <!-- square (bottom-right, gently tilted other way) -->
-            <g filter="url(#m-shadow)" transform="rotate(8 360 372)">
-              <rect x="280" y="300" width="160" height="144" rx="22" fill="url(#m-square)" stroke="#0e4b85" stroke-width="6"/>
-              <rect x="290" y="310" width="140" height="22" rx="8" fill="white" opacity="0.28"/>
-            </g>
-          </svg>
-        </div>
-
-        <div class="mt-6">
-          <h2 class="text-2xl font-semibold text-white">Shape Trio</h2>
-          <p class="mt-2 text-white/60 text-sm leading-relaxed">
-            Circle, triangle, square. The vocabulary every toddler learns first, arranged as a friendly composition. Calm, modern, and instantly recognisable at thumbnail size.
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed mt-4">
+            One chunky cookie-cutter "A" in warm sunshine yellow on a deep
+            royal-purple field. The "KIDS" sub-mark reinforces the App Store
+            keyword without crowding the glyph. Reads cleanly at every size,
+            from 60px Spotlight to 1024px hero.
           </p>
 
-          <!-- swatches -->
-          <div class="mt-4 flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full" style="background:#ffd23f"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#e63946"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#3ba4ff"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#fff8e7; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"></span>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <span class="pill"><span class="swatch" style="background: #4d2c8a"></span>#4d2c8a</span>
+            <span class="pill"><span class="swatch" style="background: #ffd23f"></span>#ffd23f</span>
+            <span class="pill"><span class="swatch" style="background: #5a3a1a"></span>#5a3a1a</span>
           </div>
 
-          <!-- downloads -->
-          <div class="mt-6 grid grid-cols-2 gap-3">
-            <button onclick="downloadIcon('icon-minimalist', 'png', 'toddler-puzzles-minimalist.png', '#fff8e7')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              PNG
-            </button>
-            <button onclick="downloadIcon('icon-minimalist', 'jpeg', 'toddler-puzzles-minimalist.jpg', '#fff8e7')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              JPEG
-            </button>
+          <div class="mt-6 flex gap-2 flex-wrap">
+            <button class="btn btn-primary" onclick="downloadIcon('icon-1','png','abc-puzzle-pals-bold-a-1024.png')">Download PNG</button>
+            <button class="btn btn-secondary" onclick="downloadIcon('icon-1','jpeg','abc-puzzle-pals-bold-a-1024.jpg','#4d2c8a')">Download JPEG</button>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <!-- ════════════════════════════════════════════════════════
-           CONCEPT 2 · Vibrant Gradients / Modern Depth
-           Liquid rainbow orb with a tiny smile, glassy highlight,
-           and a soft halo. Premium 2026 aesthetic (think Threads,
-           Apple Intelligence, Linear) — modern, dimensional, but
-           still toddler-warm via the rainbow palette + smile.
-      ═══════════════════════════════════════════════════════════ -->
-      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 250ms">
-        <div class="flex items-center gap-2 mb-6">
-          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
-            Concept 02 · Gradient Depth
-          </span>
-        </div>
+        <!-- CONCEPT 2: PUZZLE PALS TRIO -->
+        <article class="glass rounded-3xl p-7">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <div class="pill mb-3">Concept 02 / Vibrant Depth</div>
+              <h2 class="concept-title text-2xl">Puzzle Pals Trio</h2>
+            </div>
+            <span class="text-xs text-[color:var(--muted)] mono">512×512</span>
+          </div>
 
-        <!-- ICON 2 -->
-        <div class="ios-mask w-full aspect-square animate-float" style="background: radial-gradient(circle at 50% 50%, #2d1b69, #0a0623); animation-delay: 1.5s">
-          <svg id="icon-gradient" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
-            <defs>
-              <radialGradient id="g-bg" cx="0.5" cy="0.45" r="0.7">
-                <stop offset="0"   stop-color="#2d1b69"/>
-                <stop offset="0.6" stop-color="#15093f"/>
-                <stop offset="1"   stop-color="#0a0623"/>
-              </radialGradient>
-              <radialGradient id="g-halo" cx="0.5" cy="0.5" r="0.5">
-                <stop offset="0"   stop-color="#ff5da2" stop-opacity="0.45"/>
-                <stop offset="0.5" stop-color="#9b5de5" stop-opacity="0.25"/>
-                <stop offset="1"   stop-color="#3ba4ff" stop-opacity="0"/>
-              </radialGradient>
-              <radialGradient id="g-orb" cx="0.32" cy="0.32" r="0.85">
-                <stop offset="0"    stop-color="#fff3a8"/>
-                <stop offset="0.18" stop-color="#ffd23f"/>
-                <stop offset="0.42" stop-color="#ff7a4a"/>
-                <stop offset="0.62" stop-color="#ff5da2"/>
-                <stop offset="0.82" stop-color="#9b5de5"/>
-                <stop offset="1"    stop-color="#3ba4ff"/>
-              </radialGradient>
-              <radialGradient id="g-gloss" cx="0.5" cy="0.5">
-                <stop offset="0" stop-color="white" stop-opacity="0.7"/>
-                <stop offset="1" stop-color="white" stop-opacity="0"/>
-              </radialGradient>
-              <filter id="g-blur"><feGaussianBlur stdDeviation="16"/></filter>
-            </defs>
+          <div class="grid place-items-center py-4">
+            <div class="icon-tile w-72 h-72">
+              <svg
+                id="icon-2"
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+                width="100%"
+                height="100%"
+              >
+                <defs>
+                  <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5bb6ef" />
+                    <stop offset="60%" stop-color="#c6ecff" />
+                    <stop offset="100%" stop-color="#fff5d6" />
+                  </linearGradient>
+                  <linearGradient id="sunFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffe78a" />
+                    <stop offset="100%" stop-color="#ffce3a" />
+                  </linearGradient>
+                  <linearGradient id="heartFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ff9bc4" />
+                    <stop offset="100%" stop-color="#ff5da2" />
+                  </linearGradient>
+                  <linearGradient id="starFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5fe0d2" />
+                    <stop offset="100%" stop-color="#29c7b8" />
+                  </linearGradient>
+                  <filter id="drop2" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                    <feOffset dx="0" dy="6" result="off" />
+                    <feFlood flood-color="#000" flood-opacity="0.25" />
+                    <feComposite in2="off" operator="in" />
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
 
-            <!-- background -->
-            <rect width="512" height="512" fill="url(#g-bg)"/>
+                <rect width="512" height="512" fill="url(#bg2)" />
 
-            <!-- twinkles in deep space -->
-            <g fill="white">
-              <circle cx="64"  cy="100" r="2" opacity="0.7"/>
-              <circle cx="440" cy="80"  r="2.5" opacity="0.85"/>
-              <circle cx="80"  cy="420" r="2" opacity="0.7"/>
-              <circle cx="460" cy="440" r="3" opacity="0.85"/>
-              <circle cx="120" cy="240" r="1.5" opacity="0.5"/>
-              <circle cx="400" cy="260" r="1.5" opacity="0.5"/>
-              <circle cx="256" cy="42"  r="2" opacity="0.7"/>
-              <circle cx="256" cy="470" r="2" opacity="0.7"/>
-            </g>
+                <g fill="#ffffff" opacity="0.85">
+                  <ellipse cx="100" cy="90" rx="42" ry="18" />
+                  <ellipse cx="130" cy="80" rx="30" ry="14" />
+                  <ellipse cx="420" cy="115" rx="38" ry="16" />
+                </g>
 
-            <!-- sparkle (4-point star) accents -->
-            <g fill="white">
-              <path d="M 90 90 L 96 84 L 102 90 L 96 96 Z" opacity="0.9"/>
-              <path d="M 422 122 L 428 116 L 434 122 L 428 128 Z" opacity="0.9"/>
-              <path d="M 102 400 L 108 394 L 114 400 L 108 406 Z" opacity="0.8"/>
-            </g>
+                <!-- Sun pal -->
+                <g filter="url(#drop2)" transform="translate(256 195)">
+                  <circle cx="0" cy="0" r="92" fill="url(#sunFill)" stroke="#c9821b" stroke-width="14" />
+                  <circle cx="-26" cy="-22" r="38" fill="#fff5d6" opacity="0.55" />
+                  <circle cx="-32" cy="-8" r="9" fill="#7a4400" />
+                  <circle cx="32" cy="-8" r="9" fill="#7a4400" />
+                  <path d="M -28 22 Q 0 50 28 22" fill="none" stroke="#7a4400" stroke-width="11" stroke-linecap="round" />
+                </g>
 
-            <!-- glow halo -->
-            <circle cx="256" cy="256" r="220" fill="url(#g-halo)" filter="url(#g-blur)"/>
+                <!-- Heart pal -->
+                <g filter="url(#drop2)" transform="translate(155 350)">
+                  <path
+                    d="M 0 60 C -90 0 -80 -70 -30 -70 C -10 -70 0 -55 0 -45 C 0 -55 10 -70 30 -70 C 80 -70 90 0 0 60 Z"
+                    fill="url(#heartFill)"
+                    stroke="#b32a63"
+                    stroke-width="14"
+                    stroke-linejoin="round"
+                  />
+                  <path d="M -38 -45 Q -25 -65 -8 -55" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.7" />
+                </g>
 
-            <!-- main orb -->
-            <circle cx="256" cy="256" r="160" fill="url(#g-orb)"/>
+                <!-- Star pal -->
+                <g filter="url(#drop2)" transform="translate(360 345)">
+                  <path
+                    d="M 0 -78 L 22 -24 L 78 -22 L 36 14 L 50 70 L 0 38 L -50 70 L -36 14 L -78 -22 L -22 -24 Z"
+                    fill="url(#starFill)"
+                    stroke="#0b5b54"
+                    stroke-width="14"
+                    stroke-linejoin="round"
+                  />
+                  <circle cx="-12" cy="-12" r="6" fill="#ffffff" opacity="0.85" />
+                </g>
 
-            <!-- glossy highlight (top-left) -->
-            <ellipse cx="208" cy="190" rx="60" ry="42" fill="url(#g-gloss)" opacity="0.75"/>
+                <!-- Ground -->
+                <path d="M 0 470 Q 256 430 512 470 L 512 512 L 0 512 Z" fill="#9bd34f" />
+                <path d="M 0 482 Q 256 450 512 482 L 512 512 L 0 512 Z" fill="#7cc242" />
+              </svg>
+            </div>
+          </div>
 
-            <!-- rim light (bottom-right, subtle) -->
-            <circle cx="256" cy="256" r="160" fill="none" stroke="white" stroke-width="2" opacity="0.18"/>
-
-            <!-- friendly smile inside the orb -->
-            <g>
-              <ellipse cx="220" cy="268" rx="9" ry="13" fill="white"/>
-              <ellipse cx="292" cy="268" rx="9" ry="13" fill="white"/>
-              <path d="M 218 308 Q 256 348 294 308"
-                    stroke="white" stroke-width="9" fill="none" stroke-linecap="round"/>
-            </g>
-          </svg>
-        </div>
-
-        <div class="mt-6">
-          <h2 class="text-2xl font-semibold text-white">Liquid Rainbow</h2>
-          <p class="mt-2 text-white/60 text-sm leading-relaxed">
-            A dimensional gradient orb on deep night-violet, with a small white smile in the centre. Premium and 2026-modern, but the rainbow palette keeps it firmly in the toddler zone.
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed mt-4">
+            Three claymorphic pals (sun, heart, star) huddled in the same
+            sky-and-grass world the toddler enters on launch. Multi-color
+            recognition lands like a flag in App Store thumbnails, and the
+            "Pals" in the name finally has a face.
           </p>
 
-          <div class="mt-4 flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full" style="background:#ffd23f"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#ff5da2"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#9b5de5"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#3ba4ff"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#0a0623; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2)"></span>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <span class="pill"><span class="swatch" style="background: #ffce3a"></span>#ffce3a</span>
+            <span class="pill"><span class="swatch" style="background: #ff5da2"></span>#ff5da2</span>
+            <span class="pill"><span class="swatch" style="background: #29c7b8"></span>#29c7b8</span>
+            <span class="pill"><span class="swatch" style="background: #5bb6ef"></span>#5bb6ef</span>
           </div>
 
-          <div class="mt-6 grid grid-cols-2 gap-3">
-            <button onclick="downloadIcon('icon-gradient', 'png', 'toddler-puzzles-gradient.png', '#0a0623')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              PNG
-            </button>
-            <button onclick="downloadIcon('icon-gradient', 'jpeg', 'toddler-puzzles-gradient.jpg', '#0a0623')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              JPEG
-            </button>
+          <div class="mt-6 flex gap-2 flex-wrap">
+            <button class="btn btn-primary" onclick="downloadIcon('icon-2','png','abc-puzzle-pals-trio-1024.png')">Download PNG</button>
+            <button class="btn btn-secondary" onclick="downloadIcon('icon-2','jpeg','abc-puzzle-pals-trio-1024.jpg','#c6ecff')">Download JPEG</button>
           </div>
-        </div>
-      </article>
+        </article>
 
-      <!-- ════════════════════════════════════════════════════════
-           CONCEPT 3 · Illustrative / Domain Metaphor
-           Stacked alphabet-style wooden blocks (A, 1, ♥) on the
-           app's signature sky-blue gradient, with the mascot sun
-           peeking from the corner. The most "toddler app" of the
-           three — universal preschool iconography.
-      ═══════════════════════════════════════════════════════════ -->
-      <article class="glass rounded-3xl p-6 md:p-8 animate-fade-up" style="animation-delay: 400ms">
-        <div class="flex items-center gap-2 mb-6">
-          <span class="concept-badge inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase text-white/90">
-            Concept 03 · Illustrative
-          </span>
-        </div>
+        <!-- CONCEPT 3: SUNNY ABC -->
+        <article class="glass rounded-3xl p-7">
+          <div class="flex items-start justify-between mb-5">
+            <div>
+              <div class="pill mb-3">Concept 03 / Domain Metaphor</div>
+              <h2 class="concept-title text-2xl">Sunny ABC</h2>
+            </div>
+            <span class="text-xs text-[color:var(--muted)] mono">512×512</span>
+          </div>
 
-        <!-- ICON 3 -->
-        <div class="ios-mask w-full aspect-square animate-float" style="background: linear-gradient(180deg, #5bb6ef 0%, #c6ecff 100%); animation-delay: 3s">
-          <svg id="icon-blocks" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" class="w-full h-full block">
-            <defs>
-              <linearGradient id="b-sky" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0"   stop-color="#5bb6ef"/>
-                <stop offset="0.5" stop-color="#92cef1"/>
-                <stop offset="1"   stop-color="#c6ecff"/>
-              </linearGradient>
-              <linearGradient id="b-red" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ff7575"/>
-                <stop offset="1" stop-color="#e63946"/>
-              </linearGradient>
-              <linearGradient id="b-yellow" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ffe072"/>
-                <stop offset="1" stop-color="#f4b400"/>
-              </linearGradient>
-              <linearGradient id="b-blue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#6cc6ff"/>
-                <stop offset="1" stop-color="#2b8de8"/>
-              </linearGradient>
-              <filter id="b-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#0e3b6b" flood-opacity="0.28"/>
-              </filter>
-            </defs>
+          <div class="grid place-items-center py-4">
+            <div class="icon-tile w-72 h-72">
+              <svg
+                id="icon-3"
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+                width="100%"
+                height="100%"
+              >
+                <defs>
+                  <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5bb6ef" />
+                    <stop offset="100%" stop-color="#c6ecff" />
+                  </linearGradient>
+                  <radialGradient id="sun3" cx="40%" cy="40%" r="65%">
+                    <stop offset="0%" stop-color="#ffe78a" />
+                    <stop offset="100%" stop-color="#ffce3a" />
+                  </radialGradient>
+                  <linearGradient id="blockA" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ff7d57" />
+                    <stop offset="100%" stop-color="#ff5d5d" />
+                  </linearGradient>
+                  <linearGradient id="blockB" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5fc34a" />
+                    <stop offset="100%" stop-color="#3a8c2a" />
+                  </linearGradient>
+                  <linearGradient id="blockC" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5fbbff" />
+                    <stop offset="100%" stop-color="#3ba4ff" />
+                  </linearGradient>
+                  <filter id="drop3" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                    <feOffset dx="0" dy="6" result="off" />
+                    <feFlood flood-color="#000" flood-opacity="0.28" />
+                    <feComposite in2="off" operator="in" />
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
 
-            <!-- sky -->
-            <rect width="512" height="512" fill="url(#b-sky)"/>
+                <rect width="512" height="512" fill="url(#bg3)" />
 
-            <!-- cloud (top-left) -->
-            <g fill="white" opacity="0.95">
-              <ellipse cx="92"  cy="110" rx="40" ry="18"/>
-              <ellipse cx="122" cy="96"  rx="32" ry="22"/>
-              <ellipse cx="68"  cy="104" rx="26" ry="16"/>
-            </g>
+                <g fill="#ffffff" opacity="0.95">
+                  <ellipse cx="105" cy="115" rx="38" ry="16" />
+                  <ellipse cx="135" cy="100" rx="28" ry="14" />
+                  <ellipse cx="78" cy="105" rx="22" ry="12" />
+                </g>
+                <g fill="#ffffff" opacity="0.9">
+                  <ellipse cx="420" cy="145" rx="32" ry="14" />
+                  <ellipse cx="395" cy="135" rx="22" ry="11" />
+                </g>
 
-            <!-- sun mascot peeking top-right (the existing brand sun, tiny) -->
-            <g transform="translate(432 96)">
-              <g fill="#FFD23F">
-                <polygon points="0,-80 -10,-50 10,-50"/>
-                <polygon points="80,0 50,-10 50,10"/>
-                <polygon points="-80,0 -50,-10 -50,10"/>
-                <polygon points="56,-56 38,-40 28,-50"/>
-                <polygon points="-56,-56 -38,-40 -28,-50"/>
-                <polygon points="56,56 38,40 28,50"/>
-              </g>
-              <circle r="48" fill="#FFD23F"/>
-              <circle cx="-14" cy="-14" r="14" fill="#fff3a8" opacity="0.7"/>
-              <circle cx="-12" cy="-2" r="4.5" fill="#7d5d00"/>
-              <circle cx="12"  cy="-2" r="4.5" fill="#7d5d00"/>
-              <path d="M -14 14 Q 0 28 14 14"
-                    stroke="#7d5d00" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-            </g>
+                <g fill="#ffffff" opacity="0.95">
+                  <path d="M385 75 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 z" />
+                  <path d="M88 200 l3 -9 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 z" />
+                </g>
 
-            <!-- grass (rounded hill behind blocks) -->
-            <ellipse cx="256" cy="510" rx="320" ry="60" fill="#9bd34f"/>
-            <ellipse cx="120" cy="510" rx="200" ry="44" fill="#7cc242" opacity="0.85"/>
+                <!-- Sun mascot, centered upper third -->
+                <g filter="url(#drop3)" transform="translate(256 215)">
+                  <g fill="#ffd23f">
+                    <g transform="rotate(0)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(45)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(90)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(135)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(180)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(225)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(270)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                    <g transform="rotate(315)"><polygon points="0,-150 -12,-95 12,-95" /></g>
+                  </g>
+                  <circle cx="0" cy="0" r="85" fill="url(#sun3)" />
+                  <circle cx="-22" cy="-22" r="32" fill="#fff5d6" opacity="0.55" />
+                  <circle cx="-28" cy="-6" r="8" fill="#c9821b" />
+                  <circle cx="28" cy="-6" r="8" fill="#c9821b" />
+                  <path d="M -25 18 Q 0 42 25 18" fill="none" stroke="#c9821b" stroke-width="10" stroke-linecap="round" />
+                </g>
 
-            <!-- ── BLOCK STACK ──────────────────────────────────────
-                 Bottom (red, "1"), middle (yellow, "A"), top (blue, ♥).
-                 Each block is the same size; we offset the stacks
-                 horizontally so the tower has a hand-built, slightly
-                 wobbly look that toddlers respond to. -->
+                <!-- Three alphabet blocks -->
+                <g filter="url(#drop3)">
+                  <g transform="translate(140 410) rotate(-6)">
+                    <rect x="-50" y="-50" width="100" height="100" rx="18" fill="url(#blockA)" stroke="#7a1f1f" stroke-width="9" />
+                    <rect x="-42" y="-42" width="84" height="32" rx="12" fill="#ffffff" opacity="0.25" />
+                    <text x="0" y="22" text-anchor="middle" font-family="'Arial Black', sans-serif" font-weight="900" font-size="84" fill="#ffffff" stroke="#7a1f1f" stroke-width="6" paint-order="stroke fill">A</text>
+                  </g>
+                  <g transform="translate(256 410) rotate(4)">
+                    <rect x="-50" y="-50" width="100" height="100" rx="18" fill="url(#blockB)" stroke="#1a4f17" stroke-width="9" />
+                    <rect x="-42" y="-42" width="84" height="32" rx="12" fill="#ffffff" opacity="0.25" />
+                    <text x="0" y="22" text-anchor="middle" font-family="'Arial Black', sans-serif" font-weight="900" font-size="84" fill="#ffffff" stroke="#1a4f17" stroke-width="6" paint-order="stroke fill">B</text>
+                  </g>
+                  <g transform="translate(372 410) rotate(-3)">
+                    <rect x="-50" y="-50" width="100" height="100" rx="18" fill="url(#blockC)" stroke="#0e4b85" stroke-width="9" />
+                    <rect x="-42" y="-42" width="84" height="32" rx="12" fill="#ffffff" opacity="0.25" />
+                    <text x="0" y="22" text-anchor="middle" font-family="'Arial Black', sans-serif" font-weight="900" font-size="84" fill="#ffffff" stroke="#0e4b85" stroke-width="6" paint-order="stroke fill">C</text>
+                  </g>
+                </g>
 
-            <!-- bottom: red block with "1" -->
-            <g filter="url(#b-shadow)" transform="translate(160 332)">
-              <rect width="200" height="116" rx="18" fill="url(#b-red)" stroke="#7a1f1f" stroke-width="6"/>
-              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.22"/>
-              <text x="100" y="92" text-anchor="middle"
-                    font-family="Fredoka, Outfit, sans-serif"
-                    font-size="78" font-weight="700"
-                    fill="white" stroke="#7a1f1f" stroke-width="3" paint-order="stroke fill">1</text>
-            </g>
+                <path d="M 0 488 Q 256 460 512 488 L 512 512 L 0 512 Z" fill="#9bd34f" />
+              </svg>
+            </div>
+          </div>
 
-            <!-- middle: yellow block with "A" -->
-            <g filter="url(#b-shadow)" transform="translate(138 220)">
-              <rect width="200" height="116" rx="18" fill="url(#b-yellow)" stroke="#8a6500" stroke-width="6"/>
-              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.32"/>
-              <text x="100" y="94" text-anchor="middle"
-                    font-family="Fredoka, Outfit, sans-serif"
-                    font-size="82" font-weight="700"
-                    fill="#7a4400" stroke="#5a3a1a" stroke-width="2.5" paint-order="stroke fill">A</text>
-            </g>
-
-            <!-- top: blue block with heart -->
-            <g filter="url(#b-shadow)" transform="translate(178 108)">
-              <rect width="200" height="116" rx="18" fill="url(#b-blue)" stroke="#0e4b85" stroke-width="6"/>
-              <rect x="10" y="10" width="180" height="20" rx="8" fill="white" opacity="0.26"/>
-              <!-- heart (two lobes + bottom V) -->
-              <g transform="translate(100 64)">
-                <circle cx="-20" cy="-8" r="22" fill="#ff5da2" stroke="#a72869" stroke-width="3"/>
-                <circle cx="20"  cy="-8" r="22" fill="#ff5da2" stroke="#a72869" stroke-width="3"/>
-                <path d="M -39 -1 L 39 -1 L 0 46 Z" fill="#ff5da2" stroke="#a72869" stroke-width="3" stroke-linejoin="round"/>
-                <!-- cover the seam between lobes and triangle -->
-                <path d="M -39 -1 L 39 -1 L 0 46 Z" fill="#ff5da2"/>
-              </g>
-            </g>
-          </svg>
-        </div>
-
-        <div class="mt-6">
-          <h2 class="text-2xl font-semibold text-white">Alphabet Stack</h2>
-          <p class="mt-2 text-white/60 text-sm leading-relaxed">
-            Three stacked toy blocks on a sunny sky-blue background, with the app's mascot sun peeking from the corner. Reads as "preschool learning toy" before the toddler can read.
+          <p class="text-sm text-[color:var(--muted)] leading-relaxed mt-4">
+            The full brand story compressed into one frame: smiling sun
+            mascot, ABC blocks arranged like the toddler grid, sky and grass
+            world. Most narrative of the three. Best for parents browsing
+            the App Store on a tablet, where icons render large enough to
+            read the scene.
           </p>
 
-          <div class="mt-4 flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full" style="background:#5bb6ef"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#e63946"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#f4b400"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#2b8de8"></span>
-            <span class="w-5 h-5 rounded-full" style="background:#ff5da2"></span>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <span class="pill"><span class="swatch" style="background: #5bb6ef"></span>#5bb6ef</span>
+            <span class="pill"><span class="swatch" style="background: #ffd23f"></span>#ffd23f</span>
+            <span class="pill"><span class="swatch" style="background: #ff5d5d"></span>#ff5d5d</span>
+            <span class="pill"><span class="swatch" style="background: #5fc34a"></span>#5fc34a</span>
+            <span class="pill"><span class="swatch" style="background: #3ba4ff"></span>#3ba4ff</span>
           </div>
 
-          <div class="mt-6 grid grid-cols-2 gap-3">
-            <button onclick="downloadIcon('icon-blocks', 'png', 'toddler-puzzles-blocks.png', '#5bb6ef')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold text-sm shadow-lg shadow-white/10 hover:bg-white/90">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              PNG
-            </button>
-            <button onclick="downloadIcon('icon-blocks', 'jpeg', 'toddler-puzzles-blocks.jpg', '#5bb6ef')"
-                    class="download-btn flex items-center justify-center gap-2 px-4 py-3 rounded-xl glass text-white font-semibold text-sm border-white/20 hover:bg-white/10">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-              JPEG
-            </button>
+          <div class="mt-6 flex gap-2 flex-wrap">
+            <button class="btn btn-primary" onclick="downloadIcon('icon-3','png','abc-puzzle-pals-sunny-1024.png')">Download PNG</button>
+            <button class="btn btn-secondary" onclick="downloadIcon('icon-3','jpeg','abc-puzzle-pals-sunny-1024.jpg','#5bb6ef')">Download JPEG</button>
           </div>
-        </div>
-      </article>
-
-    </section>
-
-    <!-- ─────────────────────── footer ─────────────────────── -->
-    <footer class="mt-20 text-center">
-      <div class="glass inline-block rounded-2xl px-6 py-4 max-w-2xl">
-        <p class="text-sm text-white/60 leading-relaxed">
-          Pick one, click <span class="text-white font-medium">PNG</span> or <span class="text-white font-medium">JPEG</span> to download at 1024×1024, drop the file into <code class="px-1.5 py-0.5 rounded bg-white/10 text-amber-200 font-mono text-xs">assets/icon-only.png</code> then run <code class="px-1.5 py-0.5 rounded bg-white/10 text-amber-200 font-mono text-xs">npm run cap:assets</code> to generate every device-size asset.
-        </p>
+        </article>
       </div>
+
+      <!-- HOME SCREEN PREVIEW -->
+      <section class="mt-20">
+        <div class="flex items-baseline justify-between mb-6">
+          <h2 class="text-3xl font-semibold tracking-tight">On the home screen</h2>
+          <span class="text-sm text-[color:var(--muted)]">App Store sizes: 60, 76, 120, 180</span>
+        </div>
+
+        <div class="glass rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="iphone-frame">
+            <div class="iphone-bezel">
+              <div class="iphone-notch"></div>
+              <div class="text-center text-[10px] mt-2 text-white/70">9:41</div>
+              <div class="grid grid-cols-4 gap-3 mt-6">
+                <div class="grid place-items-center">
+                  <div class="icon-tile w-12 h-12">
+                    <svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-1" /></svg>
+                  </div>
+                </div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-sky-400 to-blue-600"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600"></div></div>
+              </div>
+              <p class="text-center text-[9px] text-white/80 mt-2">ABC Kids Puzzle Pals</p>
+            </div>
+            <p class="text-center text-xs text-[color:var(--muted)] mt-4">Concept 01 · Bold A</p>
+          </div>
+
+          <div class="iphone-frame">
+            <div class="iphone-bezel">
+              <div class="iphone-notch"></div>
+              <div class="text-center text-[10px] mt-2 text-white/70">9:41</div>
+              <div class="grid grid-cols-4 gap-3 mt-6">
+                <div class="grid place-items-center">
+                  <div class="icon-tile w-12 h-12">
+                    <svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-2" /></svg>
+                  </div>
+                </div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-sky-400 to-blue-600"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600"></div></div>
+              </div>
+              <p class="text-center text-[9px] text-white/80 mt-2">ABC Kids Puzzle Pals</p>
+            </div>
+            <p class="text-center text-xs text-[color:var(--muted)] mt-4">Concept 02 · Puzzle Pals Trio</p>
+          </div>
+
+          <div class="iphone-frame">
+            <div class="iphone-bezel">
+              <div class="iphone-notch"></div>
+              <div class="text-center text-[10px] mt-2 text-white/70">9:41</div>
+              <div class="grid grid-cols-4 gap-3 mt-6">
+                <div class="grid place-items-center">
+                  <div class="icon-tile w-12 h-12">
+                    <svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-3" /></svg>
+                  </div>
+                </div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-sky-400 to-blue-600"></div></div>
+                <div class="grid place-items-center"><div class="icon-tile w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-600"></div></div>
+              </div>
+              <p class="text-center text-[9px] text-white/80 mt-2">ABC Kids Puzzle Pals</p>
+            </div>
+            <p class="text-center text-xs text-[color:var(--muted)] mt-4">Concept 03 · Sunny ABC</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIZE COMPARISON -->
+      <section class="mt-16">
+        <div class="flex items-baseline justify-between mb-6">
+          <h2 class="text-3xl font-semibold tracking-tight">Readability at every size</h2>
+        </div>
+
+        <div class="glass rounded-3xl p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <p class="text-xs text-[color:var(--muted)] mb-3 uppercase tracking-wider">Concept 01</p>
+            <div class="flex items-end gap-3">
+              <div class="icon-tile" style="width: 60px; height: 60px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-1" /></svg></div>
+              <div class="icon-tile" style="width: 76px; height: 76px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-1" /></svg></div>
+              <div class="icon-tile" style="width: 120px; height: 120px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-1" /></svg></div>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs text-[color:var(--muted)] mb-3 uppercase tracking-wider">Concept 02</p>
+            <div class="flex items-end gap-3">
+              <div class="icon-tile" style="width: 60px; height: 60px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-2" /></svg></div>
+              <div class="icon-tile" style="width: 76px; height: 76px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-2" /></svg></div>
+              <div class="icon-tile" style="width: 120px; height: 120px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-2" /></svg></div>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs text-[color:var(--muted)] mb-3 uppercase tracking-wider">Concept 03</p>
+            <div class="flex items-end gap-3">
+              <div class="icon-tile" style="width: 60px; height: 60px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-3" /></svg></div>
+              <div class="icon-tile" style="width: 76px; height: 76px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-3" /></svg></div>
+              <div class="icon-tile" style="width: 120px; height: 120px"><svg viewBox="0 0 512 512" width="100%" height="100%"><use href="#icon-3" /></svg></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTRUCTIONS -->
+      <section class="mt-16 glass rounded-3xl p-8">
+        <h3 class="text-lg font-semibold mb-3">How to use these files</h3>
+        <ol class="text-sm text-[color:var(--muted)] leading-relaxed list-decimal pl-5 space-y-2">
+          <li>Pick a concept above and click <strong>Download PNG</strong> for a 1024 by 1024 transparent-corner file (App Store and Play Store both accept it).</li>
+          <li>Drop the file into <code class="mono text-[color:var(--ink)]">assets/icon.png</code> in the project root.</li>
+          <li>Run <code class="mono text-[color:var(--ink)]">npm run cap:assets</code> to regenerate every iOS and Android icon size from that single source.</li>
+          <li>Rebuild with <code class="mono text-[color:var(--ink)]">npm run build:ios</code> or <code class="mono text-[color:var(--ink)]">build:android</code>.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-6 lg:px-10 pb-16 text-xs text-[color:var(--muted)]">
+      Generated for <span class="gradient-text font-semibold">ABC Kids Puzzle Pals</span> · SVG output, client-side rasterization at 1024px.
     </footer>
 
-  </main>
+    <!-- DOWNLOAD -->
+    <script>
+      async function downloadIcon(svgId, format, filename, jpegBg) {
+        const src = document.getElementById(svgId);
+        if (!src) return;
 
-<script>
-  /**
-   * Serialise the inline SVG, paint it onto a 1024×1024 canvas, then trigger
-   * a download. Done fully client-side — no server, no deps, the page is
-   * self-contained.
-   *
-   * For PNG the canvas stays transparent so the icon's own background is
-   * the only background. For JPEG (no alpha) we pre-fill with the icon's
-   * own background colour so the mask edges look correct.
-   *
-   * Quality 0.95 keeps file sizes well under App Store Connect's 1 MB icon
-   * ceiling while staying crisp on Retina.
-   */
-  async function downloadIcon(svgId, format, filename, bgColor) {
-    const svgEl = document.getElementById(svgId);
-    if (!svgEl) {
-      console.warn(`Icon "${svgId}" not found`);
-      return;
-    }
+        // Clone so we never mutate the live DOM SVG.
+        const svg = src.cloneNode(true);
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", "1024");
+        svg.setAttribute("height", "1024");
 
-    const SIZE = 1024;
-    const canvas = document.createElement('canvas');
-    canvas.width = SIZE;
-    canvas.height = SIZE;
-    const ctx = canvas.getContext('2d');
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+        const blob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
 
-    // Serialise SVG. Clone first so we can safely add xmlns if missing.
-    const clone = svgEl.cloneNode(true);
-    if (!clone.getAttribute('xmlns')) {
-      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    }
-    let svgString = new XMLSerializer().serializeToString(clone);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
 
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = url;
+        });
 
-    const img = new Image();
-    img.onload = () => {
-      // JPEG has no alpha; pre-fill matching background colour so the mask
-      // edges don't get a white halo around dark icons.
-      if (format === 'jpeg') {
-        ctx.fillStyle = bgColor || '#ffffff';
-        ctx.fillRect(0, 0, SIZE, SIZE);
+        const size = 1024;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+
+        if (format === "jpeg") {
+          ctx.fillStyle = jpegBg || "#ffffff";
+          ctx.fillRect(0, 0, size, size);
+        }
+        ctx.drawImage(img, 0, 0, size, size);
+
+        const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+        const dataUrl = canvas.toDataURL(mime, format === "jpeg" ? 0.95 : undefined);
+
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
       }
-      ctx.drawImage(img, 0, 0, SIZE, SIZE);
-
-      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-      const dataUrl = canvas.toDataURL(mime, format === 'jpeg' ? 0.95 : undefined);
-
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      URL.revokeObjectURL(url);
-    };
-    img.onerror = (e) => {
-      console.error('SVG → image conversion failed', e);
-      URL.revokeObjectURL(url);
-      alert('Could not export this icon. Open DevTools for the error.');
-    };
-    img.src = url;
-  }
-</script>
-
-</body>
+    </script>
+  </body>
 </html>

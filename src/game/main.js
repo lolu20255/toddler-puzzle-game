@@ -12,6 +12,7 @@ import { GameJ } from './scenes/GameJ'
 import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
 import { Settings } from './scenes/Settings'
+import { installResponsive } from './responsive'
 import Phaser from 'phaser'
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -61,23 +62,27 @@ const config = {
     // smaller card windows in MainMenu.
     mipmapFilter: 'LINEAR_MIPMAP_LINEAR'
   },
-  // Enable a DOM container so the Settings scene can overlay a real
-  // <input> for the toddler-name field (Phaser has no native text input).
-  dom: {
-    createContainer: true
-  },
   scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameF, GameG, GameH, GameI, GameJ, GameOver],
   physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 300 },
+    // Matter.js (bundled with Phaser) so the falling puzzle pieces collide by
+    // their actual body shape and stack cleanly without ever overlapping —
+    // Arcade only does axis-aligned rectangles/circles. gravity y:1 is Matter's
+    // native "earth-normal" gravity, so pieces fall at a realistic rate.
+    default: 'matter',
+    matter: {
+      gravity: { y: 1 },
       debug: false
     }
   }
 }
 
 const StartGame = (parent) => {
-  return new Phaser.Game({ ...config, parent })
+  const game = new Phaser.Game({ ...config, parent })
+  // Resize + reflow the live scene when the device flips orientation. The
+  // canvas is Scale.NONE (fixed size), so without this it never adapts to
+  // rotation. See responsive.js for why we restart rather than reposition.
+  installResponsive(game)
+  return game
 }
 
 export default StartGame

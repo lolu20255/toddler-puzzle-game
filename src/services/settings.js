@@ -1,10 +1,9 @@
 /**
  * App-level user settings.
  *
- * Two prefs today:
- *   - `toddlerName`     — the name the celebration audio uses ("Good job
- *                          <name>!"). Empty string ⇒ "Good job!" (no name).
+ * Prefs:
  *   - `hapticsEnabled`  — whether the `haptics` service fires native taps.
+ *   - `language`        — 'en' | 'es', drives celebration audio + word labels.
  *
  * Values are persisted to Capacitor Preferences via `Storage`, but also held
  * in a sync in-memory cache so hot paths (celebration audio phrase build,
@@ -17,7 +16,6 @@
  */
 import { Storage } from './storage'
 
-const TODDLER_NAME_KEY = 'toddlerName'
 const HAPTICS_ENABLED_KEY = 'hapticsEnabled'
 const LANGUAGE_KEY = 'language'
 const ONBOARDING_COMPLETE_KEY = 'onboardingComplete'
@@ -34,11 +32,10 @@ const PUZZLES_COMPLETED_KEY = 'puzzlesCompleted'
 export const SUPPORTED_LANGUAGES = ['en', 'es']
 
 const cache = {
-  toddlerName: '',
   hapticsEnabled: true,
   language: 'en', // 'en' | 'es' — drives the celebration audio + word labels
   // First-launch parent onboarding sentinel. Boot checks this; if false we
-  // show the 3-step Vue Onboarding flow (welcome → name → language) before
+  // show the 2-step Vue Onboarding flow (welcome → language) before
   // MainMenu. Resetting it (Settings → Debug, when TESTING_FEATURES is on)
   // lets devs re-run the flow without uninstalling.
   onboardingComplete: false,
@@ -77,7 +74,6 @@ export const settings = {
     if (loaded) return
     try {
       const [
-        name,
         haptics,
         language,
         onboarding,
@@ -86,7 +82,6 @@ export const settings = {
         rateUsDismissedAt,
         puzzlesCompleted
       ] = await Promise.all([
-        Storage.get(TODDLER_NAME_KEY),
         Storage.get(HAPTICS_ENABLED_KEY),
         Storage.get(LANGUAGE_KEY),
         Storage.get(ONBOARDING_COMPLETE_KEY),
@@ -95,7 +90,6 @@ export const settings = {
         Storage.get(RATE_US_DISMISSED_AT_KEY),
         Storage.get(PUZZLES_COMPLETED_KEY)
       ])
-      if (name != null) cache.toddlerName = String(name)
       if (haptics != null) cache.hapticsEnabled = haptics !== 'false'
       if (SUPPORTED_LANGUAGES.includes(language)) cache.language = language
       if (onboarding != null) cache.onboardingComplete = onboarding === 'true'
@@ -118,26 +112,12 @@ export const settings = {
     loaded = true
   },
 
-  toddlerName() {
-    return cache.toddlerName
-  },
-
   hapticsEnabled() {
     return cache.hapticsEnabled
   },
 
   language() {
     return cache.language
-  },
-
-  async setToddlerName(name) {
-    cache.toddlerName = String(name || '').trim().slice(0, 20)
-    try {
-      await Storage.set(TODDLER_NAME_KEY, cache.toddlerName)
-    } catch (e) {
-      console.warn('[Settings] save name failed:', e?.message || e)
-    }
-    notify()
   },
 
   async setHapticsEnabled(value) {
