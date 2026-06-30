@@ -22,7 +22,7 @@
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ITEM_NAMES } from '../src/game/itemNames.js'
+import { ITEM_NAMES, isWordOnlyPack } from '../src/game/itemNames.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const projectRoot = join(dirname(__filename), '..')
@@ -34,6 +34,13 @@ const DEVICE_ID = process.env.LIBRO_DEVICE_ID || 'dev-audio-batch'
 const FORCE = process.env.FORCE === '1'
 
 const OUT_ROOT = join(projectRoot, 'public', 'audio', 'levels')
+
+// Non-pack phrases that also ship as bundled MP3s, so the RUNNING app never
+// calls the libro API. Output: public/audio/<slug>/<lang>.mp3. One phrase per
+// language (no spelling). The celebration praise lives here.
+const EXTRAS = {
+  praise: { en: 'Good job!', es: '¡Muy bien!' }
+}
 
 const creds = {
   email: `${DEVICE_ID}@dev.script`,
@@ -75,11 +82,20 @@ async function authenticate() {
   }
 }
 
-/** Build the same phrase the runtime uses in `celebrate.js`. */
-function buildMainPhrase(word, lang) {
+/**
+ * Build the same phrase the runtime uses (kept in lockstep with
+ * `src/services/libro/levelAudio.js → buildPhrase()`).
+ *
+ *   - Multi-character word → spelling + word (e.g. "A, P, P, L, E. APPLE!")
+ *   - Single-character word (Letters pack) → just the letter (e.g. "A!")
+ *     because spelling "A" as "A. A!" sounds redundant.
+ *   - Word-only pack (Count) → just the word (e.g. "One!"), never spelled.
+ */
+function buildMainPhrase(word, lang, pack) {
+  if (word.length === 1 || isWordOnlyPack(pack)) {
+    return lang === 'es' ? `¡${word}!` : `${word}!`
+  }
   const spelled = word.split('').join(', ')
-  // Spanish needs `¡¡¡…!!!` framing so ElevenLabs picks the right intonation —
-  // discovered via trial and error in celebrate.js.
   return lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
 }
 
@@ -156,7 +172,7 @@ async function main() {
           skipped++
           continue
         }
-        const phrase = buildMainPhrase(word, lang)
+        const phrase = buildMainPhrase(word, lang, pack)
         try {
           const buf = await fetchPronunciation(phrase, lang)
           await writeFile(outPath, buf)
@@ -171,6 +187,31 @@ async function main() {
           failed++
           console.error(`  ✗ ${lang}/${pack}/${letter}.mp3  ${e.message}`)
         }
+      }
+    }
+  }
+
+  // ── Extra non-pack phrases (e.g. the celebration praise) ────────────────
+  for (const [slug, byLang] of Object.entries(EXTRAS)) {
+    const dir = join(projectRoot, 'public', 'audio', slug)
+    await mkdir(dir, { recursive: true })
+    for (const lang of LANGS) {
+      const phrase = byLang[lang]
+      if (!phrase) continue
+      const outPath = join(dir, `${lang}.mp3`)
+      if (!FORCE && (await fileExists(outPath))) {
+        skipped++
+        continue
+      }
+      try {
+        const buf = await fetchPronunciation(phrase, lang)
+        await writeFile(outPath, buf)
+        done++
+        console.log(`  ✓ ${slug}/${lang}.mp3  "${phrase}"  (${buf.length} bytes)`)
+        await sleep(200)
+      } catch (e) {
+        failed++
+        console.error(`  ✗ ${slug}/${lang}.mp3  ${e.message}`)
       }
     }
   }

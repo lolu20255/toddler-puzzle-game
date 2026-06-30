@@ -1,21 +1,8 @@
 import { nameForAssetKey } from './itemNames'
-import { preload } from '../services/libro/pronunciation'
-import { preloadLevelAudio } from '../services/libro/levelAudio'
+import { preloadLevelAudio, preloadPraise } from '../services/libro/levelAudio'
+import { stopAllSpeech } from '../services/libro'
 import { settings } from '../services/settings'
-
-/**
- * Praise phrase — combines "good job" with the toddler's name when set.
- * Falls back to just the praise if the parent hasn't entered a name.
- *
- * This is audio 2 of the celebration. Cache key = name + lang, so once it's
- * generated for "Logan" in English it persists in IndexedDB and replays
- * instantly on every subsequent match — no network call after the first.
- */
-function buildPraisePhrase(lang) {
-  const name = settings.toddlerName()
-  if (lang === 'es') return name ? `Muy bien ${name}!` : 'Muy bien!'
-  return name ? `Good job ${name}!` : 'Good job!'
-}
+import { EventBus } from './EventBus'
 
 /**
  * Pop a celebratory modal when a toddler matches a piece.
@@ -39,9 +26,25 @@ export function showCelebration(scene, assetKey, onDismissed) {
   const assetName = nameForAssetKey(assetKey, lang)
 
   if (!assetName) return null
+
+  // EventBus → Amplitude. One emit per successful match. Captured here (not
+  // at the per-scene drop handler) so EVERY pack contributes uniformly to
+  // the per-piece engagement stat without each GameX file having to know.
+  EventBus.emit('puzzle:matched', { assetKey, lang })
   if (scene._celebrationModal) {
     scene._celebrationModal.destroy()
     scene._celebrationModal = null
+  }
+
+  // Register a one-time scene shutdown hook (idempotent per scene) so any
+  // exit path — back button, level complete, settings, restart — silences
+  // the TTS audio. The back button handler ALSO calls stopAllSpeech()
+  // directly so audio stops the instant the tap registers, before the
+  // 240ms fade. This hook is the safety net for non-back-button exits.
+  if (!scene._speechShutdownHooked) {
+    scene._speechShutdownHooked = true
+    scene.events.once('shutdown', stopAllSpeech)
+    scene.events.once('destroy', stopAllSpeech)
   }
 
   const sW = scene.sWidth
@@ -183,20 +186,21 @@ export function showCelebration(scene, assetKey, onDismissed) {
   // Audio 1 — spelling + pronunciation only ("A, P, P, L, E. APPLE!").
   // - the trick to make spanish spelling good was to add " ¡¡¡ " before the word and " !!! " after the word
   // Audio 2 — praise + name combined ("Good job Logan!"). 
+  // Single-character names (e.g. the Letters pack: "A", "B", "C") sound
+  // silly when run through the spelling format ("A. A!"). The generator
+  // script applies the same exception, so the bundled MP3 for a letter
+  // says just "A!" — not "A. A!".
+  const isSingleChar = assetName.length === 1
+
   ;(async () => {
     // Audio 1 — the spelling+pronunciation. Routed through `preloadLevelAudio`
     // which first tries the bundled MP3 (`public/audio/levels/<lang>/<pack>/
     // <letter>.mp3`, pre-generated via `npm run generate:audio`), and only
     // falls back to the API if the file is missing for this asset.
-    // Audio 2 — per-toddler "Good job <Name>!" praise. Always goes through
-    // `preload()` since the name is unique per device.
-    const praisePhrase = buildPraisePhrase(lang)
-    // Kick both fetches off in parallel, but DON'T await them together —
-    // in airplane mode the bundled main audio resolves instantly while the
-    // praise audio has to hit the API and fail, which used to delay the
-    // entire celebration by up to the axios timeout (10s). Awaiting them
-    // independently lets the spelling start the moment the bundle returns.
-    const praisePromise = preload(praisePhrase, lang)
+    // Audio 2 — generic "Good job!" praise from the bundled MP3 (no API call,
+    // no personal data, works offline). Kicked off in parallel with audio 1 but
+    // awaited independently so the spelling can start the moment audio 1 loads.
+    const praisePromise = preloadPraise(lang)
     const mainAudio = await preloadLevelAudio(assetKey, lang)
 
     if (!modal.scene) return // a newer match already destroyed us

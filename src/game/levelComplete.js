@@ -1,6 +1,7 @@
 import { settings } from '../services/settings'
+import { EventBus } from './EventBus'
 
-const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE']
+const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE', 'GameF', 'GameG', 'GameH', 'GameI', 'GameJ']
 
 /**
  * Pick the next pack to play, excluding the one the toddler just finished.
@@ -49,10 +50,8 @@ export function showLevelComplete(scene, onComplete) {
   container.add(dim)
 
   // Banner text.
-  const name = settings.toddlerName()
   const lang = settings.language()
   const headline = lang === 'es' ? '¡GENIAL!' : 'GREAT JOB!'
-  const subline = name ? (lang === 'es' ? `¡${name}!` : `${name}!`) : ''
 
   const headlineSize = minSide * 0.16
   const headlineText = scene.add
@@ -66,31 +65,6 @@ export function showLevelComplete(scene, onComplete) {
   headlineText.setStroke('#e8881c', headlineSize * 0.12)
   headlineText.setShadow(0, headlineSize * 0.05, 'rgba(0,0,0,0.35)', 6)
   container.add(headlineText)
-
-  if (subline) {
-    const subSize = minSide * 0.12
-    const subText = scene.add
-      .text(0, minSide * 0.08, subline, {
-        fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
-        fontSize: `${subSize}px`,
-        color: '#ffce3a',
-        fontStyle: 'bold'
-      })
-      .setOrigin(0.5)
-    subText.setStroke('#5a3a1a', subSize * 0.13)
-    subText.setShadow(0, subSize * 0.05, 'rgba(0,0,0,0.35)', 5)
-    container.add(subText)
-
-    if (!reducedMotion) {
-      scene.tweens.add({
-        targets: subText,
-        scale: { from: 0, to: 1 },
-        duration: 460,
-        delay: 200,
-        ease: 'Back.out'
-      })
-    }
-  }
 
   if (!reducedMotion) {
     // Headline slams in from above with a bounce.
@@ -137,6 +111,11 @@ export function showLevelComplete(scene, onComplete) {
     /* sound is best-effort */
   }
 
+  // EventBus → Amplitude. Mirrors `level:started` (TBD) and `puzzle:matched`
+  // so the per-pack completion funnel is reportable. `scene.scene.key` is
+  // the Phaser scene key, which matches the pack identifier ('GameA' …).
+  EventBus.emit('level:completed', { pack: scene.scene.key })
+
   // ─── Hold then hand control back ────────────────────────────────────────
   scene.time.delayedCall(3000, () => {
     if (!container.scene) return
@@ -148,6 +127,20 @@ export function showLevelComplete(scene, onComplete) {
       onComplete: () => {
         container.destroy()
         if (typeof onComplete === 'function') onComplete()
+        // Bump the lifetime puzzles-completed counter, then poke the
+        // RateUs Vue overlay to decide if NOW is a good moment to ask
+        // for a rating. The overlay does all the gating (count, cooldown,
+        // already-rated, minimum puzzles) — we just fire-and-forget.
+        // Done AFTER `onComplete` so the scene transition kicks off
+        // first; the rate prompt then layers on top.
+        settings
+          .incrementPuzzlesCompleted()
+          .catch(() => {
+            /* persisted-counter bump is best-effort */
+          })
+          .finally(() => {
+            EventBus.emit('rate-us:check')
+          })
       }
     })
   })

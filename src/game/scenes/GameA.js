@@ -3,6 +3,7 @@ import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
 // crispness; hardcoded pixel constants in this scene get multiplied by DPR
@@ -235,7 +236,7 @@ export class GameA extends Scene {
   addAnimalsShadow(animals) {
     this.animalsShadows = this.add.group()
     // console.log('addAnimalsShadow', animals)
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0007455 // Scale size proportional to screen dimensions
 
     for (let index = 0; index < animals.length; index++) {
       const animalKey = animals[index]
@@ -259,7 +260,7 @@ export class GameA extends Scene {
   addAnimals(animals) {
     this.animals = this.add.group()
 
-    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.0007 // Scale size proportional to screen dimensions
+    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.000735 // Scale size proportional to screen dimensions
     const createAnimal = (animalName, index) => {
       const key = `animal${String.fromCharCode(65 + index)}`
       const animal = this.add
@@ -361,12 +362,14 @@ export class GameA extends Scene {
         }
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {
     // console.log('isAnimalOnBase', animalKey)
-    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.00073 // Scale size proportional to screen dimensions
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.0007665 // Scale size proportional to screen dimensions
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0007455 // Scale size proportional to screen dimensions
     const isOnBase =
       Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
       Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10

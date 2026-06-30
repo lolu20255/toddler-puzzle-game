@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Full-bleed mobile layout.
    - `100dvh` is the dynamic viewport height — accounts for iOS browser
      chrome and Capacitor safe areas without the classic 100vh overshoot.

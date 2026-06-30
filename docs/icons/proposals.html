@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Toddler Puzzles — App Icon Proposals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:        #fff8e7;
+    --peach-100:    #ffe8d4;
+    --peach-200:    #ffe0c4;
+    --peach-300:    #ffd5c8;
+    --royal:        #4a2c8a;
+    --warm:         #7a4400;
+    --warm-ink:     #5a3a1a;
+    --sunshine:     #ffd23f;
+    --sunshine-dark:#c99e00;
+    --coral:        #ff7f50;
+    --coral-dark:   #c94a2d;
+    --sky:          #5bb6ef;
+    --sky-pale:     #c6ecff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Fredoka', 'Arial Rounded MT Bold', sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 0%,  rgba(255,210,63,0.18)   0%, transparent 55%),
+      radial-gradient(ellipse at 90% 30%, rgba(255,127,80,0.16)   0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%,rgba(91,182,239,0.18)   0%, transparent 60%),
+      linear-gradient(180deg, #fff8e7 0%, #ffe8d4 100%);
+    color: var(--warm-ink);
+  }
+
+  header {
+    text-align: center;
+    padding: 64px 24px 32px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  header h1 {
+    margin: 0;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    color: var(--royal);
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 0 white;
+  }
+  header p {
+    margin: 12px auto 0;
+    max-width: 560px;
+    font-size: 18px;
+    color: var(--warm);
+    line-height: 1.5;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    padding: 16px 32px 80px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid rgba(232,136,28,0.18);
+    border-radius: 24px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow:
+      0 4px 0 0 rgba(0,0,0,0.06),
+      0 12px 32px rgba(122,68,0,0.10);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 0 0 rgba(0,0,0,0.08),
+      0 18px 40px rgba(122,68,0,0.15);
+  }
+
+  /* iOS-style icon frame: 22.5% radius is Apple's super-ellipse approximation */
+  .icon-wrap {
+    width: 256px;
+    height: 256px;
+    margin: 0 auto 20px;
+    border-radius: 22.5%;
+    overflow: hidden;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 16px 32px rgba(0,0,0,0.18),
+      0 4px 12px rgba(0,0,0,0.12);
+    position: relative;
+  }
+  .icon-wrap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .card h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--royal);
+    font-weight: 700;
+  }
+  .card .tagline {
+    margin: 6px 0 16px;
+    color: var(--warm);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .swatches {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .swatches span {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .download-btn {
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.2px;
+    color: white;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+    background: linear-gradient(180deg, var(--coral) 0%, var(--coral-dark) 100%);
+    padding: 14px 28px;
+    border-radius: 999px;
+    box-shadow:
+      0 4px 0 0 rgba(0,0,0,0.15),
+      0 8px 18px rgba(255,127,80,0.45);
+    transition: transform 120ms ease, box-shadow 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .download-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 5px 0 0 rgba(0,0,0,0.16),
+      0 12px 22px rgba(255,127,80,0.55);
+  }
+  .download-btn:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 2px 0 0 rgba(0,0,0,0.15),
+      0 4px 10px rgba(255,127,80,0.4);
+  }
+  .download-btn .arrow {
+    display: inline-block;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--warm);
+    opacity: 0.6;
+    font-size: 13px;
+    padding: 0 24px 48px;
+  }
+
+  @media (max-width: 480px) {
+    .icon-wrap { width: 220px; height: 220px; }
+    header { padding-top: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Toddler Puzzles · Icon Proposals</h1>
+  <p>Three distinct directions, each toddler-friendly and recognisable at thumbnail size. Pick one to ship, or mix elements. Each downloads as a 1024×1024 JPG ready for App Store Connect.</p>
+</header>
+
+<div class="grid">
+
+  <!-- ─────────────────────────────────────────────────────────────────
+       OPTION 1 — Sunny Smile (the mascot)
+       The friendly sun mascot already living in MainMenu / Onboarding /
+       Paywall, scaled up as the brand hero. Cyan-blue sky behind, soft
+       cloud accents. Most "brand-consistent" of the three.
+  ───────────────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="icon-wrap">
+      <svg id="icon-sun" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#5bb6ef"/>
+            <stop offset="0.5" stop-color="#92cef1"/>
+            <stop offset="1"   stop-color="#c6ecff"/>
+          </linearGradient>
+          <radialGradient id="sunGrad" cx="0.38" cy="0.36" r="0.7">
+            <stop offset="0"   stop-color="#fff3a8"/>
+            <stop offset="0.55" stop-color="#ffd23f"/>
+            <stop offset="1"   stop-color="#e8a700"/>
+          </radialGradient>
+        </defs>
+        <!-- sky bg -->
+        <rect width="1024" height="1024" fill="url(#skyGrad)"/>
+
+        <!-- decorative twinkles -->
+        <g fill="white" opacity="0.85">
+          <circle cx="160" cy="180" r="6"/>
+          <circle cx="880" cy="240" r="8"/>
+          <circle cx="820" cy="600" r="5"/>
+          <circle cx="140" cy="780" r="7"/>
+        </g>
+
+        <!-- clouds -->
+        <g fill="white" opacity="0.95">
+          <ellipse cx="180" cy="290" rx="60" ry="28"/>
+          <ellipse cx="220" cy="270" rx="50" ry="32"/>
+          <ellipse cx="140" cy="280" rx="42" ry="26"/>
+
+          <ellipse cx="850" cy="780" rx="70" ry="32"/>
+          <ellipse cx="900" cy="760" rx="55" ry="36"/>
+          <ellipse cx="800" cy="770" rx="48" ry="28"/>
+        </g>
+
+        <!-- sun rays (9 rays around 512,512) -->
+        <g transform="translate(512 512)" fill="#FFD23F">
+          <!-- Each ray is a chunky triangle. Outer reach ~ r*1.85 -->
+          <polygon points="0,-420 -50,-300 50,-300"/>
+          <polygon points="0,420 -50,300 50,300"/>
+          <polygon points="-420,0 -300,-50 -300,50"/>
+          <polygon points="420,0 300,-50 300,50"/>
+          <polygon points="-297,-297 -226,-340 -340,-226"/>
+          <polygon points="297,-297 226,-340 340,-226"/>
+          <polygon points="-297,297 -226,340 -340,226"/>
+          <polygon points="297,297 226,340 340,226"/>
+        </g>
+
+        <!-- sun disc -->
+        <circle cx="512" cy="512" r="240" fill="url(#sunGrad)"/>
+        <!-- subtle inner glow -->
+        <circle cx="430" cy="430" r="78" fill="#fff3a8" opacity="0.6"/>
+
+        <!-- eyes -->
+        <ellipse cx="430" cy="510" rx="28" ry="36" fill="#7d5d00"/>
+        <ellipse cx="594" cy="510" rx="28" ry="36" fill="#7d5d00"/>
+        <!-- eye sparkles -->
+        <circle cx="422" cy="500" r="8" fill="white"/>
+        <circle cx="586" cy="500" r="8" fill="white"/>
+
+        <!-- smile -->
+        <path d="M 408 590 Q 512 700 616 590"
+              stroke="#7d5d00" stroke-width="32" fill="none"
+              stroke-linecap="round"/>
+
+        <!-- rosy cheeks -->
+        <ellipse cx="378" cy="580" rx="34" ry="22" fill="#ff7fb5" opacity="0.55"/>
+        <ellipse cx="646" cy="580" rx="34" ry="22" fill="#ff7fb5" opacity="0.55"/>
+      </svg>
+    </div>
+    <h2>Sunny Smile</h2>
+    <p class="tagline">The mascot already inside the app — friendly sun on a sky-blue stage, brand-perfect and instantly recognisable.</p>
+    <div class="swatches">
+      <span style="background:#5bb6ef"></span>
+      <span style="background:#ffd23f"></span>
+      <span style="background:#7d5d00"></span>
+      <span style="background:#ff7fb5"></span>
+    </div>
+    <button class="download-btn" onclick="downloadJpg('icon-sun', 'toddler-puzzles-icon-sun.jpg')">
+      Download JPG <span class="arrow">↓</span>
+    </button>
+  </div>
+
+
+  <!-- ─────────────────────────────────────────────────────────────────
+       OPTION 2 — Alphabet Block "A" (educational hero)
+       Big chunky letter A on a pastel-dawn gradient (matches the Letters
+       scene's background). Sun peeks from the corner so the mascot is
+       still present but not the lead. Tells parents "this is a learning
+       app" before they open it.
+  ───────────────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="icon-wrap">
+      <svg id="icon-letter" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dawnGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#ffd5c8"/>
+            <stop offset="0.5" stop-color="#ffbed4"/>
+            <stop offset="1"   stop-color="#d5c8ff"/>
+          </linearGradient>
+          <linearGradient id="aGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#ff7575"/>
+            <stop offset="1"   stop-color="#e63946"/>
+          </linearGradient>
+        </defs>
+        <rect width="1024" height="1024" fill="url(#dawnGrad)"/>
+
+        <!-- rainbow arc peeking from bottom -->
+        <g stroke-width="22" fill="none" opacity="0.85">
+          <path d="M 60 1100 A 460 460 0 0 1 980 1100" stroke="#ff5d5d"/>
+          <path d="M 90 1100 A 432 432 0 0 1 950 1100" stroke="#ff9f1c"/>
+          <path d="M 120 1100 A 404 404 0 0 1 920 1100" stroke="#ffd23f"/>
+          <path d="M 150 1100 A 376 376 0 0 1 890 1100" stroke="#5fc34a"/>
+          <path d="M 180 1100 A 348 348 0 0 1 860 1100" stroke="#3ba4ff"/>
+          <path d="M 210 1100 A 320 320 0 0 1 830 1100" stroke="#6c4ad6"/>
+          <path d="M 240 1100 A 292 292 0 0 1 800 1100" stroke="#9b5de5"/>
+        </g>
+
+        <!-- mini sun peeking top-right -->
+        <g transform="translate(830 200)">
+          <g fill="#FFD23F">
+            <polygon points="0,-150 -20,-90 20,-90"/>
+            <polygon points="0,150 -20,90 20,90"/>
+            <polygon points="-150,0 -90,-20 -90,20"/>
+            <polygon points="150,0 90,-20 90,20"/>
+            <polygon points="-106,-106 -78,-126 -126,-78"/>
+            <polygon points="106,-106 78,-126 126,-78"/>
+            <polygon points="-106,106 -78,126 -126,78"/>
+            <polygon points="106,106 78,126 126,78"/>
+          </g>
+          <circle r="80" fill="#FFD23F"/>
+          <circle cx="-22" cy="-22" r="22" fill="#fff3a8" opacity="0.7"/>
+          <circle cx="-22" cy="-2" r="6" fill="#7d5d00"/>
+          <circle cx="22"  cy="-2" r="6" fill="#7d5d00"/>
+          <path d="M -22 24 Q 0 42 22 24"
+                stroke="#7d5d00" stroke-width="6" fill="none"
+                stroke-linecap="round"/>
+        </g>
+
+        <!-- cloud bottom-left -->
+        <g fill="white" opacity="0.92">
+          <ellipse cx="170" cy="220" rx="68" ry="28"/>
+          <ellipse cx="200" cy="200" rx="56" ry="34"/>
+          <ellipse cx="135" cy="208" rx="44" ry="26"/>
+        </g>
+
+        <!-- big chunky A — shadow + body + stroke -->
+        <g>
+          <!-- drop shadow -->
+          <text x="512" y="780"
+                font-family="Fredoka, Arial Rounded MT Bold, sans-serif"
+                font-size="780" font-weight="700"
+                text-anchor="middle"
+                fill="rgba(0,0,0,0.25)">A</text>
+          <!-- body -->
+          <text x="512" y="760"
+                font-family="Fredoka, Arial Rounded MT Bold, sans-serif"
+                font-size="780" font-weight="700"
+                text-anchor="middle"
+                fill="url(#aGrad)"
+                stroke="#7a1f1f" stroke-width="22" paint-order="stroke fill">A</text>
+        </g>
+      </svg>
+    </div>
+    <h2>Alphabet Hero</h2>
+    <p class="tagline">Chunky red "A" on a pastel-dawn sky. Tells parents "this teaches my child to read" before they tap.</p>
+    <div class="swatches">
+      <span style="background:#ffd5c8"></span>
+      <span style="background:#e63946"></span>
+      <span style="background:#7a1f1f"></span>
+      <span style="background:#ffd23f"></span>
+    </div>
+    <button class="download-btn" onclick="downloadJpg('icon-letter', 'toddler-puzzles-icon-alphabet.jpg')">
+      Download JPG <span class="arrow">↓</span>
+    </button>
+  </div>
+
+
+  <!-- ─────────────────────────────────────────────────────────────────
+       OPTION 3 — Puzzle Buddy (4-quadrant smiling jigsaw)
+       Four colourful puzzle-piece quadrants locked together, with a
+       smiling face spanning across them. Communicates "puzzle" +
+       "friendly character" simultaneously. Most app-storey "playful"
+       direction.
+  ───────────────────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="icon-wrap">
+      <svg id="icon-puzzle" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="puzzleBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0"   stop-color="#9b5de5"/>
+            <stop offset="0.5" stop-color="#7a8de8"/>
+            <stop offset="1"   stop-color="#5bb6ef"/>
+          </linearGradient>
+        </defs>
+        <rect width="1024" height="1024" fill="url(#puzzleBg)"/>
+
+        <!-- twinkles in background -->
+        <g fill="white" opacity="0.7">
+          <circle cx="120" cy="140" r="6"/>
+          <circle cx="900" cy="180" r="5"/>
+          <circle cx="160" cy="900" r="7"/>
+          <circle cx="880" cy="850" r="6"/>
+          <circle cx="500" cy="100" r="4"/>
+        </g>
+
+        <!-- 4 puzzle quadrants. Each piece carries one knob + one socket on
+             its inner edges. All four knob/socket pairs share the mid-edge
+             of their respective inner edges so they line up cleanly around
+             the centre. Knob/socket radius = 60.
+
+             SVG arc sweep rule used throughout:
+               horizontal L→R + sweep=1 ⇒ bulge ABOVE the line
+               horizontal R→L + sweep=0 ⇒ bulge ABOVE the line
+               vertical   T→B + sweep=1 ⇒ bulge RIGHT of the line
+               vertical   B→T + sweep=0 ⇒ bulge RIGHT of the line  -->
+        <g>
+          <!-- TOP-LEFT (orange) — outer TL corner R=80; inner corners R=24
+               right-knob (bulge right) + bottom-socket (bulge up) -->
+          <path d="
+            M 192 112
+            L 428 112
+            A 24 24 0 0 1 452 136
+            L 452 222
+            A 60 60 0 0 1 452 342
+            L 452 428
+            A 24 24 0 0 1 428 452
+            L 342 452
+            A 60 60 0 0 0 222 452
+            L 136 452
+            A 24 24 0 0 1 112 428
+            L 112 192
+            A 80 80 0 0 1 192 112
+            Z"
+            fill="#ff9f1c" stroke="#a85f00" stroke-width="16" stroke-linejoin="round"/>
+
+          <!-- TOP-RIGHT (pink) — outer TR corner R=80; inner corners R=24
+               bottom-knob (bulge down) + left-socket (bulge right) -->
+          <path d="
+            M 596 112
+            L 832 112
+            A 80 80 0 0 1 912 192
+            L 912 428
+            A 24 24 0 0 1 888 452
+            L 802 452
+            A 60 60 0 0 1 682 452
+            L 596 452
+            A 24 24 0 0 1 572 428
+            L 572 342
+            A 60 60 0 0 0 572 222
+            L 572 136
+            A 24 24 0 0 1 596 112
+            Z"
+            fill="#ff5da2" stroke="#b32a63" stroke-width="16" stroke-linejoin="round"/>
+
+          <!-- BOTTOM-LEFT (green) — outer BL corner R=80; inner corners R=24
+               (CCW traversal, so corner arcs use sweep=0)
+               top-knob (bulge up) + right-socket (bulge left) -->
+          <path d="
+            M 112 596
+            L 112 832
+            A 80 80 0 0 0 192 912
+            L 428 912
+            A 24 24 0 0 0 452 888
+            L 452 802
+            A 60 60 0 0 1 452 682
+            L 452 596
+            A 24 24 0 0 0 428 572
+            L 342 572
+            A 60 60 0 0 0 222 572
+            L 136 572
+            A 24 24 0 0 0 112 596
+            Z"
+            fill="#5fc34a" stroke="#266b22" stroke-width="16" stroke-linejoin="round"/>
+
+          <!-- BOTTOM-RIGHT (indigo — Memory pack colour) — outer BR corner R=80; inner corners R=24
+               top-socket (bulge down) + left-knob (bulge left) -->
+          <path d="
+            M 596 572
+            L 682 572
+            A 60 60 0 0 0 802 572
+            L 888 572
+            A 24 24 0 0 1 912 596
+            L 912 832
+            A 80 80 0 0 1 832 912
+            L 596 912
+            A 24 24 0 0 1 572 888
+            L 572 802
+            A 60 60 0 0 1 572 682
+            L 572 596
+            A 24 24 0 0 1 596 572
+            Z"
+            fill="#5e60ce" stroke="#3a3c8c" stroke-width="16" stroke-linejoin="round"/>
+        </g>
+
+        <!-- 4 educational symbols, one per piece. Each sits at the centre
+             of the visible "outer mass" of its quadrant (the part of the
+             piece that the face circle won't cover). Symbols share a
+             single visual recipe: bold white fill + the piece's matching
+             dark stroke + paint-order=stroke fill for clean rounded edges.
+             Fredoka matches the in-game wordmark/text used everywhere else. -->
+        <g font-family="Fredoka, &quot;Arial Rounded MT Bold&quot;, sans-serif"
+           font-weight="700" text-anchor="middle">
+
+          <!-- TL · A (alphabet) -->
+          <text x="282" y="354" font-size="200"
+                fill="white" stroke="#a85f00" stroke-width="14"
+                paint-order="stroke fill">A</text>
+
+          <!-- TR · 1 (numbers) -->
+          <text x="742" y="354" font-size="200"
+                fill="white" stroke="#b32a63" stroke-width="14"
+                paint-order="stroke fill">1</text>
+
+          <!-- BL · ball (shapes / objects)
+               Sphere built from a white disc + two thin "globe" arcs
+               (one vertical, one horizontal). Reads as a ball at any
+               size; no fragile texture or stripes that would muddle at
+               thumbnail scale. -->
+          <g>
+            <circle cx="282" cy="742" r="78" fill="white" stroke="#266b22" stroke-width="14"/>
+            <!-- vertical seam (left-side, suggests sphere depth) -->
+            <path d="M 282 666 Q 228 742 282 818"
+                  stroke="#266b22" stroke-width="7" fill="none"
+                  stroke-linecap="round" opacity="0.55"/>
+            <!-- horizontal seam (top arc, suggests equator) -->
+            <path d="M 207 742 Q 282 712 357 742"
+                  stroke="#266b22" stroke-width="7" fill="none"
+                  stroke-linecap="round" opacity="0.55"/>
+            <!-- tiny highlight dot -->
+            <circle cx="256" cy="712" r="9" fill="white" opacity="0.95"/>
+          </g>
+
+          <!-- BR · + (math / counting)
+               Drawn as a single path so the outer stroke runs continuously
+               around the plus silhouette (no overlapping strokes at the
+               cross joins). Outer corners rounded by stroke-linejoin. -->
+          <path d="
+            M 722 658
+            L 762 658
+            L 762 722
+            L 826 722
+            L 826 762
+            L 762 762
+            L 762 826
+            L 722 826
+            L 722 762
+            L 658 762
+            L 658 722
+            L 722 722
+            Z"
+            fill="white" stroke="#3a3c8c" stroke-width="14"
+            stroke-linejoin="round"/>
+        </g>
+
+        <!-- sunshine-yellow face circle (yellow + purple features = classic
+             smiley). Drawn LAST so it always reads cleanly on top of any
+             other element at the centre. -->
+        <g>
+          <circle cx="512" cy="512" r="142" fill="#ffd23f" stroke="#4a2c8a" stroke-width="16"/>
+          <!-- eyes -->
+          <ellipse cx="468" cy="498" rx="18" ry="24" fill="#4a2c8a"/>
+          <ellipse cx="556" cy="498" rx="18" ry="24" fill="#4a2c8a"/>
+          <circle cx="463" cy="490" r="6" fill="white"/>
+          <circle cx="551" cy="490" r="6" fill="white"/>
+          <!-- smile -->
+          <path d="M 458 548 Q 512 600 566 548"
+                stroke="#4a2c8a" stroke-width="14" fill="none"
+                stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <h2>Puzzle Buddy</h2>
+    <p class="tagline">Four puzzle pieces, each carrying one curriculum cue (A, 1, ball, +), with the smiling face holding the centre. Tells the full story at a glance: puzzles, letters, numbers, shapes, counting.</p>
+    <div class="swatches">
+      <span style="background:#ff9f1c"></span>
+      <span style="background:#ff5da2"></span>
+      <span style="background:#5fc34a"></span>
+      <span style="background:#ffd23f"></span>
+    </div>
+    <button class="download-btn" onclick="downloadJpg('icon-puzzle', 'toddler-puzzles-icon-puzzle.jpg')">
+      Download JPG <span class="arrow">↓</span>
+    </button>
+  </div>
+
+</div>
+
+<footer>
+  Icons render at 1024×1024 — App Store Connect's required size. JPG is the
+  format Apple wants for the marketing icon. Drop the file into
+  <code>assets/icon-only.png</code> (rename to .png if you prefer) then
+  <code>npm run cap:assets</code> to regenerate every device-size asset.
+</footer>
+
+<script>
+/**
+ * Serialise the SVG, paint it onto a 1024×1024 canvas with a white base
+ * (JPG has no alpha), and trigger a download. Done on the client so the
+ * page is fully self-contained — no server, no build step, no deps.
+ *
+ * Quality 0.96 → file size sits around 80–150 KB which is well below
+ * App Store Connect's 1 MB icon limit while still looking crisp on
+ * Retina screens.
+ */
+function downloadJpg(svgId, filename) {
+  const svgEl = document.getElementById(svgId);
+  if (!svgEl) return;
+
+  // Clone so we can ensure xmlns is present for serialisation.
+  const clone = svgEl.cloneNode(true);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+  const svgString = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {
+    const SIZE = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+    // JPG has no alpha — fill white so any transparent edges are not black.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);
+
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(svgUrl);
+    }, 'image/jpeg', 0.96);
+  };
+  img.onerror = (e) => {
+    console.error('SVG → image conversion failed:', e);
+    URL.revokeObjectURL(svgUrl);
+    alert("Sorry, couldn't render the icon. Open DevTools for details.");
+  };
+  img.src = svgUrl;
+}
+</script>
+
+</body>
+</html>

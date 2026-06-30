@@ -1,6 +1,7 @@
 import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { getGrid } from '../layout'
+import { purchasesService } from '../../services/purchases'
 
 /**
  * The four puzzles share one shadow-matching mechanic but use different art
@@ -11,6 +12,11 @@ import { getGrid } from '../layout'
  * green — so the 2×2 grid in portrait reads as a satisfying complementary
  * pattern rather than four random colours.
  */
+// `free: true` packs are always playable. Premium packs show a lock badge
+// until the toddler's parent unlocks all puzzles via the Paywall scene.
+// 5 free / 5 locked. Free: Toys, Numbers, Faces, Letters, Count (a balanced
+// taste across art packs + basics + the counting mechanic). Locked upsell:
+// Heroes, Fruits, Shapes, Memory, Sort.
 const GAMES = [
   {
     label: 'Toys',
@@ -19,7 +25,8 @@ const GAMES = [
     colorDark: 0xd97e00,
     darkHex: '#a85f00',
     iconKey: 'asset_animal_cartoon_a',
-    iconFrame: 7 // teddy bear
+    iconFrame: 7, // teddy bear
+    free: true
   },
   {
     label: 'Heroes',
@@ -37,7 +44,8 @@ const GAMES = [
     colorDark: 0xdb3f82,
     darkHex: '#b32a63',
     iconKey: 'asset_emojis_lego_a',
-    iconFrame: 0 // big laughing face
+    iconFrame: 0, // big laughing face
+    free: true
   },
   {
     label: 'Fruits',
@@ -55,7 +63,55 @@ const GAMES = [
     colorDark: 0x1769b8,
     darkHex: '#0e4b85',
     iconKey: 'asset_numbers_a', // the digit "1" — instantly tells the toddler what's inside
+    iconFrame: 0,
+    free: true
+  },
+  {
+    label: 'Letters',
+    scene: 'GameF',
+    color: 0xffd23f, // sunshine yellow — alphabet-blocks vibe, only primary not yet used
+    colorDark: 0xc99e00,
+    darkHex: '#7d5d00',
+    iconKey: 'asset_letters_a', // the letter "A" — instantly tells the toddler what's inside
+    iconFrame: 0,
+    free: true
+  },
+  {
+    label: 'Shapes',
+    scene: 'GameG',
+    color: 0x29c7b8, // teal — last primary not yet on the menu
+    colorDark: 0x127a70,
+    darkHex: '#0b5b54',
+    iconKey: 'asset_shapes_card_icon', // composite of triangle + circle + square (baked in Boot)
     iconFrame: 0
+  },
+  {
+    label: 'Memory',
+    scene: 'GameH',
+    color: 0x5e60ce, // indigo — fresh primary, signals "thinky" / focus
+    colorDark: 0x3a3c8c,
+    darkHex: '#252660',
+    iconKey: 'asset_memory_icon', // baked 🧠 emoji texture from Boot
+    iconFrame: 0
+  },
+  {
+    label: 'Sort',
+    scene: 'GameI',
+    color: 0xff6b4a, // warm coral — fresh primary, distinct from Faces pink
+    colorDark: 0xb43e22,
+    darkHex: '#6e2511',
+    iconKey: 'asset_sort_icon', // baked tri-circle (red/blue/yellow) from Boot
+    iconFrame: 0
+  },
+  {
+    label: 'Count',
+    scene: 'GameJ',
+    color: 0x84cc16, // vibrant lime — distinct from Fruits' leaf green
+    colorDark: 0x4d7c0f,
+    darkHex: '#2e470a',
+    iconKey: 'asset_count_icon', // baked 🔢 keycap-numbers emoji from Boot
+    iconFrame: 0,
+    free: true
   }
 ]
 
@@ -65,6 +121,16 @@ const CARDS_PER_ROW = 2
 // Pointer must travel this many pixels vertically before we count it as a
 // scroll instead of a tap. Toddlers are jittery; under 10px we keep the tap.
 const SCROLL_THRESHOLD = 10
+
+// Fisher-Yates. Returns a new array so the source GAMES constant stays put.
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 
 export class MainMenu extends Scene {
   constructor() {
@@ -80,6 +146,11 @@ export class MainMenu extends Scene {
     this.sWidth = this.cameras.main.width
     this.sHeight = this.cameras.main.height
     this.minSide = Math.min(this.sWidth, this.sHeight)
+    // Landscape uses horizontal swipe scrolling (toddlers hold the phone
+    // sideways on a couch). Portrait keeps the existing vertical scroll.
+    // Decoration builders read this flag to pin themselves to the viewport
+    // in landscape so they don't drift sideways with the cards.
+    this.landscape = this.sWidth > this.sHeight
     this.grid = getGrid(this)
     this.locked = false
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -93,6 +164,15 @@ export class MainMenu extends Scene {
     this.buildSettingsButton()
 
     this.cameras.main.fadeIn(this.reducedMotion ? 0 : 400, 91, 182, 239)
+
+    // Rebuild the scene after a successful purchase / restore so the lock
+    // icons disappear and the shuffle pool grows to include the now-unlocked
+    // packs. Emitted by the Vue Paywall component.
+    this._onEntitlementUpdated = () => this.scene.restart()
+    EventBus.on('entitlement:updated', this._onEntitlementUpdated)
+    this.events.once('shutdown', () => {
+      EventBus.off('entitlement:updated', this._onEntitlementUpdated)
+    })
 
     EventBus.emit('current-scene-ready', this)
   }
@@ -125,8 +205,12 @@ export class MainMenu extends Scene {
     const r = this.minSide * 0.095
     // Sun scrolls at full speed with the rest of the page — it sits at the
     // top of the world and exits the viewport when the toddler scrolls
-    // down, like the hero image on a normal webpage.
+    // down, like the hero image on a normal webpage. In landscape the page
+    // scrolls sideways, so we pin the sun to the viewport instead — it
+    // would be jarring to watch a fixed-position mascot drift left with
+    // every swipe.
     const sun = this.add.container(this.sWidth * 0.2, this.sHeight * 0.135).setDepth(1)
+    if (this.landscape) sun.setScrollFactor(0)
 
     // Rays drawn around the origin so the graphics object can spin in place.
     const rays = this.add.graphics()
@@ -183,6 +267,7 @@ export class MainMenu extends Scene {
 
     clouds.forEach((c, i) => {
       const cloud = this.makeCloud(c.scale * (this.minSide / 720)).setDepth(1)
+      if (this.landscape) cloud.setScrollFactor(0)
       cloud.y = this.sHeight * c.y
       const startX = -this.sWidth * 0.2 - i * this.sWidth * 0.45
       cloud.x = this.reducedMotion ? this.sWidth * (0.2 + i * 0.3) : startX
@@ -228,6 +313,7 @@ export class MainMenu extends Scene {
         .star(this.sWidth * fx, this.sHeight * fy, 4, r * 0.4, r, 0xffffff)
         .setDepth(1)
         .setAlpha(0.85)
+      if (this.landscape) star.setScrollFactor(0)
       if (!this.reducedMotion) {
         this.tweens.add({
           targets: star,
@@ -252,13 +338,19 @@ export class MainMenu extends Scene {
   // tiles — keeps the visual language consistent across the menu.
   buildTitle() {
     const cx = this.sWidth / 2
-    const cy = this.sHeight * 0.255
-    // Pill scrolls at full speed with the cards — like a regular webpage
-    // hero header that leaves the viewport when you scroll past it.
+    // Landscape lifts the pill 15% of screen height higher so it clears the
+    // single-row cards completely and sits up near the sky instead of
+    // hovering over the icons.
+    const cy = this.sHeight * (this.landscape ? 0.155 : 0.255)
+    // Pill scrolls at full speed with the cards in portrait — like a
+    // regular webpage hero header that leaves the viewport when you scroll
+    // past it. In landscape the page scrolls sideways and the pill pins to
+    // the viewport so it doesn't slide off with every swipe.
     // Depth lower than the cards (5) so the pill renders BEHIND any card
     // that overlaps it during the scroll — otherwise the pill would mount
     // on top of the cards mid-flick.
     const badge = this.add.container(cx, cy).setDepth(2)
+    if (this.landscape) badge.setScrollFactor(0)
 
     const fontSize = this.minSide * 0.075
     const text = this.add
@@ -344,48 +436,87 @@ export class MainMenu extends Scene {
   //      uses screen coords; off-screen cards correctly receive no input.
 
   buildCards() {
-    const landscape = this.sWidth > this.sHeight
     this.cardsTop = this.sHeight * 0.31 // first row sits below the title pill
     const contentW = this.grid.contentWidth
 
-    const cols = landscape ? Math.min(GAMES.length, 4) : CARDS_PER_ROW
-    const rows = Math.ceil(GAMES.length / cols)
+    // Shuffle on every mount so the menu feels fresh each time the toddler
+    // returns. Two regimes:
+    //   • Premium: shuffle the full pack list (everything is playable).
+    //   • Free:    shuffle ONLY the free packs and keep them at the top, so
+    //              the toddler never has to scroll past locks to reach
+    //              something they can actually play. Locked packs keep their
+    //              original by-theme order underneath as a stable upsell row.
+    const orderedGames = purchasesService.cachedFullAccess
+      ? shuffle(GAMES)
+      : [...shuffle(GAMES.filter((g) => g.free)), ...GAMES.filter((g) => !g.free)]
+
     const gapX = this.sWidth * 0.04
     const gapY = this.sHeight * 0.03
 
-    const visibleRows = landscape ? 1 : 2
-    const visibleH = this.sHeight * 0.67
-    const cardW = (contentW - gapX * (cols - 1)) / cols
-    const cardH = (visibleH - gapY * (visibleRows - 1)) / visibleRows
+    if (this.landscape) {
+      // Single horizontal row. ~4 cards fit on screen; the toddler swipes
+      // left/right to reach the rest. Card dimensions match the visible-4
+      // layout that was already there, just extended off-screen to the
+      // right so the world is wider than the viewport.
+      const visibleCols = Math.min(orderedGames.length, 4)
+      const cardW = (contentW - gapX * (visibleCols - 1)) / visibleCols
+      const cardH = this.sHeight * 0.65
+      const startX = this.grid.contentLeft + cardW / 2
+      const cy = this.cardsTop + cardH / 2
 
-    const startX = this.grid.contentLeft + cardW / 2
+      for (let i = 0; i < orderedGames.length; i++) {
+        const pos = { x: startX + i * (cardW + gapX), y: cy }
+        this.createCard(orderedGames[i], pos, cardW, cardH, true, i)
+      }
 
-    for (let i = 0; i < GAMES.length; i++) {
-      const col = i % cols
-      const row = Math.floor(i / cols)
-      const isOrphanLast = i === GAMES.length - 1 && i % cols === 0
-      const pos = isOrphanLast
-        ? {
-            x: this.sWidth / 2,
-            y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
-          }
-        : {
-            x: startX + col * (cardW + gapX),
-            y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
-          }
-      this.createCard(GAMES[i], pos, cardW, cardH, true, i)
+      // Mirror the grid's left padding on the right edge so the last card
+      // doesn't slam against the camera bound at full scroll.
+      const totalCardsW = cardW * orderedGames.length + gapX * (orderedGames.length - 1)
+      const sidePadding = this.grid.contentLeft
+      this.worldWidth = sidePadding * 2 + totalCardsW
+      this.worldHeight = this.sHeight
+      this.maxScrollX = Math.max(0, this.worldWidth - this.sWidth)
+      this.maxScrollY = 0
+
+      this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight)
+    } else {
+      // Portrait: 2-column vertical grid that scrolls down. Unchanged.
+      const cols = CARDS_PER_ROW
+      const rows = Math.ceil(orderedGames.length / cols)
+      const visibleRows = 2
+      const visibleH = this.sHeight * 0.67
+      const cardW = (contentW - gapX * (cols - 1)) / cols
+      const cardH = (visibleH - gapY * (visibleRows - 1)) / visibleRows
+      const startX = this.grid.contentLeft + cardW / 2
+
+      for (let i = 0; i < orderedGames.length; i++) {
+        const col = i % cols
+        const row = Math.floor(i / cols)
+        const isOrphanLast = i === orderedGames.length - 1 && i % cols === 0
+        const pos = isOrphanLast
+          ? {
+              x: this.sWidth / 2,
+              y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
+            }
+          : {
+              x: startX + col * (cardW + gapX),
+              y: this.cardsTop + cardH / 2 + row * (cardH + gapY)
+            }
+        this.createCard(orderedGames[i], pos, cardW, cardH, true, i)
+      }
+
+      // World height = bottom of last card + a touch of breathing room above
+      // the home-indicator safe area. The camera scrolls within [0, worldH-vp].
+      const totalCardsH = cardH * rows + gapY * (rows - 1)
+      this.worldWidth = this.sWidth
+      this.worldHeight = this.cardsTop + totalCardsH + this.sHeight * 0.04
+      this.maxScrollX = 0
+      this.maxScrollY = Math.max(0, this.worldHeight - this.sHeight)
+
+      this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight)
     }
 
-    // World height = bottom of last card + a touch of breathing room above
-    // the home-indicator safe area. The camera scrolls within [0, worldH-vp].
-    const totalCardsH = cardH * rows + gapY * (rows - 1)
-    this.worldHeight = this.cardsTop + totalCardsH + this.sHeight * 0.04
-    this.maxScrollY = Math.max(0, this.worldHeight - this.sHeight)
-
-    // Lock the camera horizontally + clamp scrollY to the world bounds.
-    this.cameras.main.setBounds(0, 0, this.sWidth, this.worldHeight)
-
-    if (this.maxScrollY > 0) {
+    if (this.maxScrollX > 0 || this.maxScrollY > 0) {
       this.installScrollGestures()
     }
   }
@@ -393,47 +524,55 @@ export class MainMenu extends Scene {
   // ────────────────────────────────────────────────────── scroll gestures
   //
   // Scene-level pointer handlers do scroll-vs-tap disambiguation:
-  //   • Pointer movement < SCROLL_THRESHOLD on the Y axis → still a tap
+  //   • Pointer movement < SCROLL_THRESHOLD on the scroll axis → still a tap
   //   • Pointer movement ≥ threshold → toddler is scrolling; tap is cancelled
+  //
+  // The scroll axis is decided by which `maxScroll*` is non-zero: landscape
+  // scrolls horizontally (axis = 'x'), portrait vertically (axis = 'y').
   //
   // Card press uses `pointerup` (not pointerdown), so a finger can rest on
   // a card while the grid drag-scrolls without launching that level.
   installScrollGestures() {
-    let startY = 0
-    let startScrollY = 0
-    let lastY = 0
+    const horizontal = this.maxScrollX > 0
+    const axis = horizontal ? 'x' : 'y'
+    const camAxis = horizontal ? 'scrollX' : 'scrollY'
+    const maxScroll = horizontal ? this.maxScrollX : this.maxScrollY
+
+    let start = 0
+    let startScroll = 0
+    let last = 0
     let lastTime = 0
     let velocity = 0
     this.isScrolling = false
     const cam = this.cameras.main
 
     this.input.on('pointerdown', (pointer) => {
-      startY = pointer.y
-      lastY = pointer.y
+      start = pointer[axis]
+      last = start
       lastTime = pointer.event.timeStamp || Date.now()
-      startScrollY = cam.scrollY
+      startScroll = cam[camAxis]
       velocity = 0
       this.isScrolling = false
     })
 
     this.input.on('pointermove', (pointer) => {
       if (!pointer.isDown) return
-      const dy = pointer.y - startY
-      if (!this.isScrolling && Math.abs(dy) >= SCROLL_THRESHOLD) {
+      const cur = pointer[axis]
+      const delta = cur - start
+      if (!this.isScrolling && Math.abs(delta) >= SCROLL_THRESHOLD) {
         this.isScrolling = true
         this.tweens.killTweensOf(cam)
       }
       if (this.isScrolling) {
-        // Finger pulled UP (dy < 0) → camera scrolls DOWN (reveal lower
-        // content). camera.scrollY = how far down the world we are.
-        cam.scrollY = startScrollY - dy
-        // setBounds clamps cam.scrollY for us — no manual clamp needed.
+        // Finger pulled toward origin (delta < 0) → camera scrolls AWAY
+        // from origin (reveal later content). setBounds clamps for us.
+        cam[camAxis] = startScroll - delta
 
         const now = pointer.event.timeStamp || Date.now()
         const dt = Math.max(1, now - lastTime)
-        // Negate so positive velocity = scrolling down (camera scrollY up).
-        velocity = -(pointer.y - lastY) / dt
-        lastY = pointer.y
+        // Negate so positive velocity = scrolling forward through the world.
+        velocity = -(cur - last) / dt
+        last = cur
         lastTime = now
       }
     })
@@ -441,14 +580,10 @@ export class MainMenu extends Scene {
     this.input.on('pointerup', () => {
       if (!this.isScrolling) return
       const flingPx = velocity * 240 // ~240ms of coast at release velocity
-      const targetY = Phaser.Math.Clamp(
-        cam.scrollY + flingPx,
-        0,
-        this.maxScrollY
-      )
+      const target = Phaser.Math.Clamp(cam[camAxis] + flingPx, 0, maxScroll)
       this.tweens.add({
         targets: cam,
-        scrollY: targetY,
+        [camAxis]: target,
         duration: this.reducedMotion ? 0 : 360,
         ease: 'Quad.easeOut'
       })
@@ -615,6 +750,27 @@ export class MainMenu extends Scene {
     label.setStroke(game.darkHex, labelSize * 0.16)
     card.add(label)
 
+    // Lock badge — drawn LAST so it sits on top of the icon/label. Premium
+    // packs get a small gold circle with a lock glyph in the upper-right
+    // corner of the card. Hidden once the user owns the `premium`
+    // entitlement (cached at boot in purchasesService).
+    const isLocked = !game.free && !purchasesService.cachedFullAccess
+    card.isLocked = isLocked
+    if (isLocked) {
+      const lockR = Math.min(w, h) * 0.14
+      const lockX = w / 2 - lockR * 0.95
+      const lockY = -h / 2 + lockR * 0.95
+      const lockShadow = this.add.circle(lockX, lockY + lockR * 0.18, lockR, 0x000000, 0.22)
+      const lockDisc = this.add.circle(lockX, lockY, lockR, 0xffffff, 0.97)
+      lockDisc.setStrokeStyle(Math.max(2, lockR * 0.12), game.colorDark, 1)
+      const lockGlyph = this.add
+        .text(lockX, lockY + lockR * 0.05, '🔒', {
+          fontSize: `${lockR * 1.1}px`
+        })
+        .setOrigin(0.5)
+      card.add([lockShadow, lockDisc, lockGlyph])
+    }
+
     // Interaction.
     card.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h),
@@ -665,8 +821,39 @@ export class MainMenu extends Scene {
 
   pressCard(card, game) {
     if (this.locked) return
-    this.locked = true
 
+    // EventBus → Amplitude. Captures both locked + unlocked taps so the
+    // funnel "card tapped → paywall opened" can be measured. The amplitude
+    // service translates this to a `scene_view` event.
+    EventBus.emit('scene:view', {
+      scene: game.scene,
+      label: game.label,
+      locked: !!card.isLocked
+    })
+
+    // Locked premium pack → open the Vue paywall overlay (which lives above
+    // the Phaser canvas). We DON'T start a Phaser scene — MainMenu stays
+    // mounted underneath. When the parent closes or completes the purchase,
+    // the Paywall emits 'entitlement:updated' and we rebuild this scene to
+    // pick up the new lock state.
+    if (card.isLocked) {
+      console.log('[MainMenu] locked card pressed → emit paywall:open', game.label)
+      this.playPressSound()
+      this.burstStars(card.x, card.y)
+      this.tweens.killTweensOf(card)
+      card.setScale(1)
+      this.tweens.add({
+        targets: card,
+        scale: 0.96,
+        duration: 110,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      })
+      EventBus.emit('paywall:open')
+      return
+    }
+
+    this.locked = true
     this.playPressSound()
     this.burstStars(card.x, card.y)
 
@@ -681,7 +868,9 @@ export class MainMenu extends Scene {
       ease: 'Quad.easeOut',
       onComplete: () => {
         this.cameras.main.fadeOut(this.reducedMotion ? 0 : 260, 91, 182, 239)
-        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(game.scene))
+        this.cameras.main.once('camerafadeoutcomplete', () =>
+          this.scene.start(game.scene)
+        )
       }
     })
   }

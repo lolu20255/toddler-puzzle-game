@@ -3,6 +3,7 @@ import Phaser, { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 const NUM_OF_NUMBERS = 9
 
@@ -185,7 +186,7 @@ export class GameE extends Scene {
     // Numbers render bigger than the other packs (20% bump) — the glyph
     // takes less optical space than the chunky 3-D emoji art, so it needs
     // the extra size to read at the same visual weight.
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.000852
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0008946
 
     for (let index = 0; index < animals.length; index++) {
       const animalKey = animals[index]
@@ -211,7 +212,7 @@ export class GameE extends Scene {
   addAnimals(animals) {
     this.animals = this.add.group()
 
-    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.00084
+    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.000882
     const createAnimal = (animalName, index) => {
       const key = `animal${String.fromCharCode(65 + index)}`
       const animal = this.add
@@ -294,11 +295,13 @@ export class GameE extends Scene {
         this.scoreBoard.setScore(this.score)
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {
-    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.000876
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.000852
+    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.0009198
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0008946
     const isOnBase =
       Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
       Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10

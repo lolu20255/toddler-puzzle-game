@@ -19,6 +19,7 @@ import { notificationsService } from './notifications'
 import { appReview } from './appReview'
 import { analytics } from './analytics'
 import { libroAuth } from './libro/auth'
+import { amplitudeService } from './amplitude'
 import { settings } from './settings'
 import { EventBus } from '../game/EventBus'
 
@@ -52,6 +53,12 @@ export async function initNative() {
 
   if (!isNativePlatform()) {
     console.log('[Native] Browser build — native features disabled')
+    // Even on the dev/web build, fire `app:open` so the EventBus → Amplitude
+    // wiring is exercised when an API key is configured for a web build.
+    // Done lazily so the amplitude listeners are installed first.
+    amplitudeService
+      .initialize()
+      .then(() => EventBus.emit('app:open', { count: opens }))
     return
   }
 
@@ -61,6 +68,10 @@ export async function initNative() {
   )
 
   await step('Purchases.initialize', () => purchasesService.initialize())
+  // Warm up the entitlement cache so MainMenu can synchronously decide
+  // which cards to show with a lock icon on its very first paint, instead
+  // of flickering "unlocked → locked" once the network call resolves.
+  step('Purchases.refreshEntitlement', () => purchasesService.refreshEntitlement())
 
   await step('Notifications.initialize', () =>
     notificationsService.initialize()
@@ -79,6 +90,16 @@ export async function initNative() {
   step('LibroAuth.ensureAuthenticated', () =>
     libroAuth.ensureAuthenticated()
   )
+
+  // Amplitude — last step so analytics is the cherry on top, not a
+  // dependency for any other service. Awaited (rather than fire-and-forget)
+  // so the EventBus translation listeners are installed before any scene
+  // starts emitting events; if the API key isn't configured, this resolves
+  // instantly with a console warning.
+  await step('Amplitude.initialize', () => amplitudeService.initialize())
+  // First event after the listeners are in place — the launch we counted at
+  // the top. Mirrors the existing local `analytics.logEvent('app_open', …)`.
+  EventBus.emit('app:open', { count: opens })
 
   // backButton is an Android-only event. Calling addListener on iOS works in
   // some Capacitor versions and crashes the WebContent process in others —
