@@ -58,6 +58,11 @@ export const ITEM_NAMES = {
     colors: {
       a: 'RED', b: 'ORANGE', c: 'YELLOW', d: 'GREEN',
       e: 'BLUE', f: 'PURPLE', g: 'PINK'
+    },
+    // Vehicles shadow-matching pack (GameP) — plush 3D art in public/assets/vehicles.
+    vehicles: {
+      a: 'CAR', b: 'BUS', c: 'PLANE', d: 'BOAT',
+      e: 'TRAIN', f: 'TRUCK', g: 'HELICOPTER', h: 'ROCKET', i: 'BIKE'
     }
   },
   es: {
@@ -98,6 +103,11 @@ export const ITEM_NAMES = {
     colors: {
       a: 'ROJO', b: 'NARANJA', c: 'AMARILLO', d: 'VERDE',
       e: 'AZUL', f: 'MORADO', g: 'ROSA'
+    },
+    // Vehicles shadow-matching pack (GameP).
+    vehicles: {
+      a: 'CARRO', b: 'BUS', c: 'AVIÓN', d: 'BARCO',
+      e: 'TREN', f: 'CAMIÓN', g: 'HELICÓPTERO', h: 'COHETE', i: 'BICI'
     }
   }
 }

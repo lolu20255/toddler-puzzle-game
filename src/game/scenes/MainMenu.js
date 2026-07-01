@@ -141,6 +141,15 @@ const GAMES = [
     iconKey: 'asset_bubble_icon', // baked A + 3 bubbles from Boot
     iconFrame: 0,
     free: true
+  },
+  {
+    label: 'Vehicles',
+    scene: 'GameP',
+    color: 0xef4444, // fire-engine red — matches the plush car icon
+    colorDark: 0xb91c1c,
+    darkHex: '#7f1414',
+    iconKey: 'asset_vehicles_a', // the red plush car
+    iconFrame: 0
   }
 ]
 
