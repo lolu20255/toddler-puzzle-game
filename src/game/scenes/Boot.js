@@ -1042,6 +1042,22 @@ export class Boot extends Scene {
       this.load.image(`asset_vehicles_${letter}`, `assets/vehicles/${letter}_${name}.png`)
     }
 
+    // ANIMALS — gpt-image-1 Fluent-3D plush PNGs. See public/assets/animals/.
+    const animalFiles = {
+      a: 'cow',
+      b: 'dog',
+      c: 'cat',
+      d: 'duck',
+      e: 'sheep',
+      f: 'frog',
+      g: 'horse',
+      h: 'pig',
+      i: 'lion'
+    }
+    for (const [letter, name] of Object.entries(animalFiles)) {
+      this.load.image(`asset_animals_${letter}`, `assets/animals/${letter}_${name}.png`)
+    }
+
     // AUDIO — Kenney UI Audio (CC0). See public/assets/audio/ui/README.md
     // for the mapping of each file to where it plays.
     this.load.audio('ui_letter_pop', 'assets/audio/ui/click5.wav')

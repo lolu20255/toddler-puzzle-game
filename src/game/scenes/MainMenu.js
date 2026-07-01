@@ -150,6 +150,16 @@ const GAMES = [
     darkHex: '#7f1414',
     iconKey: 'asset_vehicles_a', // the red plush car
     iconFrame: 0
+  },
+  {
+    label: 'Animals',
+    scene: 'GameN',
+    color: 0x16a34a, // grassy green — barnyard/farm feel
+    colorDark: 0x0f7a37,
+    darkHex: '#0a5626',
+    iconKey: 'asset_animals_a', // the plush cow
+    iconFrame: 0,
+    free: true
   }
 ]
 

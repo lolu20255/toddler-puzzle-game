@@ -63,6 +63,16 @@ export const ITEM_NAMES = {
     vehicles: {
       a: 'CAR', b: 'BUS', c: 'PLANE', d: 'BOAT',
       e: 'TRAIN', f: 'TRUCK', g: 'HELICOPTER', h: 'ROCKET', i: 'BIKE'
+    },
+    // Animals & Sounds game (GameN) — spoken bare name ("Cow!"), no spelling.
+    animals: {
+      a: 'COW', b: 'DOG', c: 'CAT', d: 'DUCK',
+      e: 'SHEEP', f: 'FROG', g: 'HORSE', h: 'PIG', i: 'LION'
+    },
+    // The matching sound each animal makes, spoken as onomatopoeia ("Moo!").
+    animal_sounds: {
+      a: 'MOO', b: 'WOOF', c: 'MEOW', d: 'QUACK',
+      e: 'BAA', f: 'RIBBIT', g: 'NEIGH', h: 'OINK', i: 'ROAR'
     }
   },
   es: {
@@ -108,6 +118,16 @@ export const ITEM_NAMES = {
     vehicles: {
       a: 'CARRO', b: 'BUS', c: 'AVIÓN', d: 'BARCO',
       e: 'TREN', f: 'CAMIÓN', g: 'HELICÓPTERO', h: 'COHETE', i: 'BICI'
+    },
+    // Animals & Sounds game (GameN) — bare animal name, no spelling.
+    animals: {
+      a: 'VACA', b: 'PERRO', c: 'GATO', d: 'PATO',
+      e: 'OVEJA', f: 'RANA', g: 'CABALLO', h: 'CERDO', i: 'LEÓN'
+    },
+    // Spanish animal-sound onomatopoeia.
+    animal_sounds: {
+      a: 'MUU', b: 'GUAU', c: 'MIAU', d: 'CUAC',
+      e: 'BEE', f: 'CROAC', g: 'IIH', h: 'OINC', i: 'GRR'
     }
   }
 }
@@ -117,7 +137,7 @@ export const ITEM_NAMES = {
 // counting. (The Letters pack is handled separately by the single-character
 // rule in the phrase builders.) Shared by the runtime (levelAudio.js) and the
 // batch generator (generate-level-audios.mjs) so both build the same phrase.
-export const WORD_ONLY_PACKS = new Set(['count', 'colors'])
+export const WORD_ONLY_PACKS = new Set(['count', 'colors', 'animals', 'animal_sounds'])
 
 /** True if `pack`'s audio should be the plain word with no spelling prefix. */
 export function isWordOnlyPack(pack) {
