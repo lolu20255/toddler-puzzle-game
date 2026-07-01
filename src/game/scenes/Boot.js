@@ -281,6 +281,8 @@ export class Boot extends Scene {
       this.generateColorsIcon()
       this.generatePatternIcon()
       this.generateBubbleIcon()
+      this.generateOppositeTextures()
+      this.generateOppositesIcon()
 
       // First-launch parent onboarding gate. If the parent hasn't completed
       // the welcome → name → language flow yet, hold here, let the Vue
@@ -473,6 +475,205 @@ export class Boot extends Scene {
     three.destroy()
 
     rt.saveTexture('asset_bubble_icon')
+    rt.destroy()
+  }
+
+  // Five opposite pairs for the Opposites game (GameO), keyed a-j:
+  // (a day / b night), (c up / d down), (e happy / f sad),
+  // (g hot / h cold), (i full / j empty). Names line up with the `opposites`
+  // audio/name pack in itemNames.js. (Capped at 10 = letters a-j, the limit of
+  // the asset-key parser in levelAudio.js / itemNames.js.)
+  static OPPOSITE_ICONS = [
+    ['a', 'sun'], ['b', 'moon'], ['c', 'arrowUp'], ['d', 'arrowDown'],
+    ['e', 'happy'], ['f', 'sad'], ['g', 'flame'], ['h', 'snowflake'],
+    ['i', 'glassFull'], ['j', 'glassEmpty']
+  ]
+
+  /** Bake the ten `asset_opposites_<a-j>` opposite-pair icons (procedural). */
+  generateOppositeTextures() {
+    const size = 240
+    for (const [letter, name] of Boot.OPPOSITE_ICONS) {
+      const key = `asset_opposites_${letter}`
+      if (this.textures.exists(key)) continue
+      const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+      const g = this.make.graphics({ x: 0, y: 0 }, false)
+      this._drawOppIcon(g, name, size / 2, size / 2, size * 0.33)
+      rt.draw(g, 0, 0)
+      g.destroy()
+      rt.saveTexture(key)
+      rt.destroy()
+    }
+  }
+
+  /** Draw one opposite icon into `g` at (cx, cy), sized to radius `r`. */
+  _drawOppIcon(g, name, cx, cy, r) {
+    const rad = Phaser.Math.DegToRad
+    switch (name) {
+      case 'sun': {
+        g.fillStyle(0xffd23f, 1)
+        for (let i = 0; i < 9; i++) {
+          const a = (i / 9) * Math.PI * 2
+          const inner = r * 1.05
+          const outer = r * 1.5
+          g.fillTriangle(
+            cx + Math.cos(a) * outer, cy + Math.sin(a) * outer,
+            cx + Math.cos(a - 0.22) * inner, cy + Math.sin(a - 0.22) * inner,
+            cx + Math.cos(a + 0.22) * inner, cy + Math.sin(a + 0.22) * inner
+          )
+        }
+        g.fillCircle(cx, cy, r)
+        g.fillStyle(0xc9821b, 1)
+        g.fillCircle(cx - r * 0.32, cy - r * 0.1, r * 0.11)
+        g.fillCircle(cx + r * 0.32, cy - r * 0.1, r * 0.11)
+        g.lineStyle(r * 0.12, 0xc9821b, 1)
+        g.beginPath()
+        g.arc(cx, cy + r * 0.05, r * 0.45, rad(25), rad(155), false)
+        g.strokePath()
+        break
+      }
+      case 'moon': {
+        g.fillStyle(0xfff0a6, 1)
+        g.lineStyle(r * 0.09, 0x8a6d1f, 1)
+        g.fillCircle(cx, cy, r)
+        g.strokeCircle(cx, cy, r)
+        // Craters.
+        g.fillStyle(0xe9c95a, 1)
+        g.fillCircle(cx - r * 0.32, cy - r * 0.18, r * 0.16)
+        g.fillCircle(cx + r * 0.28, cy + r * 0.26, r * 0.2)
+        g.fillCircle(cx + r * 0.12, cy - r * 0.36, r * 0.1)
+        // Two little gold stars to signal "night".
+        g.fillStyle(0xffe27a, 1)
+        ;[[0.95, -0.7, 0.16], [-0.85, 0.62, 0.12]].forEach(([dx, dy, sr]) => {
+          const sx = cx + r * dx
+          const sy = cy + r * dy
+          const pts = []
+          for (let k = 0; k < 8; k++) {
+            const a = (Math.PI / 4) * k - Math.PI / 2
+            const rr = k % 2 === 0 ? r * sr : r * sr * 0.42
+            pts.push(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr)
+          }
+          g.fillPoints(this._pairsToPoints(pts), true)
+        })
+        break
+      }
+      case 'arrowUp':
+      case 'arrowDown': {
+        const up = name === 'arrowUp'
+        const fill = up ? 0x4cc44c : 0xff5d5d
+        const stroke = up ? 0x227a22 : 0x9c2c2c
+        const dir = up ? -1 : 1
+        g.fillStyle(fill, 1)
+        g.lineStyle(r * 0.12, stroke, 1)
+        // Stem
+        g.fillRoundedRect(cx - r * 0.2, cy - r * 0.1 * dir, r * 0.4, r * 0.9, r * 0.12)
+        // Head
+        g.fillTriangle(
+          cx, cy - r * 0.9 * dir,
+          cx - r * 0.55, cy - r * 0.05 * dir,
+          cx + r * 0.55, cy - r * 0.05 * dir
+        )
+        break
+      }
+      case 'happy':
+      case 'sad': {
+        g.fillStyle(0xffd23f, 1)
+        g.lineStyle(r * 0.09, 0xc99400, 1)
+        g.fillCircle(cx, cy, r)
+        g.strokeCircle(cx, cy, r)
+        g.fillStyle(0x5a3a1a, 1)
+        g.fillCircle(cx - r * 0.34, cy - r * 0.18, r * 0.12)
+        g.fillCircle(cx + r * 0.34, cy - r * 0.18, r * 0.12)
+        g.lineStyle(r * 0.13, 0x5a3a1a, 1)
+        g.beginPath()
+        if (name === 'happy') {
+          g.arc(cx, cy + r * 0.12, r * 0.42, rad(20), rad(160), false)
+        } else {
+          g.arc(cx, cy + r * 0.62, r * 0.42, rad(200), rad(340), false)
+        }
+        g.strokePath()
+        break
+      }
+      case 'flame': {
+        g.fillStyle(0xff5a2c, 1)
+        g.fillCircle(cx, cy + r * 0.25, r * 0.6)
+        g.fillTriangle(cx, cy - r * 0.85, cx - r * 0.6, cy + r * 0.25, cx + r * 0.6, cy + r * 0.25)
+        g.fillStyle(0xffd23f, 1)
+        g.fillCircle(cx, cy + r * 0.35, r * 0.34)
+        g.fillTriangle(cx, cy - r * 0.35, cx - r * 0.34, cy + r * 0.35, cx + r * 0.34, cy + r * 0.35)
+        break
+      }
+      case 'snowflake': {
+        g.lineStyle(r * 0.11, 0x3aa0ff, 1)
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI / 3) * i
+          const ex = cx + Math.cos(a) * r
+          const ey = cy + Math.sin(a) * r
+          g.beginPath()
+          g.moveTo(cx, cy)
+          g.lineTo(ex, ey)
+          g.strokePath()
+          // Two little branches near the tip.
+          const bx = cx + Math.cos(a) * r * 0.62
+          const by = cy + Math.sin(a) * r * 0.62
+          ;[a + rad(35), a - rad(35)].forEach((ba) => {
+            g.beginPath()
+            g.moveTo(bx, by)
+            g.lineTo(bx + Math.cos(ba) * r * 0.28, by + Math.sin(ba) * r * 0.28)
+            g.strokePath()
+          })
+        }
+        g.fillStyle(0x3aa0ff, 1)
+        g.fillCircle(cx, cy, r * 0.12)
+        break
+      }
+      case 'glassFull':
+      case 'glassEmpty': {
+        const top = cy - r * 0.7
+        const bot = cy + r * 0.7
+        const outline = [
+          cx - r * 0.42, top,
+          cx + r * 0.42, top,
+          cx + r * 0.3, bot,
+          cx - r * 0.3, bot
+        ]
+        if (name === 'glassFull') {
+          const wy = cy - r * 0.35
+          g.fillStyle(0x3aa0ff, 0.9)
+          g.fillPoints(this._pairsToPoints([
+            cx - r * 0.4, wy, cx + r * 0.4, wy, cx + r * 0.3, bot, cx - r * 0.3, bot
+          ]), true)
+        }
+        g.lineStyle(r * 0.12, 0x1f6aa8, 1)
+        g.strokePoints(this._pairsToPoints(outline), true, true)
+        break
+      }
+    }
+  }
+
+  /** [x0,y0,x1,y1,…] → [{x,y},…] for Graphics.fillPoints / strokePoints. */
+  _pairsToPoints(flat) {
+    const pts = []
+    for (let i = 0; i < flat.length; i += 2) pts.push({ x: flat[i], y: flat[i + 1] })
+    return pts
+  }
+
+  /**
+   * Bake `asset_opposites_icon` — the sun + moon side by side (the clearest
+   * day/night opposite) for the Opposites game (GameO) menu card. Must run
+   * AFTER generateOppositeTextures().
+   */
+  generateOppositesIcon() {
+    if (this.textures.exists('asset_opposites_icon')) return
+    const size = 240
+    const rt = this.add.renderTexture(0, 0, size, size).setVisible(false)
+    const scale = 0.52
+    const sun = this.add.image(0, 0, 'asset_opposites_a').setScale(scale).setVisible(false)
+    rt.draw(sun, size * 0.34, size * 0.42)
+    sun.destroy()
+    const moon = this.add.image(0, 0, 'asset_opposites_b').setScale(scale).setVisible(false)
+    rt.draw(moon, size * 0.68, size * 0.6)
+    moon.destroy()
+    rt.saveTexture('asset_opposites_icon')
     rt.destroy()
   }
 

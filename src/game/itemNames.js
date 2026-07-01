@@ -73,6 +73,12 @@ export const ITEM_NAMES = {
     animal_sounds: {
       a: 'MOO', b: 'WOOF', c: 'MEOW', d: 'QUACK',
       e: 'BAA', f: 'RIBBIT', g: 'NEIGH', h: 'OINK', i: 'ROAR'
+    },
+    // Opposites game (GameO) — spoken bare, no spelling. Keyed a-j to the baked
+    // asset_opposites_<letter> icons, in opposite pairs (a/b, c/d, e/f, g/h, i/j).
+    opposites: {
+      a: 'DAY', b: 'NIGHT', c: 'UP', d: 'DOWN',
+      e: 'HAPPY', f: 'SAD', g: 'HOT', h: 'COLD', i: 'FULL', j: 'EMPTY'
     }
   },
   es: {
@@ -128,6 +134,11 @@ export const ITEM_NAMES = {
     animal_sounds: {
       a: 'MUU', b: 'GUAU', c: 'MIAU', d: 'CUAC',
       e: 'BEE', f: 'CROAC', g: 'IIH', h: 'OINC', i: 'GRR'
+    },
+    // Opposites game (GameO).
+    opposites: {
+      a: 'DÍA', b: 'NOCHE', c: 'ARRIBA', d: 'ABAJO',
+      e: 'FELIZ', f: 'TRISTE', g: 'CALIENTE', h: 'FRÍO', i: 'LLENO', j: 'VACÍO'
     }
   }
 }
@@ -137,7 +148,7 @@ export const ITEM_NAMES = {
 // counting. (The Letters pack is handled separately by the single-character
 // rule in the phrase builders.) Shared by the runtime (levelAudio.js) and the
 // batch generator (generate-level-audios.mjs) so both build the same phrase.
-export const WORD_ONLY_PACKS = new Set(['count', 'colors', 'animals', 'animal_sounds'])
+export const WORD_ONLY_PACKS = new Set(['count', 'colors', 'animals', 'animal_sounds', 'opposites'])
 
 /** True if `pack`'s audio should be the plain word with no spelling prefix. */
 export function isWordOnlyPack(pack) {

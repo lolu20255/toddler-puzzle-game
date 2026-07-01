@@ -160,6 +160,15 @@ const GAMES = [
     iconKey: 'asset_animals_a', // the plush cow
     iconFrame: 0,
     free: true
+  },
+  {
+    label: 'Opposites',
+    scene: 'GameO',
+    color: 0x8b5cf6, // violet — distinct from the other purples
+    colorDark: 0x6d28d9,
+    darkHex: '#4c1d95',
+    iconKey: 'asset_opposites_icon', // baked sun + moon from Boot
+    iconFrame: 0
   }
 ]
 
