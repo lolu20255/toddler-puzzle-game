@@ -30,7 +30,7 @@ import { InAppReview } from '@capacitor-community/in-app-review'
 import { EventBus } from '../game/EventBus'
 import { settings } from '../services/settings'
 import { isNativePlatform } from '../services/platform'
-import { RATE_US_ENABLED } from '../config'
+import { CUSTOM_RATE_US_ENABLED } from '../config'
 
 const MAX_PROMPTS = 3
 const MIN_PUZZLES_BEFORE_PROMPT = 3
@@ -54,7 +54,7 @@ function shouldPrompt() {
 }
 
 async function onCheck() {
-  if (!RATE_US_ENABLED) return // feature off until the app is live (see config.js)
+  if (!CUSTOM_RATE_US_ENABLED) return // feature off until the app is live (see config.js)
   if (open.value) return
   if (!shouldPrompt()) return
   // Bump the prompt count BEFORE showing so a closed/crashed app on the
@@ -67,7 +67,7 @@ async function onCheck() {
 function onOpenForce() {
   // Debug / test entry — skip gating but still bump the count so we don't
   // double-prompt in the same session.
-  if (!RATE_US_ENABLED) return // feature off until the app is live (see config.js)
+  if (!CUSTOM_RATE_US_ENABLED) return // feature off until the app is live (see config.js)
   if (open.value) return
   didRate = false
   open.value = true
@@ -150,20 +150,10 @@ function onCloseX() {
 </script>
 
 <template>
-  <Transition
-    enter-active-class="transition-opacity duration-200"
-    leave-active-class="transition-opacity duration-200"
-    enter-from-class="opacity-0"
-    leave-to-class="opacity-0"
-  >
-    <div
-      v-if="open"
-      class="fixed inset-0 z-[9997] overflow-hidden font-fredoka"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="rate-us-title"
-      aria-describedby="rate-us-body"
-    >
+  <Transition enter-active-class="transition-opacity duration-200" leave-active-class="transition-opacity duration-200"
+    enter-from-class="opacity-0" leave-to-class="opacity-0">
+    <div v-if="open" class="fixed inset-0 z-[9997] overflow-hidden font-fredoka" role="dialog" aria-modal="true"
+      aria-labelledby="rate-us-title" aria-describedby="rate-us-body">
       <!-- Sky-blue gradient base — picks up the in-game world so the prompt
            feels like part of the celebration, not a marketing chrome. -->
       <div class="absolute inset-0 bg-gradient-to-b from-[#5bb6ef] via-[#92cef1] to-[#fff8e7]" />
@@ -188,40 +178,25 @@ function onCloseX() {
 
       <!-- Twinkling sparkles in the negative space. Pure CSS keyframes. -->
       <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-        <span
-          class="absolute right-10 top-24 text-base text-sunshine animate-twinkle"
-          style="animation-delay: 0s"
-        >✦</span>
-        <span
-          class="absolute left-12 top-40 text-sm text-white animate-twinkle"
-          style="animation-delay: 0.6s"
-        >✦</span>
-        <span
-          class="absolute right-24 top-1/2 text-xs text-sunshine animate-twinkle"
-          style="animation-delay: 1.2s"
-        >✦</span>
-        <span
-          class="absolute left-1/3 top-1/4 text-base text-white animate-twinkle"
-          style="animation-delay: 0.4s"
-        >✦</span>
+        <span class="absolute right-10 top-24 text-base text-sunshine animate-twinkle"
+          style="animation-delay: 0s">✦</span>
+        <span class="absolute left-12 top-40 text-sm text-white animate-twinkle" style="animation-delay: 0.6s">✦</span>
+        <span class="absolute right-24 top-1/2 text-xs text-sunshine animate-twinkle"
+          style="animation-delay: 1.2s">✦</span>
+        <span class="absolute left-1/3 top-1/4 text-base text-white animate-twinkle"
+          style="animation-delay: 0.4s">✦</span>
       </div>
 
       <!-- Content stack — fills viewport, content centred -->
-      <div
-        class="relative flex h-full w-full flex-col px-6"
-        :style="{
-          paddingTop: 'max(1rem, env(safe-area-inset-top))',
-          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
-        }"
-      >
+      <div class="relative flex h-full w-full flex-col px-6" :style="{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
+      }">
         <!-- Top row: close X -->
         <div class="flex justify-end">
-          <button
-            type="button"
-            aria-label="Close"
+          <button type="button" aria-label="Close"
             class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-coral/60 bg-white/95 text-lg font-bold text-warm shadow-sm transition-transform active:scale-95"
-            @click="onCloseX"
-          >
+            @click="onCloseX">
             ✕
           </button>
         </div>
@@ -230,10 +205,7 @@ function onCloseX() {
         <div class="flex flex-1 flex-col items-center justify-center text-center">
           <!-- Sun mascot — same SVG as Onboarding/Paywall so the moment
                reads as continuous with the rest of the world. -->
-          <div
-            aria-hidden="true"
-            class="relative h-32 w-32 animate-drift-y"
-          >
+          <div aria-hidden="true" class="relative h-32 w-32 animate-drift-y">
             <svg viewBox="0 0 100 100" class="h-full w-full overflow-visible">
               <g class="animate-spin-slow" style="transform-origin: 50px 50px;">
                 <g fill="#ffd23f">
@@ -252,48 +224,27 @@ function onCloseX() {
               <!-- Big happy smile -->
               <circle cx="41" cy="48" r="3" fill="#c9821b" />
               <circle cx="59" cy="48" r="3" fill="#c9821b" />
-              <path
-                d="M 40 55 Q 50 66 60 55"
-                stroke="#c9821b"
-                stroke-width="3"
-                fill="none"
-                stroke-linecap="round"
-              />
+              <path d="M 40 55 Q 50 66 60 55" stroke="#c9821b" stroke-width="3" fill="none" stroke-linecap="round" />
             </svg>
           </div>
 
           <!-- Animated 5-star row — staggered twinkles to feel alive. -->
-          <div
-            class="mt-6 flex items-center justify-center gap-2"
-            role="img"
-            aria-label="Five stars"
-          >
-            <span
-              v-for="(delay, i) in [0, 0.15, 0.3, 0.45, 0.6]"
-              :key="i"
-              class="text-4xl text-sunshine animate-twinkle"
-              :style="{
+          <div class="mt-6 flex items-center justify-center gap-2" role="img" aria-label="Five stars">
+            <span v-for="(delay, i) in [0, 0.15, 0.3, 0.45, 0.6]" :key="i"
+              class="text-4xl text-sunshine animate-twinkle" :style="{
                 animationDelay: `${delay}s`,
                 textShadow: '0 2px 0 #c99e00, 0 4px 6px rgba(0,0,0,0.18)'
-              }"
-              aria-hidden="true"
-            >
+              }" aria-hidden="true">
               ★
             </span>
           </div>
 
-          <h1
-            id="rate-us-title"
-            class="mt-6 text-3xl font-bold leading-tight text-royal"
-            style="text-shadow: 0 1px 0 #fff"
-          >
+          <h1 id="rate-us-title" class="mt-6 text-3xl font-bold leading-tight text-royal"
+            style="text-shadow: 0 1px 0 #fff">
             Loving Puzzle Pals?
           </h1>
 
-          <p
-            id="rate-us-body"
-            class="mt-3 max-w-sm text-base leading-snug text-warmInk"
-          >
+          <p id="rate-us-body" class="mt-3 max-w-sm text-base leading-snug text-warmInk">
             If your little one is enjoying it, a quick rating helps other
             parents find us
             <span aria-hidden="true">💛</span>
@@ -303,35 +254,25 @@ function onCloseX() {
         <!-- CTAs anchored to the bottom -->
         <div class="pt-4">
           <!-- Primary -->
-          <button
-            type="button"
-            :disabled="submitting"
+          <button type="button" :disabled="submitting"
             class="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-coral to-coralDark text-lg font-bold text-white shadow-chunkySm transition-transform active:scale-[0.98] disabled:opacity-60"
-            style="text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3)"
-            @click="onRate"
-          >
+            style="text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3)" @click="onRate">
             <span aria-hidden="true">★</span>
             <span>{{ submitting ? 'Opening…' : 'Rate the app' }}</span>
           </button>
 
           <!-- Secondary -->
-          <button
-            type="button"
-            :disabled="submitting"
+          <button type="button" :disabled="submitting"
             class="mt-3 h-12 w-full rounded-full border-2 border-coral/60 bg-white/95 text-base font-bold text-warm shadow-sm transition-transform active:scale-[0.98] disabled:opacity-60"
-            @click="onMaybeLater"
-          >
+            @click="onMaybeLater">
             Maybe later
           </button>
 
           <!-- Tertiary "don't ask again" -->
           <div class="mt-3 flex justify-center">
-            <button
-              type="button"
-              :disabled="submitting"
+            <button type="button" :disabled="submitting"
               class="text-xs font-semibold text-warm/70 underline-offset-2 hover:underline disabled:opacity-50"
-              @click="onDontAskAgain"
-            >
+              @click="onDontAskAgain">
               Don't ask again
             </button>
           </div>

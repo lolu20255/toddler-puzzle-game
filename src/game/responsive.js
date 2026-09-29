@@ -28,6 +28,8 @@
 // serialising and rehydrating per-scene state across 14 scenes.
 // ──────────────────────────────────────────────────────────────────────────
 
+import { gameViewportSize } from './viewport'
+
 // Match main.js: cap DPR at 2 so the backing store stays within WKWebView's
 // memory budget on real devices.
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
@@ -43,9 +45,8 @@ export function installResponsive(game) {
 
   const apply = () => {
     timer = null
-    const w = window.innerWidth
-    const h = window.innerHeight
-    const landscape = w > h
+    if (!game.scene) return // The game was destroyed (HMR / remount); nothing to resize.
+    const landscape = window.innerWidth > window.innerHeight
 
     // Ignore everything that is not a true orientation flip (notably the soft
     // keyboard shrinking innerHeight while staying portrait/landscape).
@@ -55,7 +56,8 @@ export function installResponsive(game) {
     // Resize the backing store to the new viewport in physical pixels. resize()
     // preserves the config `zoom` (1/DPR) and re-applies autoCenter, so the
     // canvas still displays 1:1 at innerWidth × innerHeight CSS pixels.
-    game.scale.resize(Math.floor(w * DPR), Math.floor(h * DPR))
+    const { width, height } = gameViewportSize() // The canvas area, below the iOS status bar.
+    game.scale.resize(Math.floor(width * DPR), Math.floor(height * DPR))
 
     // Rebuild the live scene(s) at the new size. Transitions always use
     // scene.start(), so in practice exactly one scene is active; restarting it

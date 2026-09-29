@@ -5,6 +5,7 @@ import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
 import { dropPieces } from '../pieceDrop'
 
+const SNAP_TOLERANCE = 0.05 // Fraction of the short side: forgiving enough for 2-4 year-old fingers.
 const NUM_OF_NUMBERS = 9
 
 /**
@@ -32,6 +33,15 @@ export class GameE extends Scene {
     this.packName = 'numbers'
   }
 
+  init() {
+    // Phaser reuses this instance on every start/restart, so per-run state is
+    // reset here; constructor values would leak into the second visit.
+    this.label = null
+    this.animalsOnBase = new Set()
+    this.celebrated = new Set()
+    this.score = 0
+  }
+
   preload() {
     this.sWidth = this.cameras.main.width
     this.sHeight = this.cameras.main.height
@@ -54,7 +64,7 @@ export class GameE extends Scene {
   create() {
     this.input.on('pointerdown', () => {
       if (this.sound.context.state === 'suspended') {
-        this.sound.context.resume()
+        this.sound.context.resume().catch(() => {})
       }
     })
     this.start()
@@ -238,11 +248,9 @@ export class GameE extends Scene {
     }
 
     const animalObjects = animals.map(createAnimal)
-    let animalDragged = null
 
     this.input.setDraggable(animalObjects)
     this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-      animalDragged = this.animalsNames[gameObject.name]
 
       dragX = Phaser.Math.Clamp(
         dragX,
@@ -262,7 +270,10 @@ export class GameE extends Scene {
     })
 
     this.input.on('dragend', (pointer, gameObject) => {
-      if (this.animalsOnBase.has(animalDragged)) {
+      // A plain tap fires dragend without 'drag', so judge the released piece
+      // itself rather than whichever piece moved last.
+      const draggedKey = this.animalsNames[gameObject.name]
+      if (this.isAnimalOnBase(gameObject.name)) {
         const slot = gameObject.name
         gameObject.x = this.baseShades[slot].x
         gameObject.y = this.baseShades[slot].y
@@ -276,13 +287,13 @@ export class GameE extends Scene {
             this.scene.start(pickNextSceneExcluding('GameE'))
           )
 
-        if (!this.celebrated.has(animalDragged)) {
-          this.celebrated.add(animalDragged)
+        if (!this.celebrated.has(draggedKey)) {
+          this.celebrated.add(draggedKey)
           // On the final match, chain level celebration to fire AFTER the
           // per-match spelling modal auto-dismisses — never on top of it.
           const modal = showCelebration(
             this,
-            animalDragged,
+            draggedKey,
             triggerEnd ? launchLevelEnd : null
           )
           if (triggerEnd && !modal) launchLevelEnd()
@@ -300,11 +311,12 @@ export class GameE extends Scene {
   }
 
   isAnimalOnBase(animalKey) {
+    const snapTolerance = Math.min(this.sWidth, this.sHeight) * SNAP_TOLERANCE
     const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.0009198
     const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0008946
     const isOnBase =
-      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
-      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10
+      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < snapTolerance &&
+      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < snapTolerance
 
     if (isOnBase) {
       // Matched: shadow blooms bright yellow (matches the moon) — clearly

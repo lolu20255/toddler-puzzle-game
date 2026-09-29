@@ -4,6 +4,7 @@ import PhaserGame from './game/PhaserGame.vue'
 import Paywall from './components/Paywall.vue'
 import Onboarding from './components/Onboarding.vue'
 import RateUs from './components/RateUs.vue'
+import SplashIntro from './components/SplashIntro.vue'
 
 const phaserRef = ref()
 
@@ -27,4 +28,5 @@ const currentScene = (scene) => {
   <Onboarding />
   <Paywall />
   <RateUs />
+  <SplashIntro />
 </template>

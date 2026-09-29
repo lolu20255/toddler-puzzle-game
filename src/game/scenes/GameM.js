@@ -35,6 +35,11 @@ const POSITIONS = {
 export class GameM extends Scene {
   constructor() {
     super('GameM')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.round = 0
     this.score = 0
     this.completed = false
@@ -231,6 +236,7 @@ export class GameM extends Scene {
     bubble._popped = true
     delete this._bubbles[letter]
     this.tweens.killTweensOf(bubble)
+    if (bubble._baseScale) bubble.setScale(bubble._baseScale) // The killed tween may be the entrance pop.
 
     this._popBubble(bubble)
     this._speak(letter)
@@ -272,7 +278,8 @@ export class GameM extends Scene {
 
   _wobble(bubble) {
     if (!bubble || this.reducedMotion) return
-    const baseX = bubble.x
+    const baseX = bubble._homeX ?? bubble.x
+    bubble._homeX = baseX // Captured once so a wobble started mid-wobble never drifts the target.
     this.tweens.add({
       targets: bubble,
       x: baseX - this.minSide * 0.018,

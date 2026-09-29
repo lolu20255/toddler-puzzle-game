@@ -38,7 +38,17 @@ body {
   overflow: hidden;
 }
 
-#game-container,
+/* The canvas sits below the iOS status bar; the strip above it is the body
+   background, recoloured per scene by src/game/viewport.js. The inset is 0
+   wherever the web view is not drawn under the status bar. */
+#game-container {
+  position: absolute;
+  top: env(safe-area-inset-top);
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
 #game-container > canvas {
   width: 100% !important;
   height: 100% !important;

@@ -3,6 +3,7 @@
  *
  * Prefs:
  *   - `hapticsEnabled`  — whether the `haptics` service fires native taps.
+ *   - `musicEnabled`    — whether the menu background music plays.
  *   - `language`        — 'en' | 'es', drives celebration audio + word labels.
  *
  * Values are persisted to Capacitor Preferences via `Storage`, but also held
@@ -17,6 +18,7 @@
 import { Storage } from './storage'
 
 const HAPTICS_ENABLED_KEY = 'hapticsEnabled'
+const MUSIC_ENABLED_KEY = 'musicEnabled'
 const LANGUAGE_KEY = 'language'
 const ONBOARDING_COMPLETE_KEY = 'onboardingComplete'
 // Rate-us prompt bookkeeping. The Vue `RateUs.vue` overlay reads these to
@@ -33,6 +35,7 @@ export const SUPPORTED_LANGUAGES = ['en', 'es']
 
 const cache = {
   hapticsEnabled: true,
+  musicEnabled: true,
   language: 'en', // 'en' | 'es' — drives the celebration audio + word labels
   // First-launch parent onboarding sentinel. Boot checks this; if false we
   // show the 2-step Vue Onboarding flow (welcome → language) before
@@ -55,7 +58,7 @@ const cache = {
   // of puzzles yet (so we don't ask before there's anything to like).
   puzzlesCompleted: 0
 }
-let loaded = false
+let loadPromise = null
 const listeners = new Set()
 
 function notify() {
@@ -68,48 +71,55 @@ function notify() {
   }
 }
 
-export const settings = {
-  /** Hydrate the cache from disk. Idempotent. */
-  async load() {
-    if (loaded) return
-    try {
-      const [
-        haptics,
-        language,
-        onboarding,
-        rateUsPromptCount,
-        rateUsRated,
-        rateUsDismissedAt,
-        puzzlesCompleted
-      ] = await Promise.all([
-        Storage.get(HAPTICS_ENABLED_KEY),
-        Storage.get(LANGUAGE_KEY),
-        Storage.get(ONBOARDING_COMPLETE_KEY),
-        Storage.get(RATE_US_PROMPT_COUNT_KEY),
-        Storage.get(RATE_US_RATED_KEY),
-        Storage.get(RATE_US_DISMISSED_AT_KEY),
-        Storage.get(PUZZLES_COMPLETED_KEY)
-      ])
-      if (haptics != null) cache.hapticsEnabled = haptics !== 'false'
-      if (SUPPORTED_LANGUAGES.includes(language)) cache.language = language
-      if (onboarding != null) cache.onboardingComplete = onboarding === 'true'
-      if (rateUsPromptCount != null) {
-        const n = parseInt(rateUsPromptCount, 10)
-        if (Number.isFinite(n) && n >= 0) cache.rateUsPromptCount = n
-      }
-      if (rateUsRated != null) cache.rateUsRated = rateUsRated === 'true'
-      if (rateUsDismissedAt != null) {
-        const n = parseInt(rateUsDismissedAt, 10)
-        if (Number.isFinite(n) && n >= 0) cache.rateUsDismissedAt = n
-      }
-      if (puzzlesCompleted != null) {
-        const n = parseInt(puzzlesCompleted, 10)
-        if (Number.isFinite(n) && n >= 0) cache.puzzlesCompleted = n
-      }
-    } catch (e) {
-      console.warn('[Settings] load failed, using defaults:', e?.message || e)
+async function hydrate() {
+  try {
+    const [
+      haptics,
+      music,
+      language,
+      onboarding,
+      rateUsPromptCount,
+      rateUsRated,
+      rateUsDismissedAt,
+      puzzlesCompleted
+    ] = await Promise.all([
+      Storage.get(HAPTICS_ENABLED_KEY),
+      Storage.get(MUSIC_ENABLED_KEY),
+      Storage.get(LANGUAGE_KEY),
+      Storage.get(ONBOARDING_COMPLETE_KEY),
+      Storage.get(RATE_US_PROMPT_COUNT_KEY),
+      Storage.get(RATE_US_RATED_KEY),
+      Storage.get(RATE_US_DISMISSED_AT_KEY),
+      Storage.get(PUZZLES_COMPLETED_KEY)
+    ])
+    if (haptics != null) cache.hapticsEnabled = haptics !== 'false'
+    if (music != null) cache.musicEnabled = music !== 'false'
+    if (SUPPORTED_LANGUAGES.includes(language)) cache.language = language
+    if (onboarding != null) cache.onboardingComplete = onboarding === 'true'
+    if (rateUsPromptCount != null) {
+      const n = parseInt(rateUsPromptCount, 10)
+      if (Number.isFinite(n) && n >= 0) cache.rateUsPromptCount = n
     }
-    loaded = true
+    if (rateUsRated != null) cache.rateUsRated = rateUsRated === 'true'
+    if (rateUsDismissedAt != null) {
+      const n = parseInt(rateUsDismissedAt, 10)
+      if (Number.isFinite(n) && n >= 0) cache.rateUsDismissedAt = n
+    }
+    if (puzzlesCompleted != null) {
+      const n = parseInt(puzzlesCompleted, 10)
+      if (Number.isFinite(n) && n >= 0) cache.puzzlesCompleted = n
+    }
+  } catch (e) {
+    console.warn('[Settings] load failed, using defaults:', e?.message || e)
+  }
+  notify() // Listeners (e.g. menu music) may have acted on defaults before the disk read landed.
+}
+
+export const settings = {
+  /** Hydrate the cache from disk. Idempotent; concurrent callers share one read. */
+  load() {
+    if (!loadPromise) loadPromise = hydrate()
+    return loadPromise
   },
 
   hapticsEnabled() {
@@ -126,6 +136,20 @@ export const settings = {
       await Storage.set(HAPTICS_ENABLED_KEY, String(cache.hapticsEnabled))
     } catch (e) {
       console.warn('[Settings] save haptics failed:', e?.message || e)
+    }
+    notify()
+  },
+
+  musicEnabled() {
+    return cache.musicEnabled
+  },
+
+  async setMusicEnabled(value) {
+    cache.musicEnabled = !!value
+    try {
+      await Storage.set(MUSIC_ENABLED_KEY, String(cache.musicEnabled))
+    } catch (e) {
+      console.warn('[Settings] save music failed:', e?.message || e)
     }
     notify()
   },

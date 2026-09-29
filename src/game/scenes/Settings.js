@@ -4,19 +4,15 @@ import { settings, SUPPORTED_LANGUAGES } from '../../services/settings'
 import { purchasesService } from '../../services/purchases'
 import { addBackButton } from '../hud'
 import { getGrid } from '../layout'
-import { RATE_US_ENABLED } from '../../config'
+import { CUSTOM_RATE_US_ENABLED } from '../../config'
 
 // Provided by Vite `define` in vite/config.*.mjs from package.json#version.
-const APP_VERSION =
-  typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'
 
 // TODO: replace with the real App Store listing ID once the build is in
 // review. Until then this URL 404s gracefully and the card stays tappable
 // so the design surface is testable.
-const RATE_APP_URL_IOS =
-  'https://apps.apple.com/app/idYOUR_APP_ID?action=write-review'
-const MANAGE_SUBSCRIPTION_URL_IOS =
-  'itms-apps://apps.apple.com/account/subscriptions'
+const RATE_APP_URL_IOS = 'https://apps.apple.com/app/idYOUR_APP_ID?action=write-review'
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
 
@@ -135,10 +131,10 @@ export class Settings extends Scene {
     // remainder evenly. Premium banner sits first (parents always see it).
     const cards = [
       { weight: 0.22, build: (cx, cy, w, h) => this.buildPremiumCard(cx, cy, w, h) },
-      { weight: 0.32, build: (cx, cy, w, h) => this.buildLanguageCard(cx, cy, w, h) },
-      { weight: 0.18, build: (cx, cy, w, h) => this.buildVibrationCard(cx, cy, w, h) }
+      { weight: 0.3, build: (cx, cy, w, h) => this.buildLanguageCard(cx, cy, w, h) },
+      { weight: 0.26, build: (cx, cy, w, h) => this.buildSoundCard(cx, cy, w, h) }
     ]
-    if (RATE_US_ENABLED) {
+    if (CUSTOM_RATE_US_ENABLED) {
       cards.push({ weight: 0.16, build: (cx, cy, w, h) => this.buildRateUsCard(cx, cy, w, h) })
     }
 
@@ -219,13 +215,11 @@ export class Settings extends Scene {
       .setOrigin(0, 0.5)
       .setDepth(6)
 
-    this.add
+    const subtitle = this.add
       .text(
         textX,
         cy + h * 0.14,
-        isPremium
-          ? 'Tap to manage subscription'
-          : 'Unlock all puzzles & games',
+        isPremium ? 'Every puzzle unlocked' : 'Unlock all puzzles & games',
         {
           fontFamily: '"Fredoka", sans-serif',
           fontSize: `${subSize}px`,
@@ -235,6 +229,10 @@ export class Settings extends Scene {
       .setOrigin(0, 0.5)
       .setDepth(6)
 
+    // Keep both lines clear of the right-side chevron / ACTIVE pill.
+    const textMaxW = cx + w / 2 - w * (isPremium ? 0.28 : 0.13) - textX
+    ;[title, subtitle].forEach((line) => line.setScale(Math.min(1, textMaxW / line.width)))
+
     // Right-side accessory: green ACTIVE pill when premium, chevron when not.
     if (isPremium) {
       const pillW = w * 0.2
@@ -242,21 +240,9 @@ export class Settings extends Scene {
       const pillX = cx + w / 2 - pillW / 2 - w * 0.05
       const pillG = this.add.graphics().setDepth(6)
       pillG.fillStyle(0x266b22, 1)
-      pillG.fillRoundedRect(
-        pillX - pillW / 2,
-        cy - pillH / 2 + 2,
-        pillW,
-        pillH,
-        pillH / 2
-      )
+      pillG.fillRoundedRect(pillX - pillW / 2, cy - pillH / 2 + 2, pillW, pillH, pillH / 2)
       pillG.fillStyle(0x5fc34a, 1)
-      pillG.fillRoundedRect(
-        pillX - pillW / 2,
-        cy - pillH / 2,
-        pillW,
-        pillH,
-        pillH / 2
-      )
+      pillG.fillRoundedRect(pillX - pillW / 2, cy - pillH / 2, pillW, pillH, pillH / 2)
       this.add
         .text(pillX, cy, 'ACTIVE', {
           fontFamily: '"Fredoka", sans-serif',
@@ -287,20 +273,14 @@ export class Settings extends Scene {
     hit.on('pointerdown', () => {
       this.tweens.add({
         targets: [title],
-        scale: { from: 1, to: 0.96 },
+        scale: { from: title.scale, to: title.scale * 0.96 }, // Relative, so the fit-to-width scale survives the press.
         duration: 90,
         yoyo: true,
         ease: 'Quad.easeOut'
       })
-      if (isPremium) {
-        try {
-          window.open(MANAGE_SUBSCRIPTION_URL_IOS, '_blank')
-        } catch {
-          /* ignore */
-        }
-      } else {
-        EventBus.emit('paywall:open')
-      }
+      // Premium is a lifetime unlock with nothing to manage, and an outbound
+      // link here would sit outside the parental gate (Kids Category 1.3).
+      if (!isPremium) EventBus.emit('paywall:open')
     })
   }
 
@@ -530,14 +510,23 @@ export class Settings extends Scene {
     }
   }
 
-  // ─── Card 3: vibration toggle ────────────────────────────────────────────
-  buildVibrationCard(cx, cy, w, h) {
+  // ─── Card 3: music + vibration toggles ──────────────────────────────────
+  buildSoundCard(cx, cy, w, h) {
     this._drawCard(cx, cy, w, h)
+    const rowOffset = h * 0.22
+    this._buildToggleRow(cx, cy - rowOffset, w, 'Music', settings.musicEnabled(), (val) =>
+      settings.setMusicEnabled(val)
+    )
+    this._buildToggleRow(cx, cy + rowOffset, w, 'Vibration', settings.hapticsEnabled(), (val) =>
+      settings.setHapticsEnabled(val)
+    )
+  }
 
+  _buildToggleRow(cx, y, w, labelText, initialValue, onChange) {
     const padX = w * 0.07
     const labelSize = this.minSide * 0.045
     this.add
-      .text(cx - w / 2 + padX, cy, 'Vibration', {
+      .text(cx - w / 2 + padX, y, labelText, {
         fontFamily: '"Fredoka", "Arial Rounded MT Bold", sans-serif',
         fontSize: `${labelSize}px`,
         color: '#5a3a1a',
@@ -548,14 +537,7 @@ export class Settings extends Scene {
 
     const toggleW = this.minSide * 0.18
     const toggleH = this.minSide * 0.085
-    this._createToggle(
-      cx + w / 2 - padX - toggleW / 2,
-      cy,
-      toggleW,
-      toggleH,
-      settings.hapticsEnabled(),
-      (val) => settings.setHapticsEnabled(val)
-    )
+    this._createToggle(cx + w / 2 - padX - toggleW / 2, y, toggleW, toggleH, initialValue, onChange)
   }
 
   _createToggle(x, y, w, h, initialValue, onChange) {
@@ -629,3 +611,4 @@ export class Settings extends Scene {
     g.strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, radius)
   }
 }
+

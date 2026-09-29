@@ -2,6 +2,18 @@ import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { settings } from '../../services/settings'
 
+/**
+ * Canvas text never triggers a webfont download on its own, so request every
+ * face the scenes draw with before any glyph texture is baked.
+ */
+function loadGameFonts() {
+  if (typeof document === 'undefined' || !document.fonts) return Promise.resolve()
+  const faces = ['400 16px Fredoka', '500 16px Fredoka', '600 16px Fredoka', '700 16px Fredoka', '16px "Bruno Ace SC"']
+  return Promise.all(faces.map((face) => document.fonts.load(face))).catch((error) =>
+    console.warn('[Boot] font load failed, using fallback:', error)
+  )
+}
+
 export class Boot extends Scene {
   constructor() {
     super('Boot')
@@ -260,10 +272,9 @@ export class Boot extends Scene {
   }
 
   create() {
-    // Fonts are loaded via <link rel="stylesheet"> in index.html (standard
-    // browser font loading, no WebFont.js). Wait briefly for them to arrive
-    // so Phaser bakes them into text textures correctly — but never sit on
-    // the Boot scene longer than 2s if the CDN is unreachable.
+    // Fonts are bundled (@fontsource, imported in src/main.js). Wait briefly
+    // for them so Phaser bakes them into text textures correctly, but never
+    // sit on the Boot scene longer than 2s.
     const proceed = () => {
       // Generate the procedural packs (numbers + letters + shapes) NOW,
       // after fonts are ready, so the baked-in glyphs use Fredoka — not the
@@ -296,13 +307,9 @@ export class Boot extends Scene {
 
       this.scene.start('MainMenu')
     }
-    const fontsReady =
-      typeof document !== 'undefined' && document.fonts && document.fonts.ready
-        ? document.fonts.ready
-        : Promise.resolve()
-    Promise.race([fontsReady, new Promise((r) => setTimeout(r, 2000))]).then(
-      proceed
-    )
+    // Settings must be hydrated too: onboarding and language are read below.
+    const ready = Promise.all([loadGameFonts(), settings.load()])
+    Promise.race([ready, new Promise((r) => setTimeout(r, 2000))]).then(proceed)
   }
 
   // Rainbow palette + matching dark strokes shared by both procedural glyph

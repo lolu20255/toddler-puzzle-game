@@ -19,6 +19,10 @@ import { GameOver } from './scenes/GameOver'
 import { MainMenu } from './scenes/MainMenu'
 import { Settings } from './scenes/Settings'
 import { installResponsive } from './responsive'
+import { followScenesWithStatusBar, gameViewportSize } from './viewport'
+import { stopAllSpeech } from '../services/libro'
+import { music } from '../services/music'
+import { EventBus } from './EventBus'
 import Phaser from 'phaser'
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -54,8 +58,6 @@ const config = {
     // NONE (not RESIZE) because we set width/height ourselves in physical
     // pixels and let CSS `zoom` scale the canvas back to the viewport.
     mode: Phaser.Scale.NONE,
-    width: Math.floor(window.innerWidth * DPR),
-    height: Math.floor(window.innerHeight * DPR),
     zoom: 1 / DPR,
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
@@ -67,6 +69,13 @@ const config = {
     // Smooth downscaling for the sprite-sheet icons that sit inside the
     // smaller card windows in MainMenu.
     mipmapFilter: 'LINEAR_MIPMAP_LINEAR'
+  },
+  input: {
+    // Window-level touch forwarding lets taps on the Vue overlays (Paywall,
+    // Onboarding, RateUs) fire pointer events on game objects underneath,
+    // e.g. launching a menu card behind the paywall. The canvas is full-screen,
+    // so nothing legitimate needs window events.
+    windowEvents: false
   },
   scene: [Boot, MainMenu, Settings, GameA, GameB, GameC, GameD, GameE, GameF, GameG, GameH, GameI, GameJ, GameK, GameL, GameM, GameN, GameO, GameP, GameOver],
   physics: {
@@ -82,13 +91,52 @@ const config = {
   }
 }
 
+// Sized at start (not import) time: the container is only laid out, and the
+// iOS edge-to-edge switch only applied, once the Vue shell has mounted.
 const StartGame = (parent) => {
-  const game = new Phaser.Game({ ...config, parent })
+  const { width, height } = gameViewportSize()
+  const scale = { ...config.scale, width: Math.floor(width * DPR), height: Math.floor(height * DPR) }
+  const game = new Phaser.Game({ ...config, scale, parent })
   // Resize + reflow the live scene when the device flips orientation. The
   // canvas is Scale.NONE (fixed size), so without this it never adapts to
   // rotation. See responsive.js for why we restart rather than reposition.
   installResponsive(game)
+  game.events.once('ready', () => {
+    silenceSpeechOnSceneExit(game)
+    followScenesWithMusic(game)
+    followScenesWithStatusBar(game)
+  })
+  EventBus.on('app:backButton', () => goBackToMenu(game))
   return game
+}
+
+function followScenesWithMusic(game) {
+  music.attach(game)
+  game.scene.scenes.forEach((scene) =>
+    scene.events.on('start', () => music.setScene(scene.sys.settings.key))
+  )
+}
+
+/**
+ * Android hardware back: from a game or Settings, return to the menu like the
+ * on-screen back button does. On the menu itself it does nothing, so a toddler
+ * can't back out of the app by accident.
+ */
+function goBackToMenu(game) {
+  const active = game.scene.getScenes(true)[0]
+  if (!active) return
+  const key = active.sys.settings.key
+  if (key === 'Boot' || key === 'MainMenu') return
+  active.scene.start('MainMenu')
+}
+
+/**
+ * Every exit path (back button, level complete, rotation restart) shuts the
+ * scene down, so one permanent listener per scene keeps TTS from trailing into
+ * the next screen. `sys.events` survives restarts, unlike input/time listeners.
+ */
+function silenceSpeechOnSceneExit(game) {
+  game.scene.scenes.forEach((scene) => scene.events.on('shutdown', stopAllSpeech))
 }
 
 export default StartGame

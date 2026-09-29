@@ -25,6 +25,11 @@ const MAX_CHOICES = 4
 export class GameO extends Scene {
   constructor() {
     super('GameO')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.round = 0
     this.score = 0
     this.completed = false
@@ -205,7 +210,9 @@ export class GameO extends Scene {
   _wobble(tile) {
     if (this.reducedMotion) return
     this.tweens.killTweensOf(tile)
-    const baseX = tile.x
+    if (tile._baseScale) tile.setScale(tile._baseScale) // The killed tween may be the entrance pop.
+    const baseX = tile._homeX ?? tile.x
+    tile._homeX = baseX // Captured once so a wobble started mid-wobble never drifts the target.
     this.tweens.add({
       targets: tile,
       x: baseX - this.minSide * 0.02,

@@ -1,15 +1,22 @@
 import { settings } from '../services/settings'
+import { purchasesService } from '../services/purchases'
 import { EventBus } from './EventBus'
 
 const SCENES = ['GameA', 'GameB', 'GameC', 'GameD', 'GameE', 'GameF', 'GameG', 'GameH', 'GameI', 'GameJ', 'GameK', 'GameL', 'GameM', 'GameN', 'GameO', 'GameP']
+export const FREE_SCENES = ['GameA', 'GameC', 'GameE', 'GameF', 'GameJ', 'GameK', 'GameM', 'GameN'] // Playable without the unlock; MainMenu locks the rest.
+
+/** Whether a game scene is playable right now (free, or the parent unlocked everything). */
+export function isScenePlayable(sceneKey) {
+  return FREE_SCENES.includes(sceneKey) || purchasesService.cachedFullAccess
+}
 
 /**
  * Pick the next pack to play, excluding the one the toddler just finished.
- * Prevents the immediate-repeat that the previous `Math.random() * 5`
- * version could produce. With 5 packs, there are always 4 valid choices.
+ * Only playable packs are candidates, so the auto-rotation can never walk a
+ * free user into a locked game.
  */
 export function pickNextSceneExcluding(currentKey) {
-  const choices = SCENES.filter((k) => k !== currentKey)
+  const choices = SCENES.filter((k) => k !== currentKey && isScenePlayable(k))
   return choices[Math.floor(Math.random() * choices.length)]
 }
 
@@ -156,7 +163,7 @@ function _playFanfare(scene) {
   try {
     const ctx = scene.sound?.context
     if (!ctx) return
-    if (ctx.state === 'suspended') ctx.resume()
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
 
     const notes = [523.25, 659.25, 783.99, 1046.5] // C5 E5 G5 C6
     const stepMs = 110

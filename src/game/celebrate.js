@@ -32,19 +32,11 @@ export function showCelebration(scene, assetKey, onDismissed) {
   // the per-piece engagement stat without each GameX file having to know.
   EventBus.emit('puzzle:matched', { assetKey, lang })
   if (scene._celebrationModal) {
+    // A quick second match replaces the card; silence the old spelling so two
+    // voices never talk over each other.
+    stopAllSpeech()
     scene._celebrationModal.destroy()
     scene._celebrationModal = null
-  }
-
-  // Register a one-time scene shutdown hook (idempotent per scene) so any
-  // exit path — back button, level complete, settings, restart — silences
-  // the TTS audio. The back button handler ALSO calls stopAllSpeech()
-  // directly so audio stops the instant the tap registers, before the
-  // 240ms fade. This hook is the safety net for non-back-button exits.
-  if (!scene._speechShutdownHooked) {
-    scene._speechShutdownHooked = true
-    scene.events.once('shutdown', stopAllSpeech)
-    scene.events.once('destroy', stopAllSpeech)
   }
 
   const sW = scene.sWidth
@@ -192,7 +184,13 @@ export function showCelebration(scene, assetKey, onDismissed) {
   // says just "A!" — not "A. A!".
   const isSingleChar = assetName.length === 1
 
-  ;(async () => {
+  playCelebrationAudio().catch((error) => {
+    // Never leave the child on a dimmed card: dismiss even if audio blew up.
+    console.warn('[celebrate] audio sequence failed', error)
+    if (modal.scene) scheduleDismiss(1500)
+  })
+
+  async function playCelebrationAudio() {
     // Audio 1 — the spelling+pronunciation. Routed through `preloadLevelAudio`
     // which first tries the bundled MP3 (`public/audio/levels/<lang>/<pack>/
     // <letter>.mp3`, pre-generated via `npm run generate:audio`), and only
@@ -207,6 +205,7 @@ export function showCelebration(scene, assetKey, onDismissed) {
 
     if (mainAudio) {
       await _audioReady(mainAudio)
+      if (!modal.scene) return
       const mainMs =
         mainAudio.duration > 0 ? mainAudio.duration * 1000 : assetName.length * 700
 
@@ -223,7 +222,10 @@ export function showCelebration(scene, assetKey, onDismissed) {
       // Small head-start so the entrance pop doesn't clash with the first
       // spoken letter, then start audio + letter reveal together.
       const startDelay = 250
+      let mainStarted = false // The cached element still reports `ended` from its last play until this one starts.
       scene.time.delayedCall(startDelay, () => {
+        if (!modal.scene) return
+        mainStarted = true
         mainAudio.currentTime = 0
         mainAudio.play().catch(() => {})
       })
@@ -241,9 +243,11 @@ export function showCelebration(scene, assetKey, onDismissed) {
       // so we don't block the spelling on it. If we're offline and the
       // praise fetch fails, this awaits null and we just skip the chain.
       const praiseAudio = await praisePromise
+      if (!modal.scene) return
       let totalAudioMs = startDelay + mainMs
       if (praiseAudio) {
         await _audioReady(praiseAudio)
+        if (!modal.scene) return
         const praiseMs =
           praiseAudio.duration > 0 ? praiseAudio.duration * 1000 : 1200
         const playPraise = () => {
@@ -253,7 +257,7 @@ export function showCelebration(scene, assetKey, onDismissed) {
         }
         // If main already finished while praise was loading, play praise now;
         // otherwise queue it to fire the instant main ends.
-        if (mainAudio.ended) playPraise()
+        if (mainStarted && mainAudio.ended) playPraise()
         else mainAudio.addEventListener('ended', playPraise, { once: true })
         totalAudioMs += praiseMs
       }
@@ -267,8 +271,11 @@ export function showCelebration(scene, assetKey, onDismissed) {
         scene.time.delayedCall(360 + i * perLetterMs, () => revealLetter(i))
       }
       const visualEnd = 360 + assetName.length * perLetterMs
+      const praiseAudio = await praisePromise
+      if (!modal.scene) return
       if (praiseAudio) {
         await _audioReady(praiseAudio)
+        if (!modal.scene) return
         const praiseMs =
           praiseAudio.duration > 0 ? praiseAudio.duration * 1000 : 1200
         scene.time.delayedCall(visualEnd + 200, () => {
@@ -281,7 +288,7 @@ export function showCelebration(scene, assetKey, onDismissed) {
         scheduleDismiss(visualEnd + 1500)
       }
     }
-  })()
+  }
 
   return modal
 }

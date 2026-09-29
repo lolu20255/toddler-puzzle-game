@@ -24,6 +24,7 @@ const BOUNCE = 0.45 // restitution: a springy "double" bounce off the floor
 // rest shape-to-shape instead of margin-to-margin.
 const BODY_FILL_X = 0.85
 const BODY_FILL_Y = 0.85
+const RESCUE_CHECK_MS = 500 // How often to look for pieces squeezed out through a wall or the floor.
 
 /**
  * Give the already-created, already-draggable pieces Matter bodies so they
@@ -91,4 +92,32 @@ export function dropPieces(scene, pieces) {
       obj.setFixedRotation() // setStatic(false) restores inertia; re-lock it
     }
   })
+
+  watchForLostPieces(scene, pieces)
+}
+
+/**
+ * Pushing a held (static) piece hard into the pile can squeeze a dynamic
+ * neighbour through the wall or floor. Nothing brings it back, which would
+ * leave the level unwinnable, so drop any escaped piece back in from the top.
+ */
+function watchForLostPieces(scene, pieces) {
+  const rescue = scene.time.addEvent({
+    delay: RESCUE_CHECK_MS,
+    loop: true,
+    callback: () => pieces.forEach((piece) => rescueIfLost(scene, piece))
+  })
+  scene.events.once('shutdown', () => rescue.remove())
+}
+
+function rescueIfLost(scene, piece) {
+  if (!piece.body || piece.isStatic()) return
+  const halfW = piece.displayWidth / 2
+  const escaped = piece.y > scene.sHeight + halfW || piece.x < -halfW || piece.x > scene.sWidth + halfW
+  if (!escaped) return
+  piece.setVelocity(0, 0)
+  piece.setPosition(
+    Phaser.Math.Clamp(scene.sWidth / 2, halfW, scene.sWidth - halfW),
+    -piece.displayHeight
+  )
 }

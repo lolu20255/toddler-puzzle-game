@@ -33,6 +33,11 @@ const MAX_CHOICES = 6
 export class GameK extends Scene {
   constructor() {
     super('GameK')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.round = 0
     this.score = 0
     this.completed = false
@@ -259,7 +264,9 @@ export class GameK extends Scene {
   _wobble(gumball) {
     if (this.reducedMotion) return
     this.tweens.killTweensOf(gumball)
-    const baseX = gumball.x
+    if (gumball._baseScale) gumball.setScale(gumball._baseScale) // The killed tween may be the entrance pop.
+    const baseX = gumball._homeX ?? gumball.x
+    gumball._homeX = baseX // Captured once so a wobble started mid-wobble never drifts the target.
     this.tweens.add({
       targets: gumball,
       x: baseX - this.minSide * 0.02,

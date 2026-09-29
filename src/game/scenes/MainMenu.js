@@ -2,6 +2,7 @@ import Phaser, { Scene } from 'phaser'
 import { EventBus } from '../EventBus'
 import { getGrid } from '../layout'
 import { purchasesService } from '../../services/purchases'
+import { FREE_SCENES, isScenePlayable } from '../levelComplete'
 
 /**
  * The four puzzles share one shadow-matching mechanic but use different art
@@ -12,11 +13,8 @@ import { purchasesService } from '../../services/purchases'
  * green — so the 2×2 grid in portrait reads as a satisfying complementary
  * pattern rather than four random colours.
  */
-// `free: true` packs are always playable. Premium packs show a lock badge
-// until the toddler's parent unlocks all puzzles via the Paywall scene.
-// 5 free / 5 locked. Free: Toys, Numbers, Faces, Letters, Count (a balanced
-// taste across art packs + basics + the counting mechanic). Locked upsell:
-// Heroes, Fruits, Shapes, Memory, Sort.
+// Packs listed in FREE_SCENES (levelComplete.js) are always playable. Premium
+// packs show a lock badge until the parent unlocks all puzzles via the Paywall.
 const GAMES = [
   {
     label: 'Toys',
@@ -26,7 +24,6 @@ const GAMES = [
     darkHex: '#a85f00',
     iconKey: 'asset_animal_cartoon_a',
     iconFrame: 7, // teddy bear
-    free: true
   },
   {
     label: 'Heroes',
@@ -45,7 +42,6 @@ const GAMES = [
     darkHex: '#b32a63',
     iconKey: 'asset_emojis_lego_a',
     iconFrame: 0, // big laughing face
-    free: true
   },
   {
     label: 'Fruits',
@@ -63,8 +59,7 @@ const GAMES = [
     colorDark: 0x1769b8,
     darkHex: '#0e4b85',
     iconKey: 'asset_numbers_a', // the digit "1" — instantly tells the toddler what's inside
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Letters',
@@ -73,8 +68,7 @@ const GAMES = [
     colorDark: 0xc99e00,
     darkHex: '#7d5d00',
     iconKey: 'asset_letters_a', // the letter "A" — instantly tells the toddler what's inside
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Shapes',
@@ -110,8 +104,7 @@ const GAMES = [
     colorDark: 0x4d7c0f,
     darkHex: '#2e470a',
     iconKey: 'asset_count_icon', // baked 🔢 keycap-numbers emoji from Boot
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Colors',
@@ -120,8 +113,7 @@ const GAMES = [
     colorDark: 0x8312a0,
     darkHex: '#5e0a73',
     iconKey: 'asset_colors_icon', // baked 2×2 rainbow gumballs from Boot
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Patterns',
@@ -139,8 +131,7 @@ const GAMES = [
     colorDark: 0x0a6e4d,
     darkHex: '#064d36',
     iconKey: 'asset_bubble_icon', // baked A + 3 bubbles from Boot
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Vehicles',
@@ -158,8 +149,7 @@ const GAMES = [
     colorDark: 0x0f7a37,
     darkHex: '#0a5626',
     iconKey: 'asset_animals_a', // the plush cow
-    iconFrame: 0,
-    free: true
+    iconFrame: 0
   },
   {
     label: 'Opposites',
@@ -188,6 +178,8 @@ function shuffle(arr) {
   }
   return a
 }
+
+const isFree = (game) => FREE_SCENES.includes(game.scene)
 
 export class MainMenu extends Scene {
   constructor() {
@@ -505,7 +497,7 @@ export class MainMenu extends Scene {
     //              original by-theme order underneath as a stable upsell row.
     const orderedGames = purchasesService.cachedFullAccess
       ? shuffle(GAMES)
-      : [...shuffle(GAMES.filter((g) => g.free)), ...GAMES.filter((g) => !g.free)]
+      : [...shuffle(GAMES.filter((g) => isFree(g))), ...GAMES.filter((g) => !isFree(g))]
 
     const gapX = this.sWidth * 0.04
     const gapY = this.sHeight * 0.03
@@ -805,13 +797,14 @@ export class MainMenu extends Scene {
       })
       .setOrigin(labelOrigin, 0.5)
     label.setStroke(game.darkHex, labelSize * 0.16)
+    label.setScale(Math.min(1, (w * 0.86) / label.width)) // Long names ("Opposites") shrink to fit narrow cards.
     card.add(label)
 
     // Lock badge — drawn LAST so it sits on top of the icon/label. Premium
     // packs get a small gold circle with a lock glyph in the upper-right
     // corner of the card. Hidden once the user owns the `premium`
     // entitlement (cached at boot in purchasesService).
-    const isLocked = !game.free && !purchasesService.cachedFullAccess
+    const isLocked = !isScenePlayable(game.scene)
     card.isLocked = isLocked
     if (isLocked) {
       const lockR = Math.min(w, h) * 0.14
@@ -820,11 +813,7 @@ export class MainMenu extends Scene {
       const lockShadow = this.add.circle(lockX, lockY + lockR * 0.18, lockR, 0x000000, 0.22)
       const lockDisc = this.add.circle(lockX, lockY, lockR, 0xffffff, 0.97)
       lockDisc.setStrokeStyle(Math.max(2, lockR * 0.12), game.colorDark, 1)
-      const lockGlyph = this.add
-        .text(lockX, lockY + lockR * 0.05, '🔒', {
-          fontSize: `${lockR * 1.1}px`
-        })
-        .setOrigin(0.5)
+      const lockGlyph = this.drawPadlock(lockX, lockY, lockR * 0.95, game.colorDark)
       card.add([lockShadow, lockDisc, lockGlyph])
     }
 
@@ -956,11 +945,29 @@ export class MainMenu extends Scene {
     }
   }
 
+  // Vector padlock: emoji glyphs render inconsistently across WebViews.
+  drawPadlock(x, y, size, color) {
+    const g = this.add.graphics()
+    const bodyW = size * 0.95
+    const bodyH = size * 0.72
+    const bodyTop = y - size * 0.12
+    g.lineStyle(size * 0.16, color, 1)
+    g.beginPath()
+    g.arc(x, bodyTop, size * 0.3, Math.PI, 0, false)
+    g.strokePath()
+    g.fillStyle(color, 1)
+    g.fillRoundedRect(x - bodyW / 2, bodyTop, bodyW, bodyH, size * 0.14)
+    g.fillStyle(0xffffff, 1)
+    g.fillCircle(x, bodyTop + bodyH * 0.42, size * 0.1)
+    g.fillRect(x - size * 0.04, bodyTop + bodyH * 0.42, size * 0.08, bodyH * 0.3)
+    return g
+  }
+
   playPressSound() {
     try {
       const ctx = this.sound.context
-      if (ctx && ctx.state === 'suspended') ctx.resume()
-      if (this.cache.audio.exists('sfx_collect')) {
+      if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {})
+      if (this.cache.audio.exists('ui_menu_tap')) {
         this.sound.play('ui_menu_tap', { volume: 0.6 })
       }
     } catch (e) {

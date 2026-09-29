@@ -30,6 +30,11 @@ const SLOTS = [
 export class GameN extends Scene {
   constructor() {
     super('GameN')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.score = 0
     this.completed = false
     this._found = new Set()
@@ -170,12 +175,18 @@ export class GameN extends Scene {
   _playAnimal(letter) {
     stopAllLevelAudio()
     const lang = settings.language()
+    const playId = (this._animalPlayId || 0) + 1 // A newer tap makes older chains stale.
+    this._animalPlayId = playId
+    let spoken = false
     preloadLevelAudio(`asset_animal_sounds_${letter}`, lang)
       .then((sound) => {
+        // Both 'ended' and the safety timer call this; only the first may speak.
         const playName = () => {
+          if (spoken || playId !== this._animalPlayId || !this.sys.isActive()) return
+          spoken = true
           preloadLevelAudio(`asset_animals_${letter}`, lang)
             .then((name) => {
-              if (!name) return
+              if (!name || playId !== this._animalPlayId) return
               try {
                 name.currentTime = 0
                 name.play().catch(() => {})

@@ -32,6 +32,11 @@ const NUM_ITEMS = COLOR_BINS.length * ITEMS_PER_COLOR
 export class GameI extends Scene {
   constructor() {
     super('GameI')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.items = []
     this.bins = []
     this.score = 0

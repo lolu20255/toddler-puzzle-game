@@ -10,6 +10,7 @@ import { dropPieces } from '../pieceDrop'
 // so they keep their original CSS-pixel visual size on Retina screens.
 // Cap kept in sync with main.js (2× — see the memory note in main.js).
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
+const SNAP_TOLERANCE = 0.05 // Fraction of the short side: forgiving enough for 2-4 year-old fingers.
 
 const NUM_OF_ANIMALS = 9
 
@@ -31,6 +32,15 @@ export class GameD extends Scene {
     this.animalsOnBase = new Set()
     this.score = 0
     this.packName = 'fruits'
+  }
+
+  init() {
+    // Phaser reuses this instance on every start/restart, so per-run state is
+    // reset here; constructor values would leak into the second visit.
+    this.label = null
+    this.animalsOnBase = new Set()
+    this.celebrated = new Set()
+    this.score = 0
   }
 
   preload() {
@@ -59,7 +69,7 @@ export class GameD extends Scene {
     // Unlock the audio context on the first touch (iOS Safari requirement).
     this.input.on('pointerdown', () => {
       if (this.sound.context.state === 'suspended') {
-        this.sound.context.resume()
+        this.sound.context.resume().catch(() => {})
       }
     })
     this.start()
@@ -149,11 +159,9 @@ export class GameD extends Scene {
     }
 
     const animalObjects = animals.map(createAnimal)
-    let animalDragged = null
 
     this.input.setDraggable(animalObjects)
     this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-      animalDragged = this.animalsNames[gameObject.name]
 
       dragX = Phaser.Math.Clamp(
         dragX,
@@ -173,7 +181,10 @@ export class GameD extends Scene {
     })
 
     this.input.on('dragend', (pointer, gameObject) => {
-      if (this.animalsOnBase.has(animalDragged)) {
+      // A plain tap fires dragend without 'drag', so judge the released piece
+      // itself rather than whichever piece moved last.
+      const draggedKey = this.animalsNames[gameObject.name]
+      if (this.isAnimalOnBase(gameObject.name)) {
         // Snap exactly onto the base and lock the piece — toddlers shouldn't
         // be able to drag a correctly-placed piece off again.
         const slot = gameObject.name
@@ -189,13 +200,13 @@ export class GameD extends Scene {
             this.scene.start(pickNextSceneExcluding('GameD'))
           )
 
-        if (!this.celebrated.has(animalDragged)) {
-          this.celebrated.add(animalDragged)
+        if (!this.celebrated.has(draggedKey)) {
+          this.celebrated.add(draggedKey)
           // On the final match, chain level celebration to fire AFTER the
           // per-match spelling modal auto-dismisses — never on top of it.
           const modal = showCelebration(
             this,
-            animalDragged,
+            draggedKey,
             triggerEnd ? launchLevelEnd : null
           )
           if (triggerEnd && !modal) launchLevelEnd()
@@ -213,11 +224,12 @@ export class GameD extends Scene {
   }
 
   isAnimalOnBase(animalKey) {
+    const snapTolerance = Math.min(this.sWidth, this.sHeight) * SNAP_TOLERANCE
     const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.0007665
     const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0007455
     const isOnBase =
-      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
-      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10
+      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < snapTolerance &&
+      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < snapTolerance
 
     if (isOnBase) {
       this[`${animalKey}Shadow`].setTint(0x00ff00)

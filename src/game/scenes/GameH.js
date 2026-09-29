@@ -2,7 +2,7 @@ import { EventBus } from '../EventBus'
 import { Scene } from 'phaser'
 import { addBackButton, addScoreBadge } from '../hud'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
-import { preloadLevelAudio } from '../../services/libro/levelAudio'
+import { preloadLevelAudio, stopAllLevelAudio } from '../../services/libro/levelAudio'
 import { settings } from '../../services/settings'
 
 // 2×4 grid = 8 cards = 4 pairs. Toddlers 2-4 hit cognitive overload
@@ -46,6 +46,11 @@ const PACK_POOLS = [
 export class GameH extends Scene {
   constructor() {
     super('GameH')
+  }
+
+  // Runs on every start/restart; Phaser reuses the instance, so per-run state
+  // must be reset here or a second visit inherits a finished/locked board.
+  init() {
     this.cards = [] // [{ sprite, back, face, assetKey, matched, faceUp }]
     this.firstPick = null
     this.locked = false // true during pair-evaluation flip-back window
@@ -351,12 +356,15 @@ export class GameH extends Scene {
     if (this.reducedMotion) return
     // Use a quick translate shake on the container (avoids re-tinting the
     // composite, which would require rebuilding graphics).
+    const restX = card.restX ?? card.container.x
+    card.restX = restX // Remember the resting spot so repeated shakes never drift the card.
     this.tweens.add({
       targets: card.container,
-      x: { from: card.container.x - 6, to: card.container.x + 6 },
+      x: { from: restX - 6, to: restX + 6 },
       duration: 60,
       yoyo: true,
-      repeat: 2
+      repeat: 2,
+      onComplete: () => card.container.setX(restX)
     })
   }
 
@@ -366,6 +374,7 @@ export class GameH extends Scene {
   // Skips the full spelling+celebration modal — Memory is paced faster than
   // the per-piece shadow-match modal. Just plays the bundled MP3.
   _speakWord(assetKey) {
+    stopAllLevelAudio() // A quick second pair must not talk over the first.
     const lang = settings.language()
     preloadLevelAudio(assetKey, lang)
       .then((audio) => {

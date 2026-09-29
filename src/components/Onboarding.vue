@@ -189,7 +189,14 @@ async function finish() {
 
           <!-- ── Step 1: Language pick ──────────────────────────────── -->
           <template v-else-if="step === 1">
-            <div class="text-5xl">🌍</div>
+            <svg class="h-16 w-16 drop-shadow" viewBox="0 0 64 64" aria-hidden="true">
+              <circle cx="32" cy="32" r="28" fill="#3ba4ff" stroke="#fff" stroke-width="4" />
+              <path
+                d="M18 20c5-2 9 1 12 0s4-6 9-5c4 1 3 6 7 8s5 6 3 9-7 1-9 5 2 9-2 11-7-3-9-7-7-3-9-7 3-9-2-12z"
+                fill="#5fc34a"
+              />
+              <ellipse cx="24" cy="20" rx="8" ry="4" fill="#fff" opacity="0.35" />
+            </svg>
             <h2
               class="mt-4 text-3xl font-bold text-white"
               style="text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15)"
@@ -211,7 +218,19 @@ async function finish() {
                 ]"
                 @click="language = 'en'"
               >
-                🇬🇧&nbsp;&nbsp;English
+                <span class="flex items-center justify-center gap-3">
+                  <svg class="h-6 w-6 shrink-0 rounded-full shadow" viewBox="0 0 60 60" aria-hidden="true">
+                  <clipPath id="flag-uk"><circle cx="30" cy="30" r="30" /></clipPath>
+                  <g clip-path="url(#flag-uk)">
+                    <rect width="60" height="60" fill="#012169" />
+                    <path d="M0 0L60 60M60 0L0 60" stroke="#fff" stroke-width="12" />
+                    <path d="M0 0L60 60M60 0L0 60" stroke="#c8102e" stroke-width="4" />
+                    <path d="M30 0V60M0 30H60" stroke="#fff" stroke-width="18" />
+                    <path d="M30 0V60M0 30H60" stroke="#c8102e" stroke-width="10" />
+                  </g>
+                </svg>
+                  English
+                </span>
               </button>
               <button
                 type="button"
@@ -223,7 +242,16 @@ async function finish() {
                 ]"
                 @click="language = 'es'"
               >
-                🇪🇸&nbsp;&nbsp;Español
+                <span class="flex items-center justify-center gap-3">
+                  <svg class="h-6 w-6 shrink-0 rounded-full shadow" viewBox="0 0 60 60" aria-hidden="true">
+                  <clipPath id="flag-es"><circle cx="30" cy="30" r="30" /></clipPath>
+                  <g clip-path="url(#flag-es)">
+                    <rect width="60" height="60" fill="#c60b1e" />
+                    <rect y="15" width="60" height="30" fill="#ffc400" />
+                  </g>
+                </svg>
+                  Español
+                </span>
               </button>
             </div>
           </template>

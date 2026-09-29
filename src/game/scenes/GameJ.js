@@ -66,6 +66,11 @@ const ITEM_POSITIONS = {
 export class GameJ extends Scene {
   constructor() {
     super('GameJ')
+  }
+
+  // Runs on every start/restart. Phaser reuses the instance, so per-run
+  // state lives here; set in the constructor it would leak into the next visit.
+  init() {
     this.round = 0 // 0-indexed; rounds 0..MAX_COUNT-1
     this.score = 0
     this.completed = false

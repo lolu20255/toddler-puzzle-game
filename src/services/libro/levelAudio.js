@@ -27,6 +27,10 @@ import { preload } from './pronunciation'
 // resulting Audio element also keeps its blob URL stable, which avoids any
 // reload latency the WKWebView would add on the second play.
 const audioByKey = new Map()
+// In-flight loads keyed like `audioByKey`, so a tap that lands while a scene is
+// still warming its cache reuses the pending load instead of creating a second
+// Audio element that `stopAllLevelAudio()` could never reach.
+const pendingByKey = new Map()
 
 /**
  * Pause every cached level-pack audio that is currently playing and rewind
@@ -53,7 +57,7 @@ function parseAssetKey(assetKey) {
 }
 
 function bundledUrl(pack, letter, lang) {
-  return `/audio/levels/${lang}/${pack}/${letter}.mp3`
+  return `audio/levels/${lang}/${pack}/${letter}.mp3` // Relative: the prod build uses base './'.
 }
 
 function isOffline() {
@@ -78,9 +82,11 @@ async function loadBundledUrl(url) {
     audio.preload = 'auto'
 
     let settled = false
+    let timeoutId = null
     const finish = (success, reason) => {
       if (settled) return
       settled = true
+      clearTimeout(timeoutId)
       audio.removeEventListener('loadedmetadata', onReady)
       audio.removeEventListener('canplay', onReady)
       audio.removeEventListener('error', onError)
@@ -89,6 +95,7 @@ async function loadBundledUrl(url) {
         resolve(audio)
       } else {
         console.log(`[levelAudio] bundle miss ${url}: ${reason}`)
+        audio.removeAttribute('src') // Stop a stalled download from continuing in the background.
         resolve(null)
       }
     }
@@ -106,7 +113,7 @@ async function loadBundledUrl(url) {
     // request goes out and bytes never come back), bail out so the
     // celebration falls through to the visual-only path instead of waiting
     // forever for an Audio element that will never load.
-    setTimeout(() => finish(false, 'timeout (3s)'), 3000)
+    timeoutId = setTimeout(() => finish(false, 'timeout (3s)'), 3000)
 
     audio.src = url
     audio.load()
@@ -128,8 +135,22 @@ export async function preloadLevelAudio(assetKey, lang = 'en') {
   if (!parsed) return null
 
   const cacheKey = `${lang}:${parsed.pack}:${parsed.letter}`
-  if (audioByKey.has(cacheKey)) return audioByKey.get(cacheKey)
+  return loadOnce(cacheKey, () => loadLevelAudio(assetKey, parsed, lang, cacheKey))
+}
 
+/**
+ * Resolve `cacheKey` from the cache, joining an in-flight load when there is
+ * one. Only successful loads are cached so a transient miss can retry later.
+ */
+async function loadOnce(cacheKey, loader) {
+  if (audioByKey.has(cacheKey)) return audioByKey.get(cacheKey)
+  if (pendingByKey.has(cacheKey)) return pendingByKey.get(cacheKey)
+  const pending = loader().finally(() => pendingByKey.delete(cacheKey))
+  pendingByKey.set(cacheKey, pending)
+  return pending
+}
+
+async function loadLevelAudio(assetKey, parsed, lang, cacheKey) {
   const bundled = await tryBundled(parsed.pack, parsed.letter, lang)
   if (bundled) {
     audioByKey.set(cacheKey, bundled)
@@ -165,10 +186,11 @@ export async function preloadLevelAudio(assetKey, lang = 'en') {
 export async function preloadPraise(lang = 'en') {
   const l = lang === 'es' ? 'es' : 'en'
   const cacheKey = `praise:${l}`
-  if (audioByKey.has(cacheKey)) return audioByKey.get(cacheKey)
-  const audio = await loadBundledUrl(`/audio/praise/${l}.mp3`)
-  if (audio) audioByKey.set(cacheKey, audio)
-  return audio
+  return loadOnce(cacheKey, async () => {
+    const audio = await loadBundledUrl(`audio/praise/${l}.mp3`)
+    if (audio) audioByKey.set(cacheKey, audio)
+    return audio
+  })
 }
 
 /**

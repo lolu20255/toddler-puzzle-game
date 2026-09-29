@@ -9,7 +9,6 @@
  * that, if any one of them kills the WebContent process on a real device, the
  * Xcode console pinpoints which one — and the rest still try to run.
  */
-import { SplashScreen } from '@capacitor/splash-screen'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { App } from '@capacitor/app'
 import { isNativePlatform, isAndroid } from './platform'
@@ -22,6 +21,8 @@ import { libroAuth } from './libro/auth'
 import { amplitudeService } from './amplitude'
 import { settings } from './settings'
 import { EventBus } from '../game/EventBus'
+import { music } from './music'
+import { stopAllSpeech } from './libro'
 
 const REVIEW_PROMPT_EVERY = 5
 
@@ -40,6 +41,7 @@ export async function initNative() {
   // 0. Hydrate user settings (toddler name + haptics flag) into the in-memory
   //    cache so every other service / scene can read them synchronously.
   await settings.load()
+  watchAppLifecycle()
 
   // 1. Count launches (works everywhere).
   let opens = 1
@@ -116,8 +118,24 @@ export async function initNative() {
     setTimeout(() => appReview.requestReview(), 4000)
   }
 
-  // 3. Reveal the game. Phaser's Boot scene shows its own loading bar.
-  requestAnimationFrame(() => {
-    SplashScreen.hide().catch(() => {})
-  })
+  // The native splash is hidden by SplashIntro.vue once its first frame is
+  // painted, so the hand-off to the animated intro never flashes.
+}
+
+/**
+ * Silence the app when it leaves the foreground: TTS keeps playing through
+ * HTMLAudio otherwise, and a praise chained on 'ended' can start in the
+ * background. `visibilitychange` covers the browser build; `appStateChange`
+ * is the reliable signal inside the native shells.
+ */
+function watchAppLifecycle() {
+  const onActiveChange = (isActive) => {
+    if (!isActive) stopAllSpeech()
+    music.setAppActive(isActive)
+  }
+  document.addEventListener('visibilitychange', () => onActiveChange(!document.hidden))
+  if (!isNativePlatform()) return
+  App.addListener('appStateChange', ({ isActive }) => onActiveChange(isActive)).catch((error) =>
+    console.error('[Native] appStateChange listener failed', error)
+  )
 }
