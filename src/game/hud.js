@@ -17,6 +17,7 @@
  * WebView combination; Rectangle input is rock-solid.
  */
 import { getGrid } from './layout'
+import { stopAllSpeech } from '../services/libro'
 
 /**
  * Modern white-circle chevron back button, top-left.
@@ -65,6 +66,10 @@ export function addBackButton(scene) {
     scene.tweens.add({ targets: [halo, arrow], scale: 1, duration: 140 })
   })
   hit.on('pointerdown', () => {
+    hit.disableInteractive() // Repeated taps would queue several MainMenu starts in one frame.
+    // Silence any TTS celebration audio immediately, before the 240ms
+    // fade-out — otherwise "Good job Logan!" would trail into MainMenu.
+    stopAllSpeech()
     scene.tweens.add({
       targets: [halo, arrow],
       scale: { from: 0.92, to: 1 },

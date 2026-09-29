@@ -14,8 +14,8 @@ export const ITEM_NAMES = {
     },
     // pack B.png — fantasy lego heroes
     mistic_lego: {
-      a: 'WIZARD', b: 'VIKING', c: 'SKULL', d: 'KNIGHT',
-      e: 'ORC', f: 'ELF', g: 'MAGE', h: 'DEMON', i: 'ANGEL'
+      a: 'WIZARD', b: 'VIKING', c: 'PIRATE', d: 'KNIGHT',
+      e: 'ORC', f: 'ELF', g: 'MAGE', h: 'FAIRY', i: 'ANGEL'
     },
     // pack C.png — emoji shapes
     emojis_lego: {
@@ -31,6 +31,54 @@ export const ITEM_NAMES = {
     numbers: {
       a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR',
       e: 'FIVE', f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE'
+    },
+    // Count game (GameJ) audio — same number words, but spoken bare ("One!")
+    // with NO letter spelling. Listed in WORD_ONLY_PACKS below so the phrase
+    // builders skip the "O, N, E." prefix that the Numbers shadow pack uses.
+    count: {
+      a: 'ONE', b: 'TWO', c: 'THREE', d: 'FOUR', e: 'FIVE',
+      f: 'SIX', g: 'SEVEN', h: 'EIGHT', i: 'NINE', j: 'TEN'
+    },
+    // pack F (procedural) — first 9 letters of the alphabet, spoken as
+    // their letter name. celebrate.js treats single-char phrases specially
+    // (no spelling prefix) so the audio is just "A!" not "A. A!".
+    letters: {
+      a: 'A', b: 'B', c: 'C', d: 'D',
+      e: 'E', f: 'F', g: 'G', h: 'H', i: 'I'
+    },
+    // pack G (procedural) — basic geometric shapes a toddler should learn.
+    // Multi-character so the celebration spelling kicks in: "C,I,R,C,L,E. CIRCLE!"
+    // gives them spelling + word pronunciation in one playback.
+    shapes: {
+      a: 'CIRCLE', b: 'SQUARE', c: 'TRIANGLE', d: 'RECTANGLE',
+      e: 'STAR', f: 'HEART', g: 'DIAMOND', h: 'HEXAGON', i: 'OVAL'
+    },
+    // Colours game (GameK) — spoken bare ("Red!"), no spelling. Keyed a-g in
+    // the same rainbow order as Boot.COLOR_PALETTE / the baked gumball textures.
+    colors: {
+      a: 'RED', b: 'ORANGE', c: 'YELLOW', d: 'GREEN',
+      e: 'BLUE', f: 'PURPLE', g: 'PINK'
+    },
+    // Vehicles shadow-matching pack (GameP) — plush 3D art in public/assets/vehicles.
+    vehicles: {
+      a: 'CAR', b: 'BUS', c: 'PLANE', d: 'BOAT',
+      e: 'TRAIN', f: 'TRUCK', g: 'HELICOPTER', h: 'ROCKET', i: 'BIKE'
+    },
+    // Animals & Sounds game (GameN) — spoken bare name ("Cow!"), no spelling.
+    animals: {
+      a: 'COW', b: 'DOG', c: 'CAT', d: 'DUCK',
+      e: 'SHEEP', f: 'FROG', g: 'HORSE', h: 'PIG', i: 'LION'
+    },
+    // The matching sound each animal makes, spoken as onomatopoeia ("Moo!").
+    animal_sounds: {
+      a: 'MOO', b: 'WOOF', c: 'MEOW', d: 'QUACK',
+      e: 'BAA', f: 'RIBBIT', g: 'NEIGH', h: 'OINK', i: 'ROAR'
+    },
+    // Opposites game (GameO) — spoken bare, no spelling. Keyed a-j to the baked
+    // asset_opposites_<letter> icons, in opposite pairs (a/b, c/d, e/f, g/h, i/j).
+    opposites: {
+      a: 'DAY', b: 'NIGHT', c: 'UP', d: 'DOWN',
+      e: 'HAPPY', f: 'SAD', g: 'HOT', h: 'COLD', i: 'FULL', j: 'EMPTY'
     }
   },
   es: {
@@ -39,8 +87,8 @@ export const ITEM_NAMES = {
       e: 'CARRO', f: 'AROS', g: 'TREN', h: 'OSO', i: 'TAMBOR'
     },
     mistic_lego: {
-      a: 'MAGO', b: 'VIKINGO', c: 'CALAVERA', d: 'CABALLERO',
-      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'DEMONIO', i: 'ÁNGEL'
+      a: 'MAGO', b: 'VIKINGO', c: 'PIRATA', d: 'CABALLERO',
+      e: 'ORCO', f: 'ELFO', g: 'BRUJO', h: 'HADA', i: 'ÁNGEL'
     },
     emojis_lego: {
       a: 'FELIZ', b: 'ENOJADO', c: 'LLORA', d: 'TRISTE',
@@ -53,13 +101,63 @@ export const ITEM_NAMES = {
     numbers: {
       a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO',
       e: 'CINCO', f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE'
+    },
+    // Count game (GameJ) audio — bare number words, no spelling. See en.count.
+    count: {
+      a: 'UNO', b: 'DOS', c: 'TRES', d: 'CUATRO', e: 'CINCO',
+      f: 'SEIS', g: 'SIETE', h: 'OCHO', i: 'NUEVE', j: 'DIEZ'
+    },
+    letters: {
+      a: 'A', b: 'B', c: 'C', d: 'D',
+      e: 'E', f: 'F', g: 'G', h: 'H', i: 'I'
+    },
+    shapes: {
+      a: 'CÍRCULO', b: 'CUADRADO', c: 'TRIÁNGULO', d: 'RECTÁNGULO',
+      e: 'ESTRELLA', f: 'CORAZÓN', g: 'ROMBO', h: 'HEXÁGONO', i: 'ÓVALO'
+    },
+    // Colours game (GameK) — bare colour words, no spelling. See en.colors.
+    colors: {
+      a: 'ROJO', b: 'NARANJA', c: 'AMARILLO', d: 'VERDE',
+      e: 'AZUL', f: 'MORADO', g: 'ROSA'
+    },
+    // Vehicles shadow-matching pack (GameP).
+    vehicles: {
+      a: 'CARRO', b: 'BUS', c: 'AVIÓN', d: 'BARCO',
+      e: 'TREN', f: 'CAMIÓN', g: 'HELICÓPTERO', h: 'COHETE', i: 'BICI'
+    },
+    // Animals & Sounds game (GameN) — bare animal name, no spelling.
+    animals: {
+      a: 'VACA', b: 'PERRO', c: 'GATO', d: 'PATO',
+      e: 'OVEJA', f: 'RANA', g: 'CABALLO', h: 'CERDO', i: 'LEÓN'
+    },
+    // Spanish animal-sound onomatopoeia.
+    animal_sounds: {
+      a: 'MUU', b: 'GUAU', c: 'MIAU', d: 'CUAC',
+      e: 'BEE', f: 'CROAC', g: 'IIH', h: 'OINC', i: 'GRR'
+    },
+    // Opposites game (GameO).
+    opposites: {
+      a: 'DÍA', b: 'NOCHE', c: 'ARRIBA', d: 'ABAJO',
+      e: 'FELIZ', f: 'TRISTE', g: 'CALIENTE', h: 'FRÍO', i: 'LLENO', j: 'VACÍO'
     }
   }
 }
 
+// Packs whose audio is the bare word, NOT spelled out letter-by-letter. The
+// Count game says "One!", "Two!"; spelling numbers ("O, N, E…") is wrong for
+// counting. (The Letters pack is handled separately by the single-character
+// rule in the phrase builders.) Shared by the runtime (levelAudio.js) and the
+// batch generator (generate-level-audios.mjs) so both build the same phrase.
+export const WORD_ONLY_PACKS = new Set(['count', 'colors', 'animals', 'animal_sounds', 'opposites'])
+
+/** True if `pack`'s audio should be the plain word with no spelling prefix. */
+export function isWordOnlyPack(pack) {
+  return WORD_ONLY_PACKS.has(pack)
+}
+
 /** Turn an asset key into a printable word in the given language. */
 export function nameForAssetKey(assetKey, lang = 'en') {
-  const match = /^asset_(.+)_([a-i])$/.exec(assetKey || '')
+  const match = /^asset_(.+)_([a-j])$/.exec(assetKey || '')
   if (!match) return ''
   const [, pack, letter] = match
   const table = ITEM_NAMES[lang] || ITEM_NAMES.en

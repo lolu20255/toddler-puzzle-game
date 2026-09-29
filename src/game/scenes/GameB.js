@@ -3,12 +3,14 @@ import { Scene } from 'phaser'
 import { showCelebration } from '../celebrate'
 import { showLevelComplete, pickNextSceneExcluding } from '../levelComplete'
 import { addBackButton, addScoreBadge } from '../hud'
+import { dropPieces } from '../pieceDrop'
 
 // HiDPI multiplier — main.js renders the canvas at innerWidth × DPR for
 // crispness; hardcoded pixel constants in this scene get multiplied by DPR
 // so they keep their original CSS-pixel visual size on Retina screens.
 // Cap kept in sync with main.js (2× — see the memory note in main.js).
 const DPR = Math.min(window.devicePixelRatio || 1, 2)
+const SNAP_TOLERANCE = 0.05 // Fraction of the short side: forgiving enough for 2-4 year-old fingers.
 
 const NUM_OF_CLOUDS = 10
 const NUM_OF_BIRDS = 2
@@ -32,6 +34,15 @@ export class GameB extends Scene {
     this.packName = 'mistic_lego'
   }
 
+  init() {
+    // Phaser reuses this instance on every start/restart, so per-run state is
+    // reset here; constructor values would leak into the second visit.
+    this.label = null
+    this.animalsOnBase = new Set()
+    this.celebrated = new Set()
+    this.score = 0
+  }
+
   preload() {
     console.log('preload')
 
@@ -51,7 +62,7 @@ export class GameB extends Scene {
     }
 
     const bgImage = this.add
-      .image(this.sWidth / 2, this.sHeight / 2, 'background_a')
+      .image(this.sWidth / 2, this.sHeight / 2, 'background_f')
       .setOrigin(0.5)
       .setDisplaySize(this.sWidth, this.sHeight)
   }
@@ -99,7 +110,7 @@ export class GameB extends Scene {
     // Ensure audio context is resumed on user interaction for iOS Safari
     this.input.on('pointerdown', () => {
       if (this.sound.context.state === 'suspended') {
-        this.sound.context.resume()
+        this.sound.context.resume().catch(() => {})
       }
     })
     this.start()
@@ -234,7 +245,7 @@ export class GameB extends Scene {
   addAnimalsShadow(animals) {
     this.animalsShadows = this.add.group()
     // console.log('addAnimalsShadow', animals)
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0007455 // Scale size proportional to screen dimensions
 
     for (let index = 0; index < animals.length; index++) {
       const animalKey = animals[index]
@@ -258,7 +269,7 @@ export class GameB extends Scene {
   addAnimals(animals) {
     this.animals = this.add.group()
 
-    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.0007 // Scale size proportional to screen dimensions
+    const scaleSize = Math.min(this.sWidth, this.sHeight) * 0.000735 // Scale size proportional to screen dimensions
     const createAnimal = (animalName, index) => {
       const key = `animal${String.fromCharCode(65 + index)}`
       const animal = this.add
@@ -286,11 +297,9 @@ export class GameB extends Scene {
     }
 
     const animalObjects = animals.map(createAnimal)
-    let animalDragged = null
 
     this.input.setDraggable(animalObjects)
     this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-      animalDragged = this.animalsNames[gameObject.name]
 
       dragX = Phaser.Math.Clamp(
         dragX,
@@ -313,7 +322,10 @@ export class GameB extends Scene {
     this.input.on('dragend', (pointer, gameObject) => {
       console.log('dragend')
 
-      if (this.animalsOnBase.has(animalDragged)) {
+      // A plain tap fires dragend without 'drag', so judge the released piece
+      // itself rather than whichever piece moved last.
+      const draggedKey = this.animalsNames[gameObject.name]
+      if (this.isAnimalOnBase(gameObject.name)) {
         // Snap exactly onto the base and lock the piece — toddlers shouldn't
         // be able to drag a correctly-placed piece off again.
         const slot = gameObject.name
@@ -329,11 +341,11 @@ export class GameB extends Scene {
             this.scene.start(pickNextSceneExcluding('GameB'))
           )
 
-        if (!this.celebrated.has(animalDragged)) {
-          this.celebrated.add(animalDragged)
+        if (!this.celebrated.has(draggedKey)) {
+          this.celebrated.add(draggedKey)
           const modal = showCelebration(
             this,
-            animalDragged,
+            draggedKey,
             triggerEnd ? launchLevelEnd : null
           )
           if (triggerEnd && !modal) launchLevelEnd()
@@ -349,22 +361,25 @@ export class GameB extends Scene {
       }
 
       if (this.animalsOnBase.size !== animalObjects.length) {
-        if (this.label) {
+        if (this.label && this.label !== 'completing') {
           this.label.destroy()
           this.tweens.killTweensOf(this.label)
           this.label = null
         }
       }
     })
+
+    dropPieces(this, animalObjects)
   }
 
   isAnimalOnBase(animalKey) {
+    const snapTolerance = Math.min(this.sWidth, this.sHeight) * SNAP_TOLERANCE
     // console.log('isAnimalOnBase', animalKey)
-    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.00073 // Scale size proportional to screen dimensions
-    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.00071 // Scale size proportional to screen dimensions
+    const scaleSizeShadowOnBase = Math.min(this.sWidth, this.sHeight) * 0.0007665 // Scale size proportional to screen dimensions
+    const scaleSizeShadow = Math.min(this.sWidth, this.sHeight) * 0.0007455 // Scale size proportional to screen dimensions
     const isOnBase =
-      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < 10 &&
-      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < 10
+      Math.abs(this[animalKey].x - this.baseShades[animalKey].x) < snapTolerance &&
+      Math.abs(this[animalKey].y - this.baseShades[animalKey].y) < snapTolerance
 
     if (isOnBase) {
       this[`${animalKey}Shadow`].setTint(0x00ff00)

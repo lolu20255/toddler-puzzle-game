@@ -1,17 +1,17 @@
 {
   "appId": "com.blackboxcode.toddlerpuzzle",
-  "appName": "Toddler Puzzles",
+  "appName": "ABC Kids Puzzle Pals",
   "webDir": "dist",
-  "backgroundColor": "#5bb6ef",
+  "backgroundColor": "#6a5ae0",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
       "launchAutoHide": false,
-      "backgroundColor": "#5bb6ef",
+      "backgroundColor": "#6a5ae0",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,
-      "splashImmersive": true
+      "splashImmersive": true,
+      "launchFadeOutDuration": 0
     },
     "StatusBar": {
       "overlaysWebView": false,
@@ -19,7 +19,11 @@
       "backgroundColor": "#5bb6ef"
     },
     "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     }
   }
 }

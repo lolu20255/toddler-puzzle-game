@@ -21,6 +21,10 @@ export default defineConfig({
     }
   },
   server: {
-      port: 8080
+    port: 8080,
+    watch: {
+      // Native builds (cap run writes ios/DerivedData) would trigger reloads.
+      ignored: ['**/ios/**', '**/android/**', '**/dist/**']
+    }
   }
 })

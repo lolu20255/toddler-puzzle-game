@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { EventBus } from './EventBus'
 import StartGame from './main'
+import { prepareViewport } from './viewport'
 
 // Save the current scene instance
 const scene = ref()
@@ -9,7 +10,8 @@ const game = ref()
 
 const emit = defineEmits(['current-active-scene'])
 
-onMounted(() => {
+onMounted(async () => {
+  await prepareViewport()
   game.value = StartGame('game-container')
   // Dev/debug hook — handy for poking at scenes from the browser console.
   // Harmless in production for a single-player offline kids game.

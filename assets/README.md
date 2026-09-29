@@ -17,4 +17,4 @@ use Capacitor's default icons — fine for testing, but **replace before release
 Tips:
 - Keep important content within the centre ~66% of the splash — edges get cropped.
 - The adaptive-icon foreground needs ~25% padding; Android masks it to various shapes.
-- The splash background colour is also set in `capacitor.config.json` (`#5bb6ef`).
+- The splash is a flat `#6a5ae0` fill on purpose: it must match the first frame of the animated intro (`src/components/SplashIntro.vue`) and `SplashScreen.backgroundColor` in `capacitor.config.json`, or the hand-off flashes.

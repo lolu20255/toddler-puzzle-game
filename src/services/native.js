@@ -9,7 +9,6 @@
  * that, if any one of them kills the WebContent process on a real device, the
  * Xcode console pinpoints which one — and the rest still try to run.
  */
-import { SplashScreen } from '@capacitor/splash-screen'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { App } from '@capacitor/app'
 import { isNativePlatform, isAndroid } from './platform'
@@ -19,8 +18,11 @@ import { notificationsService } from './notifications'
 import { appReview } from './appReview'
 import { analytics } from './analytics'
 import { libroAuth } from './libro/auth'
+import { amplitudeService } from './amplitude'
 import { settings } from './settings'
 import { EventBus } from '../game/EventBus'
+import { music } from './music'
+import { stopAllSpeech } from './libro'
 
 const REVIEW_PROMPT_EVERY = 5
 
@@ -39,6 +41,7 @@ export async function initNative() {
   // 0. Hydrate user settings (toddler name + haptics flag) into the in-memory
   //    cache so every other service / scene can read them synchronously.
   await settings.load()
+  watchAppLifecycle()
 
   // 1. Count launches (works everywhere).
   let opens = 1
@@ -52,6 +55,12 @@ export async function initNative() {
 
   if (!isNativePlatform()) {
     console.log('[Native] Browser build — native features disabled')
+    // Even on the dev/web build, fire `app:open` so the EventBus → Amplitude
+    // wiring is exercised when an API key is configured for a web build.
+    // Done lazily so the amplitude listeners are installed first.
+    amplitudeService
+      .initialize()
+      .then(() => EventBus.emit('app:open', { count: opens }))
     return
   }
 
@@ -61,6 +70,10 @@ export async function initNative() {
   )
 
   await step('Purchases.initialize', () => purchasesService.initialize())
+  // Warm up the entitlement cache so MainMenu can synchronously decide
+  // which cards to show with a lock icon on its very first paint, instead
+  // of flickering "unlocked → locked" once the network call resolves.
+  step('Purchases.refreshEntitlement', () => purchasesService.refreshEntitlement())
 
   await step('Notifications.initialize', () =>
     notificationsService.initialize()
@@ -80,6 +93,16 @@ export async function initNative() {
     libroAuth.ensureAuthenticated()
   )
 
+  // Amplitude — last step so analytics is the cherry on top, not a
+  // dependency for any other service. Awaited (rather than fire-and-forget)
+  // so the EventBus translation listeners are installed before any scene
+  // starts emitting events; if the API key isn't configured, this resolves
+  // instantly with a console warning.
+  await step('Amplitude.initialize', () => amplitudeService.initialize())
+  // First event after the listeners are in place — the launch we counted at
+  // the top. Mirrors the existing local `analytics.logEvent('app_open', …)`.
+  EventBus.emit('app:open', { count: opens })
+
   // backButton is an Android-only event. Calling addListener on iOS works in
   // some Capacitor versions and crashes the WebContent process in others —
   // skip it entirely off Android.
@@ -95,8 +118,24 @@ export async function initNative() {
     setTimeout(() => appReview.requestReview(), 4000)
   }
 
-  // 3. Reveal the game. Phaser's Boot scene shows its own loading bar.
-  requestAnimationFrame(() => {
-    SplashScreen.hide().catch(() => {})
-  })
+  // The native splash is hidden by SplashIntro.vue once its first frame is
+  // painted, so the hand-off to the animated intro never flashes.
+}
+
+/**
+ * Silence the app when it leaves the foreground: TTS keeps playing through
+ * HTMLAudio otherwise, and a praise chained on 'ended' can start in the
+ * background. `visibilitychange` covers the browser build; `appStateChange`
+ * is the reliable signal inside the native shells.
+ */
+function watchAppLifecycle() {
+  const onActiveChange = (isActive) => {
+    if (!isActive) stopAllSpeech()
+    music.setAppActive(isActive)
+  }
+  document.addEventListener('visibilitychange', () => onActiveChange(!document.hidden))
+  if (!isNativePlatform()) return
+  App.addListener('appStateChange', ({ isActive }) => onActiveChange(isActive)).catch((error) =>
+    console.error('[Native] appStateChange listener failed', error)
+  )
 }

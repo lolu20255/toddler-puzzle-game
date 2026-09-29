@@ -19,7 +19,7 @@
  * Per-toddler "Good job <Name>!" praise is NOT routed through here — that
  * always goes through `preload()` because the name is dynamic per device.
  */
-import { nameForAssetKey } from '../../game/itemNames'
+import { nameForAssetKey, isWordOnlyPack } from '../../game/itemNames'
 import { preload } from './pronunciation'
 
 // Per-session memory cache so repeated celebrations of the same piece don't
@@ -27,16 +27,37 @@ import { preload } from './pronunciation'
 // resulting Audio element also keeps its blob URL stable, which avoids any
 // reload latency the WKWebView would add on the second play.
 const audioByKey = new Map()
+// In-flight loads keyed like `audioByKey`, so a tap that lands while a scene is
+// still warming its cache reuses the pending load instead of creating a second
+// Audio element that `stopAllLevelAudio()` could never reach.
+const pendingByKey = new Map()
+
+/**
+ * Pause every cached level-pack audio that is currently playing and rewind
+ * it to the start. Mirrors `stopAllPronunciations` in pronunciation.js and is
+ * called from the same scene-exit hook so both the spelling audio (this file)
+ * and the praise audio (pronunciation.js) silence together.
+ */
+export function stopAllLevelAudio() {
+  audioByKey.forEach((audio) => {
+    try {
+      if (!audio.paused) audio.pause()
+      audio.currentTime = 0
+    } catch {
+      /* the element may already be in a bad state — ignore */
+    }
+  })
+}
 
 /** Parse an asset key like `asset_animal_cartoon_a` → `{ pack, letter }`. */
 function parseAssetKey(assetKey) {
-  const m = /^asset_(.+)_([a-i])$/.exec(assetKey || '')
+  const m = /^asset_(.+)_([a-j])$/.exec(assetKey || '')
   if (!m) return null
   return { pack: m[1], letter: m[2] }
 }
 
 function bundledUrl(pack, letter, lang) {
-  return `/audio/levels/${lang}/${pack}/${letter}.mp3`
+  return `audio/levels/${lang}/${pack}/${letter}.mp3` // Relative: the prod build uses base './'.
 }
 
 function isOffline() {
@@ -44,7 +65,7 @@ function isOffline() {
 }
 
 /**
- * Try to load the bundled MP3 via an HTMLAudioElement directly.
+ * Load a bundled MP3 by URL via an HTMLAudioElement directly.
  *
  * We do NOT use `fetch()` here. In Capacitor iOS, WKWebView's URL scheme
  * handler is flaky for `fetch()` of bundled assets — it returns HTTP 0
@@ -55,16 +76,17 @@ function isOffline() {
  *
  * Resolves with a ready-to-play Audio element on success, null on failure.
  */
-async function tryBundled(pack, letter, lang) {
-  const url = bundledUrl(pack, letter, lang)
+async function loadBundledUrl(url) {
   return new Promise((resolve) => {
     const audio = new Audio()
     audio.preload = 'auto'
 
     let settled = false
+    let timeoutId = null
     const finish = (success, reason) => {
       if (settled) return
       settled = true
+      clearTimeout(timeoutId)
       audio.removeEventListener('loadedmetadata', onReady)
       audio.removeEventListener('canplay', onReady)
       audio.removeEventListener('error', onError)
@@ -73,6 +95,7 @@ async function tryBundled(pack, letter, lang) {
         resolve(audio)
       } else {
         console.log(`[levelAudio] bundle miss ${url}: ${reason}`)
+        audio.removeAttribute('src') // Stop a stalled download from continuing in the background.
         resolve(null)
       }
     }
@@ -90,11 +113,16 @@ async function tryBundled(pack, letter, lang) {
     // request goes out and bytes never come back), bail out so the
     // celebration falls through to the visual-only path instead of waiting
     // forever for an Audio element that will never load.
-    setTimeout(() => finish(false, 'timeout (3s)'), 3000)
+    timeoutId = setTimeout(() => finish(false, 'timeout (3s)'), 3000)
 
     audio.src = url
     audio.load()
   })
+}
+
+/** Load the bundled word MP3 for an asset (pack/letter). */
+async function tryBundled(pack, letter, lang) {
+  return loadBundledUrl(bundledUrl(pack, letter, lang))
 }
 
 /**
@@ -107,8 +135,22 @@ export async function preloadLevelAudio(assetKey, lang = 'en') {
   if (!parsed) return null
 
   const cacheKey = `${lang}:${parsed.pack}:${parsed.letter}`
-  if (audioByKey.has(cacheKey)) return audioByKey.get(cacheKey)
+  return loadOnce(cacheKey, () => loadLevelAudio(assetKey, parsed, lang, cacheKey))
+}
 
+/**
+ * Resolve `cacheKey` from the cache, joining an in-flight load when there is
+ * one. Only successful loads are cached so a transient miss can retry later.
+ */
+async function loadOnce(cacheKey, loader) {
+  if (audioByKey.has(cacheKey)) return audioByKey.get(cacheKey)
+  if (pendingByKey.has(cacheKey)) return pendingByKey.get(cacheKey)
+  const pending = loader().finally(() => pendingByKey.delete(cacheKey))
+  pendingByKey.set(cacheKey, pending)
+  return pending
+}
+
+async function loadLevelAudio(assetKey, parsed, lang, cacheKey) {
   const bundled = await tryBundled(parsed.pack, parsed.letter, lang)
   if (bundled) {
     audioByKey.set(cacheKey, bundled)
@@ -131,8 +173,45 @@ export async function preloadLevelAudio(assetKey, lang = 'en') {
   // exactly so the IDB key + the file we'd have on disk would line up.
   const word = nameForAssetKey(assetKey, lang)
   if (!word) return null
+  return preload(buildPhrase(word, lang, parsed.pack), lang)
+}
+
+/**
+ * Bundled celebration praise ("Good job!" / "¡Muy bien!"), pre-generated into
+ * `public/audio/praise/<lang>.mp3` by `npm run generate:audio`. Cached in
+ * `audioByKey` like the word audio, so `stopAllLevelAudio()` (and therefore
+ * `stopAllSpeech()`) silences it on scene exit / back button. The running app
+ * never calls the API for this — it always plays from the local file.
+ */
+export async function preloadPraise(lang = 'en') {
+  const l = lang === 'es' ? 'es' : 'en'
+  const cacheKey = `praise:${l}`
+  return loadOnce(cacheKey, async () => {
+    const audio = await loadBundledUrl(`audio/praise/${l}.mp3`)
+    if (audio) audioByKey.set(cacheKey, audio)
+    return audio
+  })
+}
+
+/**
+ * Build the spelling+pronunciation phrase the TTS reads.
+ *
+ *   - Multi-character word: "A, P, P, L, E. APPLE!"  (English)
+ *                           "¡¡¡A, P, P, L, E. APPLE!!!"  (Spanish — the
+ *                           inverted-bang framing makes ElevenLabs pick the
+ *                           right intonation, discovered by trial-and-error)
+ *   - Single-character word (Letters pack, e.g. "A"): just "A!" — spelling
+ *                           a single letter as itself sounds redundant.
+ *   - Word-only pack (Count, e.g. "ONE"): just "One!" — a counting game
+ *                           should never spell the number out.
+ *
+ * Must stay in lockstep with `scripts/generate-level-audios.mjs` so the
+ * bundled MP3 filename and the runtime fallback phrase agree.
+ */
+export function buildPhrase(word, lang, pack) {
+  if (word.length === 1 || isWordOnlyPack(pack)) {
+    return lang === 'es' ? `¡${word}!` : `${word}!`
+  }
   const spelled = word.split('').join(', ')
-  const phrase =
-    lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
-  return preload(phrase, lang)
+  return lang === 'es' ? `¡¡¡${spelled}. ${word}!!!` : `${spelled}. ${word}!`
 }
